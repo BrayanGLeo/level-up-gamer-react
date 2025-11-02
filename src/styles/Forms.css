@@ -1,0 +1,70 @@
+.form-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 100px 20px;
+    min-height: calc(100vh - 120px);
+}
+
+.login-section, .register-section, .checkout-section {
+    background-color: rgba(255, 255, 255, 0.05);
+    padding: 40px;
+    border-radius: 10px;
+    max-width: 500px;
+    width: 100%;
+    text-align: center;
+}
+
+.form-group {
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: #1E90FF;
+    font-weight: bold;
+}
+
+.form-group input, .form-group select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #39FF14; 
+    background-color: #000000;
+    color: #FFFFFF;
+    border-radius: 5px;
+    box-sizing: border-box;
+    transition: border-color 0.3s ease; 
+}
+
+.form-group input.input-error {
+    border-color: #FF3914; 
+}
+
+.form-group small {
+    display: block;
+    margin-top: 5px;
+    font-size: 0.9em;
+}
+
+.form-container .btn {
+    width: 100%;
+    padding: 12px;
+    font-size: 1.2em;
+}
+
+.form-link {
+    margin-top: 20px;
+    color: #D3D3D3;
+}
+
+.form-link a {
+    color: #1E90FF;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.form-link a:hover {
+    text-decoration: underline;
+}
