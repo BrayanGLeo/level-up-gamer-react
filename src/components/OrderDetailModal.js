@@ -25,10 +25,10 @@ const OrderDetailModal = ({ show, onHide, order }) => {
                                         <strong>{item.nombre}</strong>
                                         
                                         <span style={{ color: '#D3D3D3' }}>
-                                            (x{item.quantity} - {formatPrice(item.price)} c/u)
+                                            (x{item.quantity} - {formatPrice(item.precio)} c/u)
                                         </span>
                                     </div>
-                                    <span>{formatPrice(item.price * item.quantity)}</span>
+                                    <span>{formatPrice(item.precio * item.quantity)}</span>
                                 </div>
                             ))}
                         </div>

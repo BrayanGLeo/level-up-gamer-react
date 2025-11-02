@@ -22,3 +22,53 @@
 .address-card .card-body strong {
     color: #FFFFFF;
 }
+
+.delivery-method-card {
+    cursor: pointer;
+    border: 2px solid #333;
+    background-color: rgba(255, 255, 255, 0.05);
+    transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    margin-bottom: 1rem;
+}
+
+.delivery-method-card:hover {
+    border-color: #1E90FF;
+}
+
+.delivery-method-card.active {
+    border-color: #39FF14;
+    box-shadow: 0 0 10px rgba(57, 255, 20, 0.3);
+}
+
+.delivery-method-card .form-check-input {
+    display: none;
+}
+
+.delivery-method-card .form-check-label {
+    display: block;
+    padding: 1rem;
+    cursor: pointer;
+}
+
+.toast-container {
+    z-index: 9999;
+}
+
+.toast.custom-toast {
+    background-color: #0d0d0d;
+    color: #ffffff;
+    border: 1px solid #39FF14;
+    font-family: 'Roboto', sans-serif;
+    box-shadow: 0 0 20px rgba(57, 255, 20, 0.3);
+}
+
+.toast.custom-toast .toast-header {
+    background-color: #1a1a1a;
+    color: #1E90FF;
+    font-family: 'Orbitron', sans-serif;
+    border-bottom: 1px solid #1E90FF;
+}
+
+.toast.custom-toast .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}

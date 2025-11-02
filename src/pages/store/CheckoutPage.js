@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Form, Button, Row, Col, Nav, Card, Alert } from 'react-bootstrap';
+import { Container, Form, Button, Row, Col, Nav, Card, Alert, Toast, ToastContainer } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
@@ -29,8 +29,9 @@ const CheckoutPage = () => {
 
     const [savedAddresses, setSavedAddresses] = useState([]);
     const [selectedAddressId, setSelectedAddressId] = useState(null);
-
     const [modalInfo, setModalInfo] = useState({ show: false, title: '', message: '' });
+
+    const [showSaveToast, setShowSaveToast] = useState(false);
 
     useEffect(() => {
         if (currentUser) {
@@ -153,6 +154,35 @@ const CheckoutPage = () => {
         navigate('/pedidos');
     };
 
+    const handleSaveAddress = () => {
+        if (validateStep2() && currentUser) {
+            const newAddress = {
+                alias: `${formData.calle} ${formData.numero}`,
+                region: formData.region,
+                comuna: formData.comuna,
+                calle: formData.calle,
+                numero: formData.numero,
+                depto: formData.depto,
+                recibeNombre: formData.recibeNombre,
+                recibeApellido: formData.recibeApellido,
+                recibeTelefono: formData.recibeTelefono
+            };
+
+            const updatedUser = addAddress(currentUser.email, newAddress);
+            updateCurrentUser(updatedUser);
+
+            setSavedAddresses(updatedUser.addresses);
+
+            setSelectedAddressId(newAddress.id);
+
+            setShowSaveToast(true);
+        } else if (!currentUser) {
+            alert("Debes iniciar sesión para guardar una dirección.");
+        } else {
+            alert("Por favor, completa todos los campos de dirección antes de guardar.");
+        }
+    };
+
     const renderStep1 = () => (
         <Card>
             <Card.Body>
@@ -180,9 +210,45 @@ const CheckoutPage = () => {
                 <Card.Title>Paso 2: Forma de entrega</Card.Title>
                 <Form>
                     <Form.Group className="form-group">
-                        <Form.Check type="radio" name="deliveryMethod" id="despacho" label="Despacho a Domicilio" value="despacho" checked={deliveryMethod === 'despacho'} onChange={(e) => setDeliveryMethod(e.target.value)} />
-                        <Form.Check type="radio" name="deliveryMethod" id="retiro" label="Retiro en Tienda" value="retiro" checked={deliveryMethod === 'retiro'} onChange={(e) => setDeliveryMethod(e.target.value)} />
+                        <Card
+                            className={`delivery-method-card ${deliveryMethod === 'despacho' ? 'active' : ''}`}
+                            onClick={() => setDeliveryMethod('despacho')}
+                        >
+                            <Form.Check
+                                type="radio"
+                                name="deliveryMethod"
+                                id="despacho"
+                                value="despacho"
+                                checked={deliveryMethod === 'despacho'}
+                                onChange={(e) => setDeliveryMethod(e.target.value)}
+                                className="d-none"
+                            />
+                            <Form.Check.Label htmlFor="despacho">
+                                <strong>Despacho a Domicilio</strong>
+                                <p className="text-secondary mb-0">Recibe tu pedido en la comodidad de tu casa.</p>
+                            </Form.Check.Label>
+                        </Card>
+
+                        <Card
+                            className={`delivery-method-card ${deliveryMethod === 'retiro' ? 'active' : ''}`}
+                            onClick={() => setDeliveryMethod('retiro')}
+                        >
+                            <Form.Check
+                                type="radio"
+                                name="deliveryMethod"
+                                id="retiro"
+                                value="retiro"
+                                checked={deliveryMethod === 'retiro'}
+                                onChange={(e) => setDeliveryMethod(e.target.value)}
+                                className="d-none"
+                            />
+                            <Form.Check.Label htmlFor="retiro">
+                                <strong>Retiro en Tienda</strong>
+                                <p className="text-secondary mb-0">Retira sin costo en nuestra tienda.</p>
+                            </Form.Check.Label>
+                        </Card>
                     </Form.Group>
+
                     {deliveryMethod === 'despacho' ? (
                         <>
                             <h5>Dirección de entrega:</h5>
@@ -190,7 +256,10 @@ const CheckoutPage = () => {
                                 <Row className="mb-3">
                                     {savedAddresses.map(addr => (
                                         <Col md={6} key={addr.id} className="mb-2">
-                                            <Card className={`address-card ${selectedAddressId === addr.id ? 'active' : ''}`} onClick={() => handleSelectAddress(addr)}>
+                                            <Card
+                                                className={`address-card ${selectedAddressId === addr.id ? 'active' : ''}`}
+                                                onClick={() => handleSelectAddress(addr)}
+                                            >
                                                 <Card.Body>
                                                     <strong>{addr.alias}</strong><br />
                                                     {addr.calle} {addr.numero}<br />
@@ -202,11 +271,13 @@ const CheckoutPage = () => {
                                     ))}
                                 </Row>
                             )}
+
                             {currentUser && savedAddresses.length > 0 && selectedAddressId !== 'new' && (
                                 <Button variant="outline-primary" size="sm" className="mb-3" onClick={() => { setSelectedAddressId('new'); setFormData(initialFormState); }}>
                                     Usar otra dirección
                                 </Button>
                             )}
+
                             {(!currentUser || savedAddresses.length === 0 || selectedAddressId === 'new') && (
                                 <>
                                     <Row>
@@ -225,6 +296,12 @@ const CheckoutPage = () => {
                                         <Col md={6}><Form.Group className="form-group" controlId="recibeApellido"><Form.Label>Apellido:</Form.Label><Form.Control type="text" name="recibeApellido" value={formData.recibeApellido} onChange={handleChange} isInvalid={!!errors.recibeApellido} /><Form.Control.Feedback type="invalid">{errors.recibeApellido}</Form.Control.Feedback></Form.Group></Col>
                                     </Row>
                                     <Form.Group className="form-group" controlId="recibeTelefono"><Form.Label>Teléfono:</Form.Label><Form.Control type="tel" name="recibeTelefono" value={formData.recibeTelefono} onChange={handleChange} isInvalid={!!errors.recibeTelefono} /><Form.Control.Feedback type="invalid">{errors.recibeTelefono}</Form.Control.Feedback></Form.Group>
+
+                                    {currentUser && (
+                                        <Button variant="outline-success" size="sm" className="mb-3" onClick={handleSaveAddress}>
+                                            Guardar dirección en mi libreta
+                                        </Button>
+                                    )}
                                 </>
                             )}
                         </>
@@ -240,6 +317,7 @@ const CheckoutPage = () => {
                             </Alert>
                         </>
                     )}
+
                     <div className="d-flex justify-content-between">
                         <Button variant="secondary" onClick={prevStep}>Volver</Button>
                         <Button className="btn" onClick={nextStep}>Continuar</Button>
@@ -261,8 +339,7 @@ const CheckoutPage = () => {
                                 <span style={{ color: '#D3D3D3' }}>
                                     {item.nombre} (x{item.quantity} - ${item.precio.toLocaleString('es-CL')} c/u)
                                 </span>
-
-                                <strong>${(item.price * item.quantity).toLocaleString('es-CL')}</strong>
+                                <strong>${(item.precio * item.quantity).toLocaleString('es-CL')}</strong>
                             </div>
                         ))}
                         <hr />
@@ -308,6 +385,7 @@ const CheckoutPage = () => {
             <main className="form-container">
                 <Container>
                     <h2 className="section-title">Finalizar Compra</h2>
+
                     <Nav variant="pills" justify className="mb-4">
                         <Nav.Item><Nav.Link active={step === 1} disabled={step < 1} onClick={() => step > 1 && setStep(1)}>1. Tus datos</Nav.Link></Nav.Item>
                         <Nav.Item><Nav.Link active={step === 2} disabled={step < 2} onClick={() => step > 2 && setStep(2)}>2. Forma de entrega</Nav.Link></Nav.Item>
@@ -326,6 +404,21 @@ const CheckoutPage = () => {
                 title={modalInfo.title}
                 message={modalInfo.message}
             />
+
+            <ToastContainer position="top-end" className="p-3 toast-container">
+                <Toast
+                    onClose={() => setShowSaveToast(false)}
+                    show={showSaveToast}
+                    delay={2000}
+                    autohide
+                    className="custom-toast"
+                >
+                    <Toast.Header>
+                        <strong className="me-auto">Notificación</strong>
+                    </Toast.Header>
+                    <Toast.Body>¡Dirección guardada en tu perfil!</Toast.Body>
+                </Toast>
+            </ToastContainer>
         </>
     );
 };
