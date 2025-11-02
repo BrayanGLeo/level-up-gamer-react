@@ -16,17 +16,18 @@ const getInitialUsers = () => {
             addresses: [
                 {
                     id: 1,
-                    alias: 'Casa Principal',
+                    alias: 'Casa (Ejemplo SP Digital)',
                     region: 'Biobío',
                     comuna: 'Hualpén',
-                    calle: 'Pasaje La vida',
-                    numero: '#1234',
+                    calle: 'Pasaje Greenlandia',
+                    numero: '#2457',
                     depto: '',
-                    recibeNombre: 'Wacoldo',
-                    recibeApellido: 'Soto',
-                    recibeTelefono: '+56999999999'
+                    recibeNombre: 'Brayan',
+                    recibeApellido: 'Godoy',
+                    recibeTelefono: '+56978979900'
                 }
-            ]
+            ],
+            orders: []
         };
         localStorage.setItem(USERS_KEY, JSON.stringify([adminUser]));
         return [adminUser];
@@ -46,6 +47,7 @@ export const findUserByEmail = (email) => {
     return users.find(u => u.email === email);
 };
 
+
 export const registerUser = (newUser) => {
     if (findUserByEmail(newUser.email)) {
         throw new Error('Este correo electrónico ya está registrado.');
@@ -54,7 +56,8 @@ export const registerUser = (newUser) => {
     const userToSave = {
         ...newUser,
         role: newUser.email.endsWith('@admin.cl') ? 'Administrador' : 'Cliente',
-        addresses: []
+        addresses: [],
+        orders: []
     };
 
     users.push(userToSave);
@@ -71,9 +74,10 @@ export const saveUser = (user) => {
     const index = users.findIndex(u => u.email === user.email);
     if (index > -1) {
         const existingAddresses = users[index].addresses || [];
-        users[index] = { ...users[index], ...user, addresses: existingAddresses };
+        const existingOrders = users[index].orders || [];
+        users[index] = { ...users[index], ...user, addresses: existingAddresses, orders: existingOrders };
     } else {
-        users.push({ ...user, addresses: [] });
+        users.push({ ...user, addresses: [], orders: [] });
     }
     localStorage.setItem(USERS_KEY, JSON.stringify(users));
     return user;
@@ -94,7 +98,7 @@ export const addAddress = (email, newAddress) => {
         }
         newAddress.id = Date.now();
         users[userIndex].addresses.push(newAddress);
-
+        
         localStorage.setItem(USERS_KEY, JSON.stringify(users));
         if (JSON.parse(localStorage.getItem('currentUser')).email === email) {
             localStorage.setItem('currentUser', JSON.stringify(users[userIndex]));
@@ -109,7 +113,25 @@ export const deleteAddress = (email, addressId) => {
     const userIndex = users.findIndex(u => u.email === email);
     if (userIndex > -1 && users[userIndex].addresses) {
         users[userIndex].addresses = users[userIndex].addresses.filter(addr => addr.id !== addressId);
+        
+        localStorage.setItem(USERS_KEY, JSON.stringify(users));
+        if (JSON.parse(localStorage.getItem('currentUser')).email === email) {
+            localStorage.setItem('currentUser', JSON.stringify(users[userIndex]));
+        }
+        return users[userIndex];
+    }
+    return null;
+};
 
+export const addOrderToUser = (email, newOrder) => {
+    let users = getInitialUsers();
+    const userIndex = users.findIndex(u => u.email === email);
+    if (userIndex > -1) {
+        if (!users[userIndex].orders) {
+            users[userIndex].orders = [];
+        }
+        users[userIndex].orders.push(newOrder);
+        
         localStorage.setItem(USERS_KEY, JSON.stringify(users));
         if (JSON.parse(localStorage.getItem('currentUser')).email === email) {
             localStorage.setItem('currentUser', JSON.stringify(users[userIndex]));

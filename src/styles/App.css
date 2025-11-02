@@ -1,4 +1,4 @@
-body, #root, .card {
+body,#root,.card {
     background-color: #000000 !important;
     color: #ffffff !important;
     font-family: 'Roboto', sans-serif;
@@ -32,7 +32,6 @@ h3 {
     text-align: center;
 }
 
-
 .text-secondary {
     color: #D3D3D3 !important;
 }
@@ -50,11 +49,6 @@ header .container {
     display: flex;
     justify-content: space-between;
     align-items: center;
-}
-
-.logo {
-    font-size: 1.5rem;
-    font-family: 'Roboto', sans-serif !important;
 }
 
 header nav ul {
@@ -89,8 +83,8 @@ header nav ul li a:hover {
 .dropdown-menu {
     display: none;
     position: absolute;
-    background-color: #000!important;
-    border: 1px solid #1E90FF!important;
+    background-color: #000 !important;
+    border: 1px solid #1E90FF !important;
     border-radius: 5px;
     min-width: 160px;
     z-index: 1001;
@@ -116,23 +110,18 @@ header nav ul li a:hover {
     color: #39FF14 !important;
 }
 
-.hamburger-menu {
-    display: none;
-    cursor: pointer;
-    background: none;
-    border: none;
-    padding: 0;
+.navbar-brand.logo {
+    font-family: 'Orbitron', sans-serif !important;
+    font-weight: 700;
+    font-size: 1.5rem !important;
+    color: #1E90FF !important;
 }
 
-.hamburger-menu span {
-    display: block;
-    width: 25px;
-    height: 3px;
-    background-color: #fff !important;
-    margin: 5px 0;
-    transition: 0.3s;
+.header-nav .nav-link {
+    font-family: 'Orbitron', sans-serif !important;
+    font-weight: 700;
+    color: #FFFFFF !important;
 }
-
 
 .hero {
     background-size: 100% auto;
@@ -142,12 +131,6 @@ header nav ul li a:hover {
     padding: 330px 0;
     margin-top: 60px;
     position: relative;
-}
-
-.hero-title {
-    font-size: 3rem;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5) !important;
-    color: #1E90FF !important;
 }
 
 .hero .container {
@@ -164,12 +147,16 @@ header nav ul li a:hover {
 }
 
 .hero-title {
+    font-size: 3rem;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5) !important;
+    color: #1E90FF !important;
     top: 6%;
 }
 
 .hero-text {
+    font-family: 'Orbitron', sans-serif !important;
     color: rgb(87, 236, 236) !important;
-    top: 77%;
+    top: 75.5%;
     margin: 0 auto;
     width: 30%;
     left: 50.8%;
@@ -181,6 +168,7 @@ header nav ul li a:hover {
     height: 6%;
     background-color: #1E90FF !important;
     color: #ffffff !important;
+    font-family: 'Orbitron', sans-serif !important;
     border: none;
     padding: 10px;
 }
@@ -280,11 +268,19 @@ footer {
     margin-bottom: 15px;
 }
 
-
 @media (max-width: 768px) {
     .hamburger-menu {
         display: block;
         z-index: 1002;
+    }
+
+    .hamburger-menu span {
+        display: block;
+        width: 25px;
+        height: 3px;
+        background-color: #fff !important;
+        margin: 5px 0;
+        transition: 0.3s;
     }
 
     header nav ul {
@@ -295,7 +291,7 @@ footer {
         left: 0;
         width: 100%;
         background-color: #000 !important;
-        border-top: 1px solid #1E90FF ;
+        border-top: 1px solid #1E90FF;
     }
 
     header nav ul.show {
@@ -333,17 +329,4 @@ footer {
         padding: 10px;
         top: 80%;
     }
-}
-
-.navbar-brand.logo {
-    font-family: 'Orbitron', sans-serif !important;
-    font-weight: 700;
-    font-size: 1.5rem !important;
-    color: #1E90FF !important;
-}
-
-.header-nav .nav-link {
-    font-family: 'Orbitron', sans-serif !important;
-    font-weight: 700;
-    color: #FFFFFF !important;
 }

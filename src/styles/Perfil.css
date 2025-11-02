@@ -104,3 +104,30 @@
     border-radius: 5px;
     margin-right: 15px;
 }
+
+.order-items-column {
+    border-right: 1px solid #333;
+}
+
+.order-shipping-column h4 {
+    color: #39FF14;
+}
+
+.order-shipping-column p {
+    font-size: 0.95rem;
+    color: #D3D3D3;
+}
+
+.order-item-info-modal {
+    flex-grow: 1;
+    margin-right: 10px;
+}
+
+@media (max-width: 767px) {
+    .order-items-column {
+        border-right: none;
+        border-bottom: 1px solid #333;
+        padding-bottom: 20px;
+        margin-bottom: 20px;
+    }
+}

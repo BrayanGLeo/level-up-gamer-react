@@ -1,0 +1,69 @@
+.custom-modal .modal-content {
+    background-color: #000 !important;
+    color: #fff !important;
+    border: 2px solid #39FF14 !important;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(57, 255, 20, 0.5) !important;
+}
+
+.custom-modal .modal-header {
+    border-bottom: 1px solid #1E90FF !important;
+}
+
+.custom-modal .modal-title {
+    font-family: 'Orbitron', sans-serif;
+    color: #1E90FF !important;
+}
+
+.custom-modal .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+.custom-modal .modal-body {
+    border-bottom: 1px solid #333 !important;
+}
+
+.modal-product-details {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.modal-product-image {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 5px;
+    border: 1px solid #1E90FF;
+}
+
+.modal-product-info h5 {
+    color: #ffffff;
+    font-family: 'Roboto', sans-serif;
+    font-weight: 700;
+}
+
+.modal-product-info .product-price {
+    color: #39FF14;
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+.custom-modal .modal-footer {
+    border-top: none !important;
+    justify-content: space-between;
+}
+
+.custom-modal .btn-danger-neon {
+    background-color: #dc3545;
+    border: 1px solid #ffffff;
+    color: #ffffff;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+.custom-modal .btn-danger-neon:hover {
+    background-color: #ff0000;
+    color: #ffffff;
+    box-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+}

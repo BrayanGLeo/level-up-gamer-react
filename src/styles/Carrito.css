@@ -107,3 +107,32 @@
 .btn-cantidad:hover {
     background-color: #39FF14;
 }
+
+.carrito-item-info {
+    position: relative;
+}
+
+.btn-remove-item {
+    position: absolute;
+    top: -40%;
+    right: 0;
+    width: 25px;
+    height: 25px;
+    background-color: #dc3545;
+    color: #ffffff;
+    border: 1px solid #ff0000;
+    border-radius: 5px;
+    font-weight: bold;
+    font-size: 1rem;
+    line-height: 1.2;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-remove-item:hover {
+    background-color: #ff0000;
+    color: #ffffff;
+    box-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+    transform: scale(1.1);
+}
+

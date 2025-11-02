@@ -1,12 +1,10 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { findUser, registerUser } from '../data/userData';
-import { useNavigate } from 'react-router-dom';
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
     const [currentUser, setCurrentUser] = useState(null);
-    const navigate = useNavigate();
 
     useEffect(() => {
         const storedUser = localStorage.getItem('currentUser');
@@ -24,18 +22,14 @@ export const AuthProvider = ({ children }) => {
         const user = findUser(email, password);
         if (user) {
             updateCurrentUser(user);
-
+            
             if (user.role === 'Administrador') {
-                alert('Inicio de sesión de administrador exitoso.');
-                navigate('/admin');
+                return { success: true, redirect: '/admin', message: 'Inicio de sesión de administrador exitoso.' };
             } else {
-                alert('¡Inicio de Sesión Exitoso!');
-                navigate('/');
+                return { success: true, redirect: '/', message: '¡Inicio de Sesión Exitoso!' };
             }
-            return true;
         } else {
-            alert('Correo o contraseña incorrectos.');
-            return false;
+            return { success: false, message: 'Correo o contraseña incorrectos.' };
         }
     };
 
@@ -45,24 +39,19 @@ export const AuthProvider = ({ children }) => {
             updateCurrentUser(newUser);
 
             if (newUser.role === 'Administrador') {
-                alert('Cuenta de administrador registrada con éxito.');
-                navigate('/admin');
+                return { success: true, redirect: '/admin', message: 'Cuenta de administrador registrada con éxito.' };
             } else {
-                alert('¡Registro Exitoso! Bienvenido.');
-                navigate('/');
+                return { success: true, redirect: '/', message: '¡Registro Exitoso! Bienvenido.' };
             }
-            return true;
         } catch (error) {
-            alert(error.message);
-            return false;
+            return { success: false, message: error.message };
         }
     };
 
     const logout = () => {
         localStorage.removeItem('currentUser');
         setCurrentUser(null);
-        alert('Has cerrado la sesión.');
-        navigate('/');
+        return { success: true, message: 'Has cerrado la sesión.', redirect: '/' };
     };
 
     return (

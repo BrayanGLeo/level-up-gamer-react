@@ -4,7 +4,9 @@ import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import { regionesData } from '../../data/chileData';
+import { addOrderToUser } from '../../data/userData';
 import { validateRut, validateEmail, validatePhone, validateRequiredField } from '../../utils/validation';
+import NotificationModal from '../../components/NotificationModal';
 import '../../styles/Forms.css';
 import '../../styles/Checkout.css';
 
@@ -21,12 +23,14 @@ const CheckoutPage = () => {
     const [deliveryMethod, setDeliveryMethod] = useState('despacho');
     const [comunas, setComunas] = useState([]);
 
-    const { currentUser } = useAuth();
+    const { currentUser, updateCurrentUser } = useAuth();
     const { cartItems, getCartTotal, clearCart } = useCart();
     const navigate = useNavigate();
 
     const [savedAddresses, setSavedAddresses] = useState([]);
     const [selectedAddressId, setSelectedAddressId] = useState(null);
+
+    const [modalInfo, setModalInfo] = useState({ show: false, title: '', message: '' });
 
     useEffect(() => {
         if (currentUser) {
@@ -50,7 +54,6 @@ const CheckoutPage = () => {
         if (!validateRut(formData.rut)) newErrors.rut = 'El RUT no es válido.';
         if (!validateEmail(formData.email)) newErrors.email = 'El E-mail no es válido.';
         if (!validatePhone(formData.telefono)) newErrors.telefono = 'El teléfono no es válido (ej: 912345678).';
-
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -68,12 +71,10 @@ const CheckoutPage = () => {
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
-
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
         setSelectedAddressId('new');
     };
-
     const handleRegionChange = (e) => {
         const regionNombre = e.target.value;
         setFormData({ ...formData, region: regionNombre, comuna: '' });
@@ -81,7 +82,6 @@ const CheckoutPage = () => {
         setComunas(regionEncontrada ? regionEncontrada.comunas : []);
         setSelectedAddressId('new');
     };
-
     const handleSelectAddress = (address) => {
         setFormData({ ...formData, ...address });
         setSelectedAddressId(address.id);
@@ -89,7 +89,6 @@ const CheckoutPage = () => {
         setComunas(regionEncontrada ? regionEncontrada.comunas : []);
         setErrors({});
     };
-
     const nextStep = () => {
         let isValid = false;
         if (step === 1) isValid = validateStep1();
@@ -101,15 +100,57 @@ const CheckoutPage = () => {
         }
     };
     const prevStep = () => setStep(prev => prev - 1);
-    const handleSimulatedPayment = (e) => {
-        e.preventDefault();
-        alert(`¡Gracias por tu compra, ${formData.nombre}!\nTu pedido ha sido realizado con éxito.`);
-        clearCart();
-        navigate('/compra-exitosa');
-    };
     const getPickupDate = () => {
         const date = new Date(Date.now() + 10 * 24 * 60 * 60 * 1000);
         return date.toLocaleDateString('es-CL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    };
+
+    const handleSimulatedPayment = (e) => {
+        e.preventDefault();
+
+        const newOrder = {
+            number: Date.now(),
+            date: new Date().toLocaleDateString('es-CL'),
+            items: cartItems,
+            total: getCartTotal(),
+            customer: {
+                name: formData.nombre,
+                surname: formData.apellidos,
+                email: formData.email,
+                phone: formData.telefono,
+            },
+            shipping: deliveryMethod === 'despacho' ? {
+                calle: formData.calle,
+                numero: formData.numero,
+                comuna: formData.comuna,
+                region: formData.region,
+                recibe: `${formData.recibeNombre} ${formData.recibeApellido}`
+            } : {
+                type: 'Retiro en Tienda'
+            }
+        };
+
+        if (currentUser) {
+            const updatedUser = addOrderToUser(currentUser.email, newOrder);
+            updateCurrentUser(updatedUser);
+        } else {
+            const orders = JSON.parse(localStorage.getItem('orders')) || [];
+            orders.push(newOrder);
+            localStorage.setItem('orders', JSON.stringify(orders));
+        }
+
+        clearCart();
+
+        setModalInfo({
+            show: true,
+            title: '¡Compra Exitosa!',
+            message: `¡Gracias por tu compra, ${formData.nombre}! Tu pedido #${newOrder.number} ha sido realizado con éxito.`
+        });
+    };
+
+    const handleModalClose = () => {
+        setModalInfo({ show: false, title: '', message: '' });
+        navigate('/pedidos');
     };
 
     const renderStep1 = () => (
@@ -133,7 +174,6 @@ const CheckoutPage = () => {
             </Card.Body>
         </Card>
     );
-
     const renderStep2 = () => (
         <Card>
             <Card.Body>
@@ -143,7 +183,6 @@ const CheckoutPage = () => {
                         <Form.Check type="radio" name="deliveryMethod" id="despacho" label="Despacho a Domicilio" value="despacho" checked={deliveryMethod === 'despacho'} onChange={(e) => setDeliveryMethod(e.target.value)} />
                         <Form.Check type="radio" name="deliveryMethod" id="retiro" label="Retiro en Tienda" value="retiro" checked={deliveryMethod === 'retiro'} onChange={(e) => setDeliveryMethod(e.target.value)} />
                     </Form.Group>
-
                     {deliveryMethod === 'despacho' ? (
                         <>
                             <h5>Dirección de entrega:</h5>
@@ -151,10 +190,7 @@ const CheckoutPage = () => {
                                 <Row className="mb-3">
                                     {savedAddresses.map(addr => (
                                         <Col md={6} key={addr.id} className="mb-2">
-                                            <Card
-                                                className={`address-card ${selectedAddressId === addr.id ? 'active' : ''}`}
-                                                onClick={() => handleSelectAddress(addr)}
-                                            >
+                                            <Card className={`address-card ${selectedAddressId === addr.id ? 'active' : ''}`} onClick={() => handleSelectAddress(addr)}>
                                                 <Card.Body>
                                                     <strong>{addr.alias}</strong><br />
                                                     {addr.calle} {addr.numero}<br />
@@ -166,13 +202,11 @@ const CheckoutPage = () => {
                                     ))}
                                 </Row>
                             )}
-
                             {currentUser && savedAddresses.length > 0 && selectedAddressId !== 'new' && (
                                 <Button variant="outline-primary" size="sm" className="mb-3" onClick={() => { setSelectedAddressId('new'); setFormData(initialFormState); }}>
                                     Usar otra dirección
                                 </Button>
                             )}
-
                             {(!currentUser || savedAddresses.length === 0 || selectedAddressId === 'new') && (
                                 <>
                                     <Row>
@@ -206,7 +240,6 @@ const CheckoutPage = () => {
                             </Alert>
                         </>
                     )}
-
                     <div className="d-flex justify-content-between">
                         <Button variant="secondary" onClick={prevStep}>Volver</Button>
                         <Button className="btn" onClick={nextStep}>Continuar</Button>
@@ -225,7 +258,10 @@ const CheckoutPage = () => {
                         <h5>Resumen del Pedido</h5>
                         {cartItems.map(item => (
                             <div key={item.codigo} className="d-flex justify-content-between my-2">
-                                <span>{item.nombre} (x{item.quantity})</span>
+                                <span style={{ color: '#D3D3D3' }}>
+                                    {item.nombre} (x{item.quantity} - ${item.precio.toLocaleString('es-CL')} c/u)
+                                </span>
+
                                 <strong>${(item.price * item.quantity).toLocaleString('es-CL')}</strong>
                             </div>
                         ))}
@@ -248,7 +284,7 @@ const CheckoutPage = () => {
                     </Col>
                     <Col md={5}>
                         <h5>Método de Pago (Simulado)</h5>
-                        <Form onSubmit={handleSimulatedPayment}>
+                        <div>
                             <Form.Group className="form-group">
                                 <Form.Label>Método de Pago</Form.Label>
                                 <Form.Select defaultValue="webpay">
@@ -256,8 +292,10 @@ const CheckoutPage = () => {
                                     <option value="transferencia">Transferencia (Simulación)</option>
                                 </Form.Select>
                             </Form.Group>
-                            <Button type="submit" className="btn w-100">Realizar Pedido y Pagar</Button>
-                        </Form>
+                            <Button onClick={handleSimulatedPayment} className="btn w-100">
+                                Realizar Pedido y Pagar
+                            </Button>
+                        </div>
                     </Col>
                 </Row>
                 <Button variant="secondary" onClick={prevStep} className="mt-3">Volver</Button>
@@ -266,21 +304,29 @@ const CheckoutPage = () => {
     );
 
     return (
-        <main className="form-container">
-            <Container>
-                <h2 className="section-title">Finalizar Compra</h2>
+        <>
+            <main className="form-container">
+                <Container>
+                    <h2 className="section-title">Finalizar Compra</h2>
+                    <Nav variant="pills" justify className="mb-4">
+                        <Nav.Item><Nav.Link active={step === 1} disabled={step < 1} onClick={() => step > 1 && setStep(1)}>1. Tus datos</Nav.Link></Nav.Item>
+                        <Nav.Item><Nav.Link active={step === 2} disabled={step < 2} onClick={() => step > 2 && setStep(2)}>2. Forma de entrega</Nav.Link></Nav.Item>
+                        <Nav.Item><Nav.Link active={step === 3} disabled={step < 3}>3. Resumen y Pago</Nav.Link></Nav.Item>
+                    </Nav>
 
-                <Nav variant="pills" justify className="mb-4">
-                    <Nav.Item><Nav.Link active={step === 1} disabled={step < 1} onClick={() => step > 1 && setStep(1)}>1. Tus datos</Nav.Link></Nav.Item>
-                    <Nav.Item><Nav.Link active={step === 2} disabled={step < 2} onClick={() => step > 2 && setStep(2)}>2. Forma de entrega</Nav.Link></Nav.Item>
-                    <Nav.Item><Nav.Link active={step === 3} disabled={step < 3}>3. Resumen y Pago</Nav.Link></Nav.Item>
-                </Nav>
+                    {step === 1 && renderStep1()}
+                    {step === 2 && renderStep2()}
+                    {step === 3 && renderStep3()}
+                </Container>
+            </main>
 
-                {step === 1 && renderStep1()}
-                {step === 2 && renderStep2()}
-                {step === 3 && renderStep3()}
-            </Container>
-        </main>
+            <NotificationModal
+                show={modalInfo.show}
+                onHide={handleModalClose}
+                title={modalInfo.title}
+                message={modalInfo.message}
+            />
+        </>
     );
 };
 

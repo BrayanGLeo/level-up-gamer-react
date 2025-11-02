@@ -6,7 +6,9 @@
     min-height: calc(100vh - 120px);
 }
 
-.login-section, .register-section, .checkout-section {
+.login-section,
+.register-section,
+.checkout-section {
     background-color: rgba(255, 255, 255, 0.05);
     padding: 40px;
     border-radius: 10px;
@@ -27,19 +29,20 @@
     font-weight: bold;
 }
 
-.form-group input, .form-group select {
+.form-group input,
+.form-group select {
     width: 100%;
     padding: 10px;
-    border: 1px solid #39FF14; 
+    border: 1px solid #39FF14;
     background-color: #000000;
     color: #FFFFFF;
     border-radius: 5px;
     box-sizing: border-box;
-    transition: border-color 0.3s ease; 
+    transition: border-color 0.3s ease;
 }
 
 .form-group input.input-error {
-    border-color: #FF3914; 
+    border-color: #FF3914;
 }
 
 .form-group small {
@@ -67,4 +70,42 @@
 
 .form-link a:hover {
     text-decoration: underline;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    background-color: #000000 !important;
+    color: #FFFFFF !important;
+    font-weight: 500;
+    box-shadow: none;
+    border-color: #39FF14;
+}
+
+.form-group input:-webkit-autofill,
+.form-group input:-webkit-autofill:hover,
+.form-group input:-webkit-autofill:focus,
+.form-group input:-webkit-autofill:active {
+    -webkit-text-fill-color: #FFFFFF !important;
+    -webkit-box-shadow: 0 0 0px 1000px #000000 inset !important;
+    font-weight: 500;
+    caret-color: white;
+}
+
+.form-group input::placeholder,
+.form-group select::placeholder {
+    color: rgba(255, 255, 255, 0.5) !important;
+    opacity: 1;
+}
+
+.form-group input::-webkit-input-placeholder {
+    color: rgba(255, 255, 255, 0.5) !important;
+}
+
+.form-group input::-moz-placeholder {
+    color: rgba(255, 255, 255, 0.5) !important;
+    opacity: 1;
+}
+
+.form-group input:-ms-input-placeholder {
+    color: rgba(255, 255, 255, 0.5) !important;
 }

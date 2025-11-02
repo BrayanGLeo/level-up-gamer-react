@@ -28,7 +28,6 @@ export const CartProvider = ({ children }) => {
 
         setCartItems(newCart);
         updateLocalStorage(newCart);
-        alert(`"${product.nombre}" ha sido añadido al carrito.`);
     };
 
     const updateQuantity = (codigo, amount) => {
@@ -38,6 +37,12 @@ export const CartProvider = ({ children }) => {
 
         newCart = newCart.filter(item => item.quantity > 0);
 
+        setCartItems(newCart);
+        updateLocalStorage(newCart);
+    };
+
+    const removeFromCart = (codigo) => {
+        const newCart = cartItems.filter(item => item.codigo !== codigo);
         setCartItems(newCart);
         updateLocalStorage(newCart);
     };
@@ -56,7 +61,7 @@ export const CartProvider = ({ children }) => {
     };
 
     return (
-        <CartContext.Provider value={{ cartItems, addToCart, updateQuantity, clearCart, getCartTotal, getCartItemCount }}>
+        <CartContext.Provider value={{ cartItems, addToCart, updateQuantity, removeFromCart, clearCart, getCartTotal, getCartItemCount }}>
             {children}
         </CartContext.Provider>
     );

@@ -4,13 +4,18 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import '../../styles/Carrito.css';
+import RemoveFromCartModal from '../../components/RemoveFromCartModal';
+import ClearCartModal from '../../components/ClearCartModal';
 
 const CartPage = () => {
-    const { cartItems, updateQuantity, clearCart, getCartTotal } = useCart();
+    const { cartItems, updateQuantity, clearCart, getCartTotal, removeFromCart } = useCart();
     const { currentUser } = useAuth();
     const navigate = useNavigate();
 
     const [showLoginModal, setShowLoginModal] = useState(false);
+    const [showRemoveModal, setShowRemoveModal] = useState(false);
+    const [productToRemove, setProductToRemove] = useState(null);
+    const [showClearModal, setShowClearModal] = useState(false);
 
     const handleCheckoutClick = () => {
         if (currentUser) {
@@ -19,10 +24,35 @@ const CartPage = () => {
             setShowLoginModal(true);
         }
     };
-
     const handleGuestCheckout = () => {
         setShowLoginModal(false);
         navigate('/checkout');
+    };
+
+    const handleOpenRemoveModal = (product) => {
+        setProductToRemove(product);
+        setShowRemoveModal(true);
+    };
+    const handleCloseRemoveModal = () => {
+        setShowRemoveModal(false);
+        setProductToRemove(null);
+    };
+    const handleConfirmRemove = () => {
+        if (productToRemove) {
+            removeFromCart(productToRemove.codigo);
+        }
+        handleCloseRemoveModal();
+    };
+
+    const handleOpenClearModal = () => {
+        setShowClearModal(true);
+    };
+    const handleCloseClearModal = () => {
+        setShowClearModal(false);
+    };
+    const handleConfirmClearCart = () => {
+        clearCart();
+        handleCloseClearModal();
     };
 
     return (
@@ -60,6 +90,15 @@ const CartPage = () => {
                                                 <p className="carrito-item-precio">
                                                     ${(item.precio * item.quantity).toLocaleString('es-CL')}
                                                 </p>
+                                                
+                                                <button
+                                                    className="btn-remove-item"
+                                                    onClick={() => handleOpenRemoveModal(item)}
+                                                    title="Eliminar producto del carrito"
+                                                >
+                                                    X
+                                                </button>
+                                                
                                             </div>
                                         </div>
                                     ))}
@@ -69,7 +108,7 @@ const CartPage = () => {
                                     <div className="carrito-acciones-container">
                                         <h3>Total: <span id="total-precio">${getCartTotal().toLocaleString('es-CL')} CLP</span></h3>
                                         <div className="carrito-botones">
-                                            <Button id="vaciar-carrito" variant="danger" onClick={clearCart}>
+                                            <Button id="vaciar-carrito" variant="danger" onClick={handleOpenClearModal}>
                                                 Vaciar Carrito
                                             </Button>
                                             <Button onClick={handleCheckoutClick} className="btn">
@@ -104,6 +143,19 @@ const CartPage = () => {
                     </Button>
                 </Modal.Footer>
             </Modal>
+
+            <RemoveFromCartModal
+                show={showRemoveModal}
+                onHide={handleCloseRemoveModal}
+                onConfirm={handleConfirmRemove}
+                product={productToRemove}
+            />
+
+            <ClearCartModal
+                show={showClearModal}
+                onHide={handleCloseClearModal}
+                onConfirm={handleConfirmClearCart}
+            />
         </>
     );
 };
