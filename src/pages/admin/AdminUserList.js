@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Button } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
-import { getUsers, deleteUserByEmail } from '../../data/userData';
+import { getUsers, deleteUserByRut } from '../../data/userData';
 import '../../styles/AdminStyle.css';
 
 const AdminUserList = () => {
@@ -12,14 +12,14 @@ const AdminUserList = () => {
         setUsers(getUsers());
     }, []);
 
-    const handleDelete = (email) => {
-        if (email === 'admin@admin.cl') {
+    const handleDelete = (rut) => {
+        if (rut === '12345678-9') {
             alert('No puedes eliminar al administrador principal.');
             return;
         }
 
         if (window.confirm('¿Estás seguro de que quieres eliminar este usuario?')) {
-            deleteUserByEmail(email);
+            deleteUserByRut(rut);
             setUsers(getUsers());
         }
     };
@@ -45,8 +45,8 @@ const AdminUserList = () => {
                     </thead>
                     <tbody>
                         {users.map(user => (
-                            <tr key={user.email}>
-                                <td>{user.run || 'N/A'}</td>
+                            <tr key={user.rut}>
+                                <td>{user.rut || 'N/A'}</td>
                                 <td>{user.name} {user.surname}</td>
                                 <td>{user.email}</td>
                                 <td>{user.role}</td>
@@ -55,14 +55,14 @@ const AdminUserList = () => {
                                         variant="warning"
                                         size="sm"
                                         className="me-2"
-                                        onClick={() => navigate(`/admin/usuarios/editar/${user.email}`)}
+                                        onClick={() => navigate(`/admin/usuarios/editar/${user.rut}`)}
                                     >
                                         Editar
                                     </Button>
                                     <Button
                                         variant="danger"
                                         size="sm"
-                                        onClick={() => handleDelete(user.email)}
+                                        onClick={() => handleDelete(user.rut)}
                                     >
                                         Eliminar
                                     </Button>

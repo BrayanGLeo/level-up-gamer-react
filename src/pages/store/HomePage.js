@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Container, Row, Col } from 'react-bootstrap';
 import ProductCard from '../../components/ProductCard';
@@ -6,10 +6,21 @@ import BlogPostSummary from '../../components/BlogPostSummary';
 import { getProducts } from '../../data/productData';
 import { getBlogPosts } from '../../data/blogData';
 import heroBackground from '../../assets/Fondo.png';
+import { useCart } from '../../context/CartContext';
+import AddToCartModal from '../../components/AddToCartModal';
 
 const HomePage = () => {
     const featuredProducts = getProducts().slice(0, 4);
     const featuredPosts = getBlogPosts().slice(0, 2);
+    const { addToCart } = useCart();
+    const [showModal, setShowModal] = useState(false);
+    const [selectedProduct, setSelectedProduct] = useState(null);
+
+    const handleAddToCart = (product) => {
+        addToCart(product);
+        setSelectedProduct(product);
+        setShowModal(true);
+    };
 
     const heroStyle = {
         backgroundImage: `url(${heroBackground})`
@@ -31,7 +42,10 @@ const HomePage = () => {
                     <Row>
                         {featuredProducts.map(product => (
                             <Col key={product.codigo} md={4} lg={3} className="mb-4">
-                                <ProductCard product={product} />
+                                <ProductCard
+                                    product={product}
+                                    onAddToCartClick={handleAddToCart}
+                                />
                             </Col>
                         ))}
                     </Row>
@@ -51,6 +65,12 @@ const HomePage = () => {
                     <Link to="/blog" className="btn">Ver Más Novedades</Link>
                 </div>
             </section>
+
+            <AddToCartModal
+                show={showModal}
+                onHide={() => setShowModal(false)}
+                product={selectedProduct}
+            />
         </>
     );
 };

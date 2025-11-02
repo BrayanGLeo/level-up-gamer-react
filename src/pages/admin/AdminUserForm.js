@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Form, Button, Row, Col } from 'react-bootstrap';
 import { useNavigate, useParams } from 'react-router-dom';
-import { findUserByEmail, saveUser } from '../../data/userData';
+import { findUserByRut, saveUser, findUserByEmail } from '../../data/userData';
 import { validateUserForm } from '../../utils/validation';
 import '../../styles/AdminStyle.css';
 
@@ -29,15 +29,15 @@ const AdminUserForm = () => {
     const [errors, setErrors] = useState({});
     const [comunas, setComunas] = useState([]);
     const navigate = useNavigate();
-    const { email } = useParams();
-    const isEditMode = Boolean(email);
+    const { rut } = useParams();
+    const isEditMode = Boolean(rut);
 
     useEffect(() => {
         if (isEditMode) {
-            const user = findUserByEmail(email);
+            const user = findUserByRut(rut);
             if (user) {
                 setFormData({
-                    run: user.run || '',
+                    run: user.rut || '',
                     nombre: user.name,
                     apellidos: user.surname,
                     email: user.email,
@@ -48,41 +48,61 @@ const AdminUserForm = () => {
                     role: user.role
                 });
 
-                // Si el usuario ya tiene una región, se cargan las comunas
                 if (user.region) {
                     setComunas(regionesYComunas[user.region] || []);
                 }
             }
         }
-    }, [isEditMode, email]);
+    }, [isEditMode, rut]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData({ ...formData, [name]: value });
     };
 
-    // Manejador especial para la Región (actualiza las comunas)
-    const handleRegionChange = (e) => {
-        const region = e.target.value;
-        setFormData({ ...formData, region: region, comuna: '' });
-        setComunas(regionesYComunas[region] || []);
-    };
-
+    // Manejador especial para la Región
     const handleSubmit = (e) => {
         e.preventDefault();
+
         const formErrors = validateUserForm(formData);
+
+        if (isEditMode) {
+            const userOriginal = findUserByRut(formData.run);
+            if (userOriginal.email !== formData.email && findUserByEmail(formData.email)) {
+                formErrors.email = 'Este correo ya está en uso por otro usuario.';
+            }
+        } else {
+            if (findUserByEmail(formData.email)) {
+                formErrors.email = 'Este correo ya está en uso por otro usuario.';
+            }
+            if (findUserByRut(formData.run)) {
+                formErrors.run = 'Este RUT ya está en uso por otro usuario.';
+            }
+        }
+
         setErrors(formErrors);
 
-        // Si no hay errores, se guarda
         if (Object.keys(formErrors).length === 0) {
             const userToSave = {
                 ...formData,
                 name: formData.nombre,
                 surname: formData.apellidos,
-                // (password no se maneja aquí, se manejaría en un form de registro separado)
             };
 
             saveUser(userToSave);
+
+            if (isEditMode) {
+                const userOriginal = findUserByRut(formData.run);
+                if (userOriginal.email !== formData.email) {
+                    try {
+                        updateUserEmail(formData.run, formData.email);
+                    } catch (error) {
+                        setErrors({ email: error.message });
+                        return;
+                    }
+                }
+            }
+
             alert(isEditMode ? 'Usuario actualizado con éxito' : 'Usuario guardado con éxito');
             navigate('/admin/usuarios');
         }
@@ -95,7 +115,6 @@ const AdminUserForm = () => {
             </header>
             <section className="admin-form-container">
                 <Form id="nuevoUsuarioForm" onSubmit={handleSubmit} noValidate>
-
                     <Form.Group className="form-group" controlId="run">
                         <Form.Label>RUN:</Form.Label>
                         <Form.Control
@@ -103,6 +122,7 @@ const AdminUserForm = () => {
                             name="run"
                             value={formData.run}
                             onChange={handleChange}
+                            readOnly={isEditMode}
                             isInvalid={!!errors.run}
                         />
                         <Form.Control.Feedback type="invalid">{errors.run}</Form.Control.Feedback>
@@ -144,7 +164,7 @@ const AdminUserForm = () => {
                             name="email"
                             value={formData.email}
                             onChange={handleChange}
-                            readOnly={isEditMode}
+                            readOnly={false}
                             isInvalid={!!errors.email}
                         />
                         <Form.Control.Feedback type="invalid">{errors.email}</Form.Control.Feedback>

@@ -4,8 +4,11 @@ import { useAuth } from '../../context/AuthContext';
 import '../../styles/Perfil.css';
 
 const PerfilPage = () => {
-    const { currentUser } = useAuth();
-    const [profilePic, setProfilePic] = useState('https://via.placeholder.com/150');
+    const { currentUser, updateCurrentUser } = useAuth();
+
+    const [profilePic, setProfilePic] = useState(
+        currentUser?.profilePic || 'https://via.placeholder.com/150'
+    );
 
     const [profileData, setProfileData] = useState({
         name: '',
@@ -20,6 +23,8 @@ const PerfilPage = () => {
                 email: currentUser.email,
                 memberSince: 'Septiembre 2025'
             });
+
+            setProfilePic(currentUser.profilePic || 'https://via.placeholder.com/150');
         }
     }, [currentUser]);
 
@@ -28,8 +33,14 @@ const PerfilPage = () => {
         if (file) {
             const reader = new FileReader();
             reader.onload = (e) => {
-                setProfilePic(e.target.result);
-                // Aquí guardarías la imagen en el servidor o localStorage
+                const picData = e.target.result;
+                
+                setProfilePic(picData);
+
+                if (currentUser) {
+                    const updatedUser = { ...currentUser, profilePic: picData };
+                    updateCurrentUser(updatedUser);
+                }
             };
             reader.readAsDataURL(file);
         }

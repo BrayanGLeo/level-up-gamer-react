@@ -129,8 +129,9 @@ const CheckoutPage = () => {
                 recibeNombre: formData.recibeNombre, recibeApellido: formData.recibeApellido, recibeTelefono: formData.recibeTelefono
             } : { type: 'Retiro en Tienda' }
         };
+        
         if (currentUser) {
-            const updatedUser = addOrderToUser(currentUser.email, newOrder);
+            const updatedUser = addOrderToUser(currentUser.rut, newOrder);
             updateCurrentUser(updatedUser);
         } else {
             const orders = JSON.parse(localStorage.getItem('orders')) || [];
@@ -164,7 +165,7 @@ const CheckoutPage = () => {
                 recibeTelefono: formData.recibeTelefono
             };
 
-            const updatedUser = addAddress(currentUser.email, newAddress);
+            const updatedUser = addAddress(currentUser.rut, newAddress);
             updateCurrentUser(updatedUser);
 
             setSavedAddresses(updatedUser.addresses);
@@ -191,7 +192,7 @@ const CheckoutPage = () => {
                         <Col md={6}><Form.Group className="form-group" controlId="nombre"><Form.Label>Nombre:</Form.Label><Form.Control type="text" name="nombre" value={formData.nombre} onChange={handleChange} isInvalid={!!errors.nombre} required /><Form.Control.Feedback type="invalid">{errors.nombre}</Form.Control.Feedback></Form.Group></Col>
                         <Col md={6}><Form.Group className="form-group" controlId="apellidos"><Form.Label>Apellidos:</Form.Label><Form.Control type="text" name="apellidos" value={formData.apellidos} onChange={handleChange} isInvalid={!!errors.apellidos} required /><Form.Control.Feedback type="invalid">{errors.apellidos}</Form.Control.Feedback></Form.Group></Col>
                     </Row>
-                    <Form.Group className="form-group" controlId="rut"><Form.Label>RUT:</Form.Label><Form.Control type="text" name="rut" value={formData.rut} onChange={handleChange} isInvalid={!!errors.rut} placeholder="12345678-K" required /><Form.Control.Feedback type="invalid">{errors.rut}</Form.Control.Feedback></Form.Group>
+                    <Form.Group className="form-group" controlId="rut"><Form.Label>RUT:</Form.Label><Form.Control type="text" name="rut" value={formData.rut} onChange={handleChange} isInvalid={!!errors.rut} placeholder="12345678-K" required readOnly={!!currentUser} /><Form.Control.Feedback type="invalid">{errors.rut}</Form.Control.Feedback></Form.Group>
                     <Row>
                         <Col md={7}><Form.Group className="form-group" controlId="email"><Form.Label>E-mail:</Form.Label><Form.Control type="email" name="email" value={formData.email} onChange={handleChange} isInvalid={!!errors.email} required /><Form.Control.Feedback type="invalid">{errors.email}</Form.Control.Feedback></Form.Group></Col>
                         <Col md={5}><Form.Group className="form-group" controlId="telefono"><Form.Label>Teléfono:</Form.Label><Form.Control type="tel" name="telefono" value={formData.telefono} onChange={handleChange} isInvalid={!!errors.telefono} placeholder="+56912345678" required /><Form.Control.Feedback type="invalid">{errors.telefono}</Form.Control.Feedback></Form.Group></Col>

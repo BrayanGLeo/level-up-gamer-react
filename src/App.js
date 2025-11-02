@@ -56,7 +56,7 @@ function App() {
             <Route path="productos/editar/:codigo" element={<AdminProductForm />} />
             <Route path="usuarios" element={<AdminUserList />} />
             <Route path="usuarios/nuevo" element={<AdminUserForm />} />
-            <Route path="usuarios/editar/:email" element={<AdminUserForm />} />
+            <Route path="usuarios/editar/:rut" element={<AdminUserForm />} />
           </Route>
         </Routes>
       </CartProvider>
