@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import { regionesData } from '../../data/chileData';
-import { addOrderToUser } from '../../data/userData';
+import { addOrderToUser, addAddress } from '../../data/userData';
 import { validateRut, validateEmail, validatePhone, validateRequiredField } from '../../utils/validation';
 import NotificationModal from '../../components/NotificationModal';
 import '../../styles/Forms.css';
@@ -16,13 +16,19 @@ const initialFormState = {
     recibeNombre: '', recibeApellido: '', recibeTelefono: ''
 };
 
+const initialAddressState = {
+    region: '', comuna: '', calle: '', numero: '', depto: '',
+    recibeNombre: '', recibeApellido: '', recibeTelefono: ''
+};
+
 const CheckoutPage = () => {
     const [step, setStep] = useState(1);
     const [formData, setFormData] = useState(initialFormState);
     const [errors, setErrors] = useState({});
-    const [deliveryMethod, setDeliveryMethod] = useState('despacho');
-    const [comunas, setComunas] = useState([]);
 
+    const [deliveryMethod, setDeliveryMethod] = useState(null);
+
+    const [comunas, setComunas] = useState([]);
     const { currentUser, updateCurrentUser } = useAuth();
     const { cartItems, getCartTotal, clearCart } = useCart();
     const navigate = useNavigate();
@@ -30,7 +36,6 @@ const CheckoutPage = () => {
     const [savedAddresses, setSavedAddresses] = useState([]);
     const [selectedAddressId, setSelectedAddressId] = useState(null);
     const [modalInfo, setModalInfo] = useState({ show: false, title: '', message: '' });
-
     const [showSaveToast, setShowSaveToast] = useState(false);
 
     useEffect(() => {
@@ -58,8 +63,12 @@ const CheckoutPage = () => {
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
+
     const validateStep2 = () => {
         const newErrors = {};
+        if (!deliveryMethod) {
+            newErrors.deliveryMethod = 'Debes seleccionar una forma de entrega.';
+        }
         if (deliveryMethod === 'despacho') {
             if (!formData.region) newErrors.region = 'Selecciona una región.';
             if (!formData.comuna) newErrors.comuna = 'Selecciona una comuna.';
@@ -72,6 +81,7 @@ const CheckoutPage = () => {
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
+
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
         setSelectedAddressId('new');
@@ -108,29 +118,17 @@ const CheckoutPage = () => {
 
     const handleSimulatedPayment = (e) => {
         e.preventDefault();
-
         const newOrder = {
             number: Date.now(),
             date: new Date().toLocaleDateString('es-CL'),
             items: cartItems,
             total: getCartTotal(),
-            customer: {
-                name: formData.nombre,
-                surname: formData.apellidos,
-                email: formData.email,
-                phone: formData.telefono,
-            },
+            customer: { name: formData.nombre, surname: formData.apellidos, email: formData.email, phone: formData.telefono, },
             shipping: deliveryMethod === 'despacho' ? {
-                calle: formData.calle,
-                numero: formData.numero,
-                comuna: formData.comuna,
-                region: formData.region,
-                recibe: `${formData.recibeNombre} ${formData.recibeApellido}`
-            } : {
-                type: 'Retiro en Tienda'
-            }
+                calle: formData.calle, numero: formData.numero, depto: formData.depto, comuna: formData.comuna, region: formData.region,
+                recibeNombre: formData.recibeNombre, recibeApellido: formData.recibeApellido, recibeTelefono: formData.recibeTelefono
+            } : { type: 'Retiro en Tienda' }
         };
-
         if (currentUser) {
             const updatedUser = addOrderToUser(currentUser.email, newOrder);
             updateCurrentUser(updatedUser);
@@ -139,9 +137,7 @@ const CheckoutPage = () => {
             orders.push(newOrder);
             localStorage.setItem('orders', JSON.stringify(orders));
         }
-
         clearCart();
-
         setModalInfo({
             show: true,
             title: '¡Compra Exitosa!',
@@ -157,7 +153,7 @@ const CheckoutPage = () => {
     const handleSaveAddress = () => {
         if (validateStep2() && currentUser) {
             const newAddress = {
-                alias: `${formData.calle} ${formData.numero}`,
+                alias: `${formData.calle} ${formData.numero}` || 'Dirección Nueva',
                 region: formData.region,
                 comuna: formData.comuna,
                 calle: formData.calle,
@@ -172,14 +168,17 @@ const CheckoutPage = () => {
             updateCurrentUser(updatedUser);
 
             setSavedAddresses(updatedUser.addresses);
-
-            setSelectedAddressId(newAddress.id);
+            const newId = updatedUser.addresses[updatedUser.addresses.length - 1].id;
+            setSelectedAddressId(newId);
 
             setShowSaveToast(true);
         } else if (!currentUser) {
-            alert("Debes iniciar sesión para guardar una dirección.");
         } else {
-            alert("Por favor, completa todos los campos de dirección antes de guardar.");
+            setModalInfo({
+                show: true,
+                title: "Error al Guardar",
+                message: "Por favor, completa todos los campos de dirección antes de guardar (Región, Comuna, Calle, Número, y datos de quién recibe)."
+            });
         }
     };
 
@@ -187,15 +186,15 @@ const CheckoutPage = () => {
         <Card>
             <Card.Body>
                 <Card.Title>Paso 1: Tus datos</Card.Title>
-                <Form>
+                <Form noValidate>
                     <Row>
-                        <Col md={6}><Form.Group className="form-group" controlId="nombre"><Form.Label>Nombre:</Form.Label><Form.Control type="text" name="nombre" value={formData.nombre} onChange={handleChange} isInvalid={!!errors.nombre} /><Form.Control.Feedback type="invalid">{errors.nombre}</Form.Control.Feedback></Form.Group></Col>
-                        <Col md={6}><Form.Group className="form-group" controlId="apellidos"><Form.Label>Apellidos:</Form.Label><Form.Control type="text" name="apellidos" value={formData.apellidos} onChange={handleChange} isInvalid={!!errors.apellidos} /><Form.Control.Feedback type="invalid">{errors.apellidos}</Form.Control.Feedback></Form.Group></Col>
+                        <Col md={6}><Form.Group className="form-group" controlId="nombre"><Form.Label>Nombre:</Form.Label><Form.Control type="text" name="nombre" value={formData.nombre} onChange={handleChange} isInvalid={!!errors.nombre} required /><Form.Control.Feedback type="invalid">{errors.nombre}</Form.Control.Feedback></Form.Group></Col>
+                        <Col md={6}><Form.Group className="form-group" controlId="apellidos"><Form.Label>Apellidos:</Form.Label><Form.Control type="text" name="apellidos" value={formData.apellidos} onChange={handleChange} isInvalid={!!errors.apellidos} required /><Form.Control.Feedback type="invalid">{errors.apellidos}</Form.Control.Feedback></Form.Group></Col>
                     </Row>
-                    <Form.Group className="form-group" controlId="rut"><Form.Label>RUT:</Form.Label><Form.Control type="text" name="rut" value={formData.rut} onChange={handleChange} isInvalid={!!errors.rut} placeholder="12345678-K" /><Form.Control.Feedback type="invalid">{errors.rut}</Form.Control.Feedback></Form.Group>
+                    <Form.Group className="form-group" controlId="rut"><Form.Label>RUT:</Form.Label><Form.Control type="text" name="rut" value={formData.rut} onChange={handleChange} isInvalid={!!errors.rut} placeholder="12345678-K" required /><Form.Control.Feedback type="invalid">{errors.rut}</Form.Control.Feedback></Form.Group>
                     <Row>
-                        <Col md={7}><Form.Group className="form-group" controlId="email"><Form.Label>E-mail:</Form.Label><Form.Control type="email" name="email" value={formData.email} onChange={handleChange} isInvalid={!!errors.email} /><Form.Control.Feedback type="invalid">{errors.email}</Form.Control.Feedback></Form.Group></Col>
-                        <Col md={5}><Form.Group className="form-group" controlId="telefono"><Form.Label>Teléfono:</Form.Label><Form.Control type="tel" name="telefono" value={formData.telefono} onChange={handleChange} isInvalid={!!errors.telefono} placeholder="+56912345678" /><Form.Control.Feedback type="invalid">{errors.telefono}</Form.Control.Feedback></Form.Group></Col>
+                        <Col md={7}><Form.Group className="form-group" controlId="email"><Form.Label>E-mail:</Form.Label><Form.Control type="email" name="email" value={formData.email} onChange={handleChange} isInvalid={!!errors.email} required /><Form.Control.Feedback type="invalid">{errors.email}</Form.Control.Feedback></Form.Group></Col>
+                        <Col md={5}><Form.Group className="form-group" controlId="telefono"><Form.Label>Teléfono:</Form.Label><Form.Control type="tel" name="telefono" value={formData.telefono} onChange={handleChange} isInvalid={!!errors.telefono} placeholder="+56912345678" required /><Form.Control.Feedback type="invalid">{errors.telefono}</Form.Control.Feedback></Form.Group></Col>
                     </Row>
                     <div className="text-end">
                         <Button className="btn" onClick={nextStep}>Continuar</Button>
@@ -204,62 +203,53 @@ const CheckoutPage = () => {
             </Card.Body>
         </Card>
     );
+
     const renderStep2 = () => (
         <Card>
             <Card.Body>
                 <Card.Title>Paso 2: Forma de entrega</Card.Title>
-                <Form>
-                    <Form.Group className="form-group">
-                        <Card
-                            className={`delivery-method-card ${deliveryMethod === 'despacho' ? 'active' : ''}`}
-                            onClick={() => setDeliveryMethod('despacho')}
-                        >
-                            <Form.Check
-                                type="radio"
-                                name="deliveryMethod"
-                                id="despacho"
-                                value="despacho"
-                                checked={deliveryMethod === 'despacho'}
-                                onChange={(e) => setDeliveryMethod(e.target.value)}
-                                className="d-none"
-                            />
-                            <Form.Check.Label htmlFor="despacho">
-                                <strong>Despacho a Domicilio</strong>
-                                <p className="text-secondary mb-0">Recibe tu pedido en la comodidad de tu casa.</p>
-                            </Form.Check.Label>
-                        </Card>
-
-                        <Card
-                            className={`delivery-method-card ${deliveryMethod === 'retiro' ? 'active' : ''}`}
-                            onClick={() => setDeliveryMethod('retiro')}
-                        >
-                            <Form.Check
-                                type="radio"
-                                name="deliveryMethod"
-                                id="retiro"
-                                value="retiro"
-                                checked={deliveryMethod === 'retiro'}
-                                onChange={(e) => setDeliveryMethod(e.target.value)}
-                                className="d-none"
-                            />
-                            <Form.Check.Label htmlFor="retiro">
-                                <strong>Retiro en Tienda</strong>
-                                <p className="text-secondary mb-0">Retira sin costo en nuestra tienda.</p>
-                            </Form.Check.Label>
-                        </Card>
+                <Form noValidate>
+                    <Form.Group className="form-group delivery-method-group">
+                        <Form.Check
+                            type="radio"
+                            name="deliveryMethod"
+                            id="despacho"
+                            value="despacho"
+                            checked={deliveryMethod === 'despacho'}
+                            onChange={(e) => setDeliveryMethod(e.target.value)}
+                            label={
+                                <>
+                                    <strong>Despacho a Domicilio</strong>
+                                    <p className="text-secondary mb-0">Recibe tu pedido en la comodidad de tu casa.</p>
+                                </>
+                            }
+                        />
+                        <Form.Check
+                            type="radio"
+                            name="deliveryMethod"
+                            id="retiro"
+                            value="retiro"
+                            checked={deliveryMethod === 'retiro'}
+                            onChange={(e) => setDeliveryMethod(e.target.value)}
+                            label={
+                                <>
+                                    <strong>Retiro en Tienda</strong>
+                                    <p className="text-secondary mb-0">Retira sin costo en nuestra tienda.</p>
+                                </>
+                            }
+                        />
+                        {!!errors.deliveryMethod && <div className="invalid-feedback d-block">{errors.deliveryMethod}</div>}
                     </Form.Group>
 
-                    {deliveryMethod === 'despacho' ? (
+                    {deliveryMethod === 'despacho' && (
                         <>
+                            <hr />
                             <h5>Dirección de entrega:</h5>
                             {currentUser && savedAddresses.length > 0 && (
                                 <Row className="mb-3">
                                     {savedAddresses.map(addr => (
                                         <Col md={6} key={addr.id} className="mb-2">
-                                            <Card
-                                                className={`address-card ${selectedAddressId === addr.id ? 'active' : ''}`}
-                                                onClick={() => handleSelectAddress(addr)}
-                                            >
+                                            <Card className={`address-card ${selectedAddressId === addr.id ? 'active' : ''}`} onClick={() => handleSelectAddress(addr)}>
                                                 <Card.Body>
                                                     <strong>{addr.alias}</strong><br />
                                                     {addr.calle} {addr.numero}<br />
@@ -273,7 +263,11 @@ const CheckoutPage = () => {
                             )}
 
                             {currentUser && savedAddresses.length > 0 && selectedAddressId !== 'new' && (
-                                <Button variant="outline-primary" size="sm" className="mb-3" onClick={() => { setSelectedAddressId('new'); setFormData(initialFormState); }}>
+                                <Button variant="outline-primary" size="sm" className="mb-3" onClick={() => {
+                                    setSelectedAddressId('new');
+                                    setFormData(prev => ({ ...prev, ...initialAddressState }));
+                                    setErrors({});
+                                }}>
                                     Usar otra dirección
                                 </Button>
                             )}
@@ -281,31 +275,38 @@ const CheckoutPage = () => {
                             {(!currentUser || savedAddresses.length === 0 || selectedAddressId === 'new') && (
                                 <>
                                     <Row>
-                                        <Col md={6}><Form.Group className="form-group" controlId="region"><Form.Label>Región:</Form.Label><Form.Select name="region" value={formData.region} onChange={handleRegionChange} isInvalid={!!errors.region}><option value="">Selecciona una región</option>{regionesData.map(r => <option key={r.nombre} value={r.nombre}>{r.nombre}</option>)}</Form.Select><Form.Control.Feedback type="invalid">{errors.region}</Form.Control.Feedback></Form.Group></Col>
-                                        <Col md={6}><Form.Group className="form-group" controlId="comuna"><Form.Label>Comuna:</Form.Label><Form.Select name="comuna" value={formData.comuna} onChange={handleChange} isInvalid={!!errors.comuna} disabled={comunas.length === 0}><option value="">Selecciona una comuna</option>{comunas.map(c => <option key={c} value={c}>{c}</option>)}</Form.Select><Form.Control.Feedback type="invalid">{errors.comuna}</Form.Control.Feedback></Form.Group></Col>
+                                        <Col md={6}><Form.Group className="form-group" controlId="region"><Form.Label>Región:</Form.Label><Form.Select name="region" value={formData.region} onChange={handleRegionChange} isInvalid={!!errors.region} required><option value="">Selecciona una región</option>{regionesData.map(r => <option key={r.nombre} value={r.nombre}>{r.nombre}</option>)}</Form.Select><Form.Control.Feedback type="invalid">{errors.region}</Form.Control.Feedback></Form.Group></Col>
+                                        <Col md={6}><Form.Group className="form-group" controlId="comuna"><Form.Label>Comuna:</Form.Label><Form.Select name="comuna" value={formData.comuna} onChange={handleChange} isInvalid={!!errors.comuna} disabled={comunas.length === 0} required><option value="">Selecciona una comuna</option>{comunas.map(c => <option key={c} value={c}>{c}</option>)}</Form.Select><Form.Control.Feedback type="invalid">{errors.comuna}</Form.Control.Feedback></Form.Group></Col>
                                     </Row>
                                     <Row>
-                                        <Col md={8}><Form.Group className="form-group" controlId="calle"><Form.Label>Calle:</Form.Label><Form.Control type="text" name="calle" value={formData.calle} onChange={handleChange} isInvalid={!!errors.calle} /><Form.Control.Feedback type="invalid">{errors.calle}</Form.Control.Feedback></Form.Group></Col>
-                                        <Col md={4}><Form.Group className="form-group" controlId="numero"><Form.Label>Número:</Form.Label><Form.Control type="text" name="numero" value={formData.numero} onChange={handleChange} isInvalid={!!errors.numero} /><Form.Control.Feedback type="invalid">{errors.numero}</Form.Control.Feedback></Form.Group></Col>
+                                        <Col md={8}><Form.Group className="form-group" controlId="calle"><Form.Label>Calle:</Form.Label><Form.Control type="text" name="calle" value={formData.calle} onChange={handleChange} isInvalid={!!errors.calle} required /><Form.Control.Feedback type="invalid">{errors.calle}</Form.Control.Feedback></Form.Group></Col>
+                                        <Col md={4}><Form.Group className="form-group" controlId="numero"><Form.Label>Número:</Form.Label><Form.Control type="text" name="numero" value={formData.numero} onChange={handleChange} isInvalid={!!errors.numero} required /><Form.Control.Feedback type="invalid">{errors.numero}</Form.Control.Feedback></Form.Group></Col>
                                     </Row>
                                     <Form.Group className="form-group" controlId="depto"><Form.Label>N° Depto / Oficina (Opcional):</Form.Label><Form.Control type="text" name="depto" value={formData.depto} onChange={handleChange} /></Form.Group>
                                     <hr />
                                     <h5>Datos de Quien Recibe</h5>
                                     <Row>
-                                        <Col md={6}><Form.Group className="form-group" controlId="recibeNombre"><Form.Label>Nombre:</Form.Label><Form.Control type="text" name="recibeNombre" value={formData.recibeNombre} onChange={handleChange} isInvalid={!!errors.recibeNombre} /><Form.Control.Feedback type="invalid">{errors.recibeNombre}</Form.Control.Feedback></Form.Group></Col>
-                                        <Col md={6}><Form.Group className="form-group" controlId="recibeApellido"><Form.Label>Apellido:</Form.Label><Form.Control type="text" name="recibeApellido" value={formData.recibeApellido} onChange={handleChange} isInvalid={!!errors.recibeApellido} /><Form.Control.Feedback type="invalid">{errors.recibeApellido}</Form.Control.Feedback></Form.Group></Col>
+                                        <Col md={6}><Form.Group className="form-group" controlId="recibeNombre"><Form.Label>Nombre:</Form.Label><Form.Control type="text" name="recibeNombre" value={formData.recibeNombre} onChange={handleChange} isInvalid={!!errors.recibeNombre} required /><Form.Control.Feedback type="invalid">{errors.recibeNombre}</Form.Control.Feedback></Form.Group></Col>
+                                        <Col md={6}><Form.Group className="form-group" controlId="recibeApellido"><Form.Label>Apellido:</Form.Label><Form.Control type="text" name="recibeApellido" value={formData.recibeApellido} onChange={handleChange} isInvalid={!!errors.recibeApellido} required /><Form.Control.Feedback type="invalid">{errors.recibeApellido}</Form.Control.Feedback></Form.Group></Col>
                                     </Row>
-                                    <Form.Group className="form-group" controlId="recibeTelefono"><Form.Label>Teléfono:</Form.Label><Form.Control type="tel" name="recibeTelefono" value={formData.recibeTelefono} onChange={handleChange} isInvalid={!!errors.recibeTelefono} /><Form.Control.Feedback type="invalid">{errors.recibeTelefono}</Form.Control.Feedback></Form.Group>
+
+                                    <Form.Group className="form-group" controlId="recibeTelefono">
+                                        <Form.Label>Teléfono:</Form.Label>
+                                        <Form.Control type="tel" name="recibeTelefono" value={formData.recibeTelefono} onChange={handleChange} isInvalid={!!errors.recibeTelefono} required />
+                                        <Form.Control.Feedback type="invalid">{errors.recibeTelefono}</Form.Control.Feedback>
+                                    </Form.Group>
 
                                     {currentUser && (
                                         <Button variant="outline-success" size="sm" className="mb-3" onClick={handleSaveAddress}>
-                                            Guardar dirección en mi libreta
+                                            Guardar dirección
                                         </Button>
                                     )}
                                 </>
                             )}
                         </>
-                    ) : (
+                    )}
+
+                    {deliveryMethod === 'retiro' && (
                         <>
                             <h5>Retiro en Tienda</h5>
                             <Alert variant="info">
@@ -347,11 +348,9 @@ const CheckoutPage = () => {
                             <span>Total:</span>
                             <strong>${getCartTotal().toLocaleString('es-CL')}</strong>
                         </div>
-
                         <hr />
                         <h5>Datos Personales</h5>
                         <p>{formData.nombre} {formData.apellidos} ({formData.email})</p>
-
                         <h5>Entrega</h5>
                         {deliveryMethod === 'despacho' ? (
                             <p>Despacho a: {formData.calle} {formData.numero}, {formData.comuna}, {formData.region}</p>
