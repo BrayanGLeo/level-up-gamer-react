@@ -8,7 +8,7 @@ import '../../styles/Perfil.css';
 import '../../styles/Forms.css';
 
 const DireccionesPage = () => {
-    const { currentUser, login } = useAuth();
+    const { currentUser, updateCurrentUser } = useAuth();
     const [addresses, setAddresses] = useState([]);
     const [showForm, setShowForm] = useState(false);
     const [formData, setFormData] = useState({
@@ -45,16 +45,17 @@ const DireccionesPage = () => {
         if (!validateRequiredField(formData.recibeNombre, 50)) newErrors.recibeNombre = 'El nombre es requerido.';
         if (!validateRequiredField(formData.recibeApellido, 100)) newErrors.recibeApellido = 'El apellido es requerido.';
         if (!validatePhone(formData.recibeTelefono)) newErrors.recibeTelefono = 'El teléfono no es válido.';
-
+        
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
+
 
     const handleSubmit = (e) => {
         e.preventDefault();
         if (validateForm() && currentUser) {
             const updatedUser = addAddress(currentUser.email, formData);
-            login(updatedUser.email, updatedUser.password);
+            updateCurrentUser(updatedUser); 
             setAddresses(updatedUser.addresses);
             setShowForm(false);
             setFormData({
@@ -68,7 +69,7 @@ const DireccionesPage = () => {
     const handleDelete = (addressId) => {
         if (window.confirm('¿Estás seguro de que quieres eliminar esta dirección?') && currentUser) {
             const updatedUser = deleteAddress(currentUser.email, addressId);
-            login(updatedUser.email, updatedUser.password);
+            updateCurrentUser(updatedUser);
             setAddresses(updatedUser.addresses);
         }
     };
@@ -100,7 +101,7 @@ const DireccionesPage = () => {
                             </Card>
                         </Col>
                     ))}
-
+                    
                     <Col md={12} className="mt-3">
                         {!showForm ? (
                             <Button className="btn" onClick={() => setShowForm(true)}>
@@ -128,7 +129,7 @@ const DireccionesPage = () => {
                                             <Col md={6}><Form.Group className="form-group" controlId="recibeApellido"><Form.Label>Apellido:</Form.Label><Form.Control type="text" name="recibeApellido" onChange={handleChange} isInvalid={!!errors.recibeApellido} /><Form.Control.Feedback type="invalid">{errors.recibeApellido}</Form.Control.Feedback></Form.Group></Col>
                                         </Row>
                                         <Form.Group className="form-group" controlId="recibeTelefono"><Form.Label>Teléfono:</Form.Label><Form.Control type="tel" name="recibeTelefono" onChange={handleChange} isInvalid={!!errors.recibeTelefono} /><Form.Control.Feedback type="invalid">{errors.recibeTelefono}</Form.Control.Feedback></Form.Group>
-
+                                        
                                         <Button type="submit" className="btn me-2">Guardar Dirección</Button>
                                         <Button variant="secondary" onClick={() => setShowForm(false)}>Cancelar</Button>
                                     </Form>

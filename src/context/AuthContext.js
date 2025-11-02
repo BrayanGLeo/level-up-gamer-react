@@ -15,11 +15,15 @@ export const AuthProvider = ({ children }) => {
         }
     }, []);
 
+    const updateCurrentUser = (user) => {
+        localStorage.setItem('currentUser', JSON.stringify(user));
+        setCurrentUser(user);
+    };
+
     const login = (email, password) => {
         const user = findUser(email, password);
         if (user) {
-            localStorage.setItem('currentUser', JSON.stringify(user));
-            setCurrentUser(user);
+            updateCurrentUser(user);
 
             if (user.role === 'Administrador') {
                 alert('Inicio de sesión de administrador exitoso.');
@@ -38,8 +42,7 @@ export const AuthProvider = ({ children }) => {
     const register = (userData) => {
         try {
             const newUser = registerUser(userData);
-            localStorage.setItem('currentUser', JSON.stringify(newUser));
-            setCurrentUser(newUser);
+            updateCurrentUser(newUser);
 
             if (newUser.role === 'Administrador') {
                 alert('Cuenta de administrador registrada con éxito.');
@@ -63,7 +66,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ currentUser, login, register, logout }}>
+        <AuthContext.Provider value={{ currentUser, login, register, logout, updateCurrentUser }}>
             {children}
         </AuthContext.Provider>
     );
