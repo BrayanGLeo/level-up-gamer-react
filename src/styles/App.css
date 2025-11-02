@@ -124,7 +124,6 @@ header nav ul li a:hover {
 }
 
 .hero {
-    background-image: url(/img/Fondo.png);
     background-size: 100% auto;
     background-position: center;
     background-repeat: no-repeat;

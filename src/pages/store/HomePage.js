@@ -5,14 +5,19 @@ import ProductCard from '../../components/ProductCard';
 import BlogPostSummary from '../../components/BlogPostSummary';
 import { getProducts } from '../../data/productData';
 import { getBlogPosts } from '../../data/blogData';
+import heroBackground from '../../assets/Fondo.png';
 
 const HomePage = () => {
     const featuredProducts = getProducts().slice(0, 4);
     const featuredPosts = getBlogPosts().slice(0, 2);
 
+    const heroStyle = {
+        backgroundImage: `url(${heroBackground})`
+    };
+
     return (
         <>
-            <section className="hero">
+            <section className="hero" style={heroStyle}>
                 <div className="container">
                     <h2 className="hero-title">¡Desafía tus límites con Level-Up Gamer!</h2>
                     <p className="hero-text">Conviértete en el héroe de tu propia historia y únete a nuestra comunidad de jugadores. ¡Explora, juega y gana con nosotros!</p>
