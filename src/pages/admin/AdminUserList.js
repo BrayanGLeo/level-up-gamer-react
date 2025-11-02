@@ -2,15 +2,21 @@ import React, { useState, useEffect } from 'react';
 import { Table, Button } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import { getUsers, deleteUserByRut } from '../../data/userData';
+import { useAuth } from '../../context/AuthContext';
+import EmailHistoryModal from '../../components/EmailHistoryModal';
 import '../../styles/AdminStyle.css';
 
 const AdminUserList = () => {
-    const [users, setUsers] = useState([]);
+    const [products, setUsers] = useState([]);
     const navigate = useNavigate();
+    const { currentUser } = useAuth();
+
+    const [showHistoryModal, setShowHistoryModal] = useState(false);
+    const [selectedUser, setSelectedUser] = useState(null);
 
     useEffect(() => {
         setUsers(getUsers());
-    }, []);
+    }, [currentUser]);
 
     const handleDelete = (rut) => {
         if (rut === '12345678-9') {
@@ -22,6 +28,16 @@ const AdminUserList = () => {
             deleteUserByRut(rut);
             setUsers(getUsers());
         }
+    };
+
+    const handleShowHistory = (user) => {
+        setSelectedUser(user);
+        setShowHistoryModal(true);
+    };
+
+    const handleCloseHistory = () => {
+        setShowHistoryModal(false);
+        setSelectedUser(null);
     };
 
     return (
@@ -44,7 +60,7 @@ const AdminUserList = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {users.map(user => (
+                        {products.map(user => (
                             <tr key={user.rut}>
                                 <td>{user.rut || 'N/A'}</td>
                                 <td>{user.name} {user.surname}</td>
@@ -59,6 +75,16 @@ const AdminUserList = () => {
                                     >
                                         Editar
                                     </Button>
+
+                                    <Button
+                                        variant="info"
+                                        size="sm"
+                                        className="me-2"
+                                        onClick={() => handleShowHistory(user)}
+                                    >
+                                        Historial
+                                    </Button>
+
                                     <Button
                                         variant="danger"
                                         size="sm"
@@ -72,6 +98,12 @@ const AdminUserList = () => {
                     </tbody>
                 </Table>
             </section>
+
+            <EmailHistoryModal
+                show={showHistoryModal}
+                onHide={handleCloseHistory}
+                user={selectedUser}
+            />
         </>
     );
 };

@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Form, Button, Row, Col } from 'react-bootstrap';
 import { useNavigate, useParams } from 'react-router-dom';
-import { findUserByRut, saveUser, findUserByEmail } from '../../data/userData';
+import { findUserByRut, saveUser, findUserByEmail, updateUserEmail } from '../../data/userData';
 import { validateUserForm } from '../../utils/validation';
 import '../../styles/AdminStyle.css';
 
-// Simulacion de los datos de regiones y comunas
 const regionesYComunas = {
     "Biobío": ["Concepción", "Los Ángeles", "Talcahuano", "Coronel", "Chiguayante", "Hualpén"],
     "Metropolitana": ["Santiago", "Maipú", "Puente Alto", "La Florida", "Las Condes", "Ñuñoa"],
@@ -60,19 +59,25 @@ const AdminUserForm = () => {
         setFormData({ ...formData, [name]: value });
     };
 
-    // Manejador especial para la Región
+    const handleRegionChange = (e) => {
+        const region = e.target.value;
+        setFormData({ ...formData, region: region, comuna: '' });
+        setComunas(regionesYComunas[region] || []);
+    };
+
     const handleSubmit = (e) => {
         e.preventDefault();
 
         const formErrors = validateUserForm(formData);
 
+        const existingUser = findUserByEmail(formData.email);
+
         if (isEditMode) {
-            const userOriginal = findUserByRut(formData.run);
-            if (userOriginal.email !== formData.email && findUserByEmail(formData.email)) {
+            if (existingUser && existingUser.rut !== formData.run) {
                 formErrors.email = 'Este correo ya está en uso por otro usuario.';
             }
         } else {
-            if (findUserByEmail(formData.email)) {
+            if (existingUser) {
                 formErrors.email = 'Este correo ya está en uso por otro usuario.';
             }
             if (findUserByRut(formData.run)) {
@@ -89,17 +94,16 @@ const AdminUserForm = () => {
                 surname: formData.apellidos,
             };
 
+            const userOriginal = isEditMode ? findUserByRut(formData.run) : null;
+
             saveUser(userToSave);
 
-            if (isEditMode) {
-                const userOriginal = findUserByRut(formData.run);
-                if (userOriginal.email !== formData.email) {
-                    try {
-                        updateUserEmail(formData.run, formData.email);
-                    } catch (error) {
-                        setErrors({ email: error.message });
-                        return;
-                    }
+            if (isEditMode && userOriginal.email !== formData.email) {
+                try {
+                    updateUserEmail(formData.run, formData.email);
+                } catch (error) {
+                    setErrors({ email: error.message });
+                    return;
                 }
             }
 
@@ -115,6 +119,7 @@ const AdminUserForm = () => {
             </header>
             <section className="admin-form-container">
                 <Form id="nuevoUsuarioForm" onSubmit={handleSubmit} noValidate>
+
                     <Form.Group className="form-group" controlId="run">
                         <Form.Label>RUN:</Form.Label>
                         <Form.Control

@@ -14,6 +14,7 @@ const getInitialUsers = () => {
             role: 'Administrador',
             rut: '12345678-9',
             emailHistory: ['admin@admin.cl'],
+            isOriginalAdmin: true,
             addresses: [
                 {
                     id: 1,
@@ -38,19 +39,24 @@ const getInitialUsers = () => {
     }
 };
 
-let users = getInitialUsers();
-
 export const findUser = (email, password) => {
+    let users = getInitialUsers();
     return users.find(u => u.email === email && u.password === password);
 };
 
 export const findUserByEmail = (email) => {
+    let users = getInitialUsers();
     return users.find(u => u.email === email);
 };
 
 export const findUserByRut = (rut) => {
+    let users = getInitialUsers();
     return users.find(u => u.rut === rut);
 };
+
+export const getUsers = () => {
+    return getInitialUsers();
+}
 
 export const registerUser = (newUser) => {
     if (findUserByEmail(newUser.email)) {
@@ -60,9 +66,13 @@ export const registerUser = (newUser) => {
         throw new Error('Este RUT ya está registrado.');
     }
 
+    let users = getInitialUsers();
+    const isAdmin = newUser.email.endsWith('@admin.cl');
+
     const userToSave = {
         ...newUser,
-        role: newUser.email.endsWith('@admin.cl') ? 'Administrador' : 'Cliente',
+        role: isAdmin ? 'Administrador' : 'Cliente',
+        isOriginalAdmin: isAdmin,
         emailHistory: [newUser.email],
         addresses: [],
         orders: []
@@ -73,18 +83,16 @@ export const registerUser = (newUser) => {
     return userToSave;
 };
 
-export const getUsers = () => {
-    return users;
-}
-
 export const saveUser = (user) => {
     let users = getInitialUsers();
     const index = users.findIndex(u => u.rut === user.rut);
+
     if (index > -1) {
         const existingAddresses = users[index].addresses || [];
         const existingOrders = users[index].orders || [];
         const existingHistory = users[index].emailHistory || [users[index].email];
         const existingPic = users[index].profilePic || null;
+        const isOriginalAdmin = users[index].isOriginalAdmin || false;
 
         users[index] = {
             ...users[index],
@@ -92,23 +100,34 @@ export const saveUser = (user) => {
             addresses: existingAddresses,
             orders: existingOrders,
             emailHistory: existingHistory,
-            profilePic: existingPic
+            profilePic: existingPic,
+            isOriginalAdmin: isOriginalAdmin
         };
     } else {
-        users.push({ ...user, emailHistory: [user.email], addresses: [], orders: [] });
+        const isAdmin = user.email.endsWith('@admin.cl');
+        users.push({
+            ...user,
+            isOriginalAdmin: isAdmin,
+            emailHistory: [user.email],
+            addresses: [],
+            orders: []
+        });
     }
+
     localStorage.setItem(USERS_KEY, JSON.stringify(users));
 
     const currentUser = JSON.parse(localStorage.getItem('currentUser'));
     if (currentUser && currentUser.rut === user.rut) {
-        localStorage.setItem('currentUser', JSON.stringify(users[index]));
+        localStorage.setItem('currentUser', JSON.stringify(users[index > -1 ? index : users.length - 1]));
     }
 
-    return users[index] || user;
+    return users[index > -1 ? index : users.length - 1];
 }
 
 export const updateUserEmail = (rut, newEmail) => {
-    if (findUserByEmail(newEmail)) {
+    const existingUser = findUserByEmail(newEmail);
+
+    if (existingUser && existingUser.rut !== rut) {
         throw new Error('El nuevo correo electrónico ya está en uso por otro usuario.');
     }
 
@@ -116,28 +135,42 @@ export const updateUserEmail = (rut, newEmail) => {
     const index = users.findIndex(u => u.rut === rut);
 
     if (index > -1) {
-        if (!users[index].emailHistory) {
-            users[index].emailHistory = [];
-        }
-        if (!users[index].emailHistory.includes(users[index].email)) {
-            users[index].emailHistory.push(users[index].email);
+        const user = users[index];
+        const newEmailIsAdmin = newEmail.endsWith('@admin.cl');
+
+        if (!user.isOriginalAdmin && newEmailIsAdmin) {
+            throw new Error('No tienes permisos para asignar un dominio de administrador.');
         }
 
-        users[index].email = newEmail;
+        if (user.isOriginalAdmin && newEmailIsAdmin) {
+            user.role = 'Administrador';
+        } else {
+            user.role = 'Cliente';
+        }
+
+        if (!user.emailHistory) {
+            user.emailHistory = [];
+        }
+        if (user.email && !user.emailHistory.includes(user.email)) {
+            user.emailHistory.push(user.email);
+        }
+
+        user.email = newEmail;
 
         localStorage.setItem(USERS_KEY, JSON.stringify(users));
 
         const currentUser = JSON.parse(localStorage.getItem('currentUser'));
         if (currentUser && currentUser.rut === rut) {
-            localStorage.setItem('currentUser', JSON.stringify(users[index]));
+            localStorage.setItem('currentUser', JSON.stringify(user));
         }
 
-        return users[index];
+        return user;
     }
     throw new Error('No se encontró al usuario para actualizar el correo.');
 };
 
 export const deleteUserByRut = (rut) => {
+    let users = getInitialUsers();
     users = users.filter(u => u.rut !== rut);
     localStorage.setItem(USERS_KEY, JSON.stringify(users));
     return true;

@@ -19,7 +19,6 @@ const PrivacidadPage = () => {
         confirm: ''
     });
     const [passwordErrors, setPasswordErrors] = useState({});
-
     const [modalInfo, setModalInfo] = useState({ show: false, title: '', message: '' });
 
     const handlePasswordChange = (e) => {
@@ -40,7 +39,8 @@ const PrivacidadPage = () => {
             return;
         }
 
-        if (findUserByEmail(newEmail)) {
+        const existingUser = findUserByEmail(newEmail);
+        if (existingUser && existingUser.rut !== currentUser.rut) {
             setEmailError('Ese correo ya está en uso por otra cuenta.');
             return;
         }
@@ -87,7 +87,6 @@ const PrivacidadPage = () => {
 
         try {
             const updatedUser = { ...currentUser, password: passwords.new };
-
             saveUser(updatedUser);
             updateCurrentUser(updatedUser);
 
