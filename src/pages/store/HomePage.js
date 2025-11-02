@@ -20,7 +20,7 @@ const HomePage = () => {
             <section className="hero" style={heroStyle}>
                 <div className="container">
                     <h2 className="hero-title">¡Desafía tus límites con Level-Up Gamer!</h2>
-                    <p className="hero-text">Conviértete en el héroe de tu propia historia y únete a nuestra comunidad de jugadores. ¡Explora, juega y gana con nosotros!</p>
+                    <p className="hero-text">Conviértete en un Pro Gamer con nuestros productos y únete a nuestra comunidad de jugadores. ¡Explora, mejora y gana con nosotros!</p>
                     <Link to="/catalogo" className="btn">Explorar Productos</Link>
                 </div>
             </section>
@@ -28,7 +28,7 @@ const HomePage = () => {
             <section id="featured-products" className="section-catalogo" style={{ paddingTop: '50px', backgroundColor: '#111' }}>
                 <Container>
                     <h2 className="section-title">Productos Destacados</h2>
-                    <Row className="product-grid-detailed">
+                    <Row>
                         {featuredProducts.map(product => (
                             <Col key={product.codigo} md={4} lg={3} className="mb-4">
                                 <ProductCard product={product} />
