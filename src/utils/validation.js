@@ -1,30 +1,34 @@
-// Valida el formato del email y los dominios permitidos
 export const validateEmail = (email) => {
     if (!email) return false;
     const emailRegex = /^[^\s@]+@((duoc\.cl)|(profesor\.duoc\.cl)|(gmail\.com)|(admin\.cl))$/;
     return emailRegex.test(String(email).toLowerCase());
 };
 
-// Valida la contraseña para el registro (mínimo 6 caracteres)
 export const validatePassword = (password) => {
     if (!password) return false;
     return password.length >= 6;
 };
 
-// Valida la contraseña para el login
 export const validateLoginPassword = (password) => {
     if (!password) return false;
     return password.length >= 6;
 };
 
-// Valida que un campo no esté vacío y no exceda una longitud
 export const validateRequiredField = (value, maxLength) => {
     if (!value || value.trim() === '') return false;
     if (maxLength && value.length > maxLength) return false;
     return true;
 };
 
-// Valida el formato Y el dígito verificador del RUT chileno
+export const validateTextField = (value, maxLength) => {
+    if (!value || value.trim() === '') return false;
+    if (maxLength && value.length > maxLength) return false;
+    const regex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
+    return regex.test(value);
+};
+
+
+// Valida el formato Y el dígito verificador
 export const validateRut = (rutCompleto) => {
     if (!rutCompleto) return false;
 
@@ -35,6 +39,12 @@ export const validateRut = (rutCompleto) => {
     const dv = rutLimpio.slice(-1).toUpperCase();
 
     if (!/^\d+$/.test(cuerpo)) return false;
+
+    const primerDigito = cuerpo.charAt(0);
+    const todosIguales = cuerpo.split('').every(char => char === primerDigito);
+    if (todosIguales) {
+        return false;
+    }
 
     let suma = 0;
     let multiplo = 2;
@@ -125,12 +135,12 @@ export const validateUserForm = (user) => {
         errors.run = 'El RUN ingresado no es válido.';
     }
 
-    if (!validateRequiredField(user.nombre, 50)) {
-        errors.nombre = 'El nombre es requerido (máx 50).';
+    if (!validateTextField(user.nombre, 30)) {
+        errors.nombre = 'El nombre no puede estar vacio y solo debe contener letras y espacios (máx 30).';
     }
 
-    if (!validateRequiredField(user.apellidos, 100)) {
-        errors.apellidos = 'Los apellidos son requeridos (máx 100).';
+    if (!validateTextField(user.apellidos, 30)) {
+        errors.apellidos = 'Los apellidos no puede estar vacio y solo debe contener letras y espacios (máx 30).';
     }
 
     if (!validateEmail(user.email)) {

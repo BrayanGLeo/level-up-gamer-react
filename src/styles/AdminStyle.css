@@ -94,11 +94,27 @@ body {
 .btn-action.edit { background-color: #ffc107; }
 .btn-action.delete { background-color: #dc3545; }
 
+
 .admin-form-container, .admin-table-container {
+    background-color: transparent;
+    padding: 0;
+    box-shadow: none;
+    border-radius: 0;
+}
+
+.admin-table-container {
     background-color: #fff;
     padding: 20px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     border-radius: 8px;
+}
+
+.admin-form-container .form-group {
+    background-color: transparent; 
+    padding: 0;
+    border-radius: 0;
+    margin-bottom: 15px;
+    border: none;
 }
 
 .form-group {
@@ -109,15 +125,42 @@ body {
     display: block;
     margin-bottom: 5px;
     font-weight: bold;
+    color: #333;
 }
 
-.form-group input, .form-group select, .form-group textarea {
+.admin-form-container .form-group input, 
+.admin-form-container .form-group select, 
+.admin-form-container .form-group textarea {
     width: 100%;
     padding: 10px;
     box-sizing: border-box;
-    border: 1px solid #ccc;
+    border: 1px solid #1E90FF;
     border-radius: 4px;
+    background-color: #000000;
+    color: #ffffff;
 }
+
+.admin-form-container .form-group select option {
+    background-color: #000000;
+    color: #ffffff;
+}
+
+.admin-form-container .form-group input:focus,
+.admin-form-container .form-group select:focus,
+.admin-form-container .form-group textarea:focus {
+    background-color: #000000;
+    color: #ffffff;
+    border-color: #39FF14;
+    box-shadow: 0 0 8px rgba(30, 144, 255, 0.5);
+    outline: none;
+}
+
+.admin-form-container .form-group input::placeholder,
+.admin-form-container .form-group textarea::placeholder {
+    color: #aaa;
+    opacity: 1;
+}
+
 
 table {
     width: 100%;

@@ -2,20 +2,35 @@ import React, { useState, useEffect } from 'react';
 import { Table, Button } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import { getProducts, deleteProductByCode } from '../../data/productData';
+import AdminConfirmModal from '../../components/AdminConfirmModal';
 
 const AdminProductList = () => {
     const [products, setProducts] = useState([]);
     const navigate = useNavigate();
+    
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
+    const [productToDelete, setProductToDelete] = useState(null);
 
     useEffect(() => {
         setProducts(getProducts());
     }, []);
 
-    const handleDelete = (codigo) => {
-        if (window.confirm('¿Estás seguro de que quieres eliminar este producto?')) {
-            deleteProductByCode(codigo);
+    const handleDeleteClick = (codigo) => {
+        setProductToDelete(codigo);
+        setShowConfirmModal(true);
+    };
+
+    const handleModalClose = () => {
+        setProductToDelete(null);
+        setShowConfirmModal(false);
+    };
+
+    const handleModalConfirm = () => {
+        if (productToDelete) {
+            deleteProductByCode(productToDelete);
             setProducts(getProducts());
         }
+        handleModalClose();
     };
 
     return (
@@ -56,7 +71,7 @@ const AdminProductList = () => {
                                     <Button
                                         variant="danger"
                                         size="sm"
-                                        onClick={() => handleDelete(product.codigo)}
+                                        onClick={() => handleDeleteClick(product.codigo)}
                                     >
                                         Eliminar
                                     </Button>
@@ -66,6 +81,14 @@ const AdminProductList = () => {
                     </tbody>
                 </Table>
             </section>
+
+            <AdminConfirmModal
+                show={showConfirmModal}
+                onHide={handleModalClose}
+                onConfirm={handleModalConfirm}
+                title="Confirmar Eliminación"
+                message="¿Estás seguro de que quieres eliminar este producto?"
+            />
         </>
     );
 };

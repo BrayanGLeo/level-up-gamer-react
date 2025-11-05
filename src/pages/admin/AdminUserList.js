@@ -5,6 +5,8 @@ import { getUsers, deleteUserByRut } from '../../data/userData';
 import { useAuth } from '../../context/AuthContext';
 import EmailHistoryModal from '../../components/EmailHistoryModal';
 import '../../styles/AdminStyle.css';
+import AdminConfirmModal from '../../components/AdminConfirmModal';
+import AdminNotificationModal from '../../components/AdminNotificationModal';
 
 const AdminUserList = () => {
     const [products, setUsers] = useState([]);
@@ -14,20 +16,43 @@ const AdminUserList = () => {
     const [showHistoryModal, setShowHistoryModal] = useState(false);
     const [selectedUser, setSelectedUser] = useState(null);
 
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
+    const [userToDelete, setUserToDelete] = useState(null);
+    const [showNotifyModal, setShowNotifyModal] = useState(false);
+    const [notifyInfo, setNotifyInfo] = useState({ title: '', message: '' });
+
     useEffect(() => {
         setUsers(getUsers());
     }, [currentUser]);
 
     const handleDelete = (rut) => {
         if (rut === '12345678-9') {
-            alert('No puedes eliminar al administrador principal.');
+            setNotifyInfo({ title: 'Error', message: 'No puedes eliminar al administrador principal.' });
+            setShowNotifyModal(true);
             return;
         }
 
-        if (window.confirm('¿Estás seguro de que quieres eliminar este usuario?')) {
-            deleteUserByRut(rut);
+        setUserToDelete(rut);
+        setShowConfirmModal(true);
+    };
+
+    const handleConfirmDelete = () => {
+        if (userToDelete) {
+            deleteUserByRut(userToDelete);
             setUsers(getUsers());
         }
+        setShowConfirmModal(false);
+        setUserToDelete(null);
+    };
+
+    const handleCloseConfirm = () => {
+        setShowConfirmModal(false);
+        setUserToDelete(null);
+    };
+
+    const handleCloseNotify = () => {
+        setShowNotifyModal(false);
+        setNotifyInfo({ title: '', message: '' });
     };
 
     const handleShowHistory = (user) => {
@@ -103,6 +128,21 @@ const AdminUserList = () => {
                 show={showHistoryModal}
                 onHide={handleCloseHistory}
                 user={selectedUser}
+            />
+
+            <AdminConfirmModal
+                show={showConfirmModal}
+                onHide={handleCloseConfirm}
+                onConfirm={handleConfirmDelete}
+                title="Confirmar Eliminación"
+                message="¿Estás seguro de que quieres eliminar este usuario?"
+            />
+            
+            <AdminNotificationModal
+                show={showNotifyModal}
+                onHide={handleCloseNotify}
+                title={notifyInfo.title}
+                message={notifyInfo.message}
             />
         </>
     );

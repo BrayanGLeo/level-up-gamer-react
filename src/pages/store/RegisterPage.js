@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Container, Form, Button, Row, Col } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { validateEmail, validatePassword, validateRequiredField, validateRut, validateBirthdate } from '../../utils/validation';
+import { validateEmail, validatePassword, validateTextField, validateRut, validateBirthdate } from '../../utils/validation';
 import NotificationModal from '../../components/NotificationModal';
 import '../../styles/Forms.css';
 
@@ -33,11 +33,11 @@ const RegisterPage = () => {
         e.preventDefault();
         let newErrors = {};
 
-        if (!validateRequiredField(formData.names, 50)) newErrors.names = 'El nombre es requerido (máx 50 caracteres).';
-        if (!validateRequiredField(formData.surnames, 100)) newErrors.surnames = 'El apellido es requerido (máx 100 caracteres).';
+        if (!validateTextField(formData.names, 30)) newErrors.names = 'El nombre solo debe contener letras y espacios (máx 30 caracteres).';
+        if (!validateTextField(formData.surnames, 30)) newErrors.surnames = 'El apellido solo debe contener letras y espacios (máx 30 caracteres).';
         if (!validateRut(formData.rut)) newErrors.rut = 'El RUT no es válido (ej: 12345678-9).';
         if (!validateEmail(formData.email)) newErrors.email = 'El correo no es válido (solo dominios permitidos).';
-        if (!validateBirthdate(formData.birthdate)) newErrors.birthdate = 'Fecha inválida. Debes ser mayor de 18 años y haber nacido después de 1900.';
+        if (!validateBirthdate(formData.birthdate)) newErrors.birthdate = 'Fecha inválida. Debes ser mayor de 18 años';
         if (!validatePassword(formData.password)) newErrors.password = 'La contraseña debe tener al menos 6 caracteres.';
         if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = 'Las contraseñas no coinciden.';
 

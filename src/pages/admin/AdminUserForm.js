@@ -4,6 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { findUserByRut, saveUser, findUserByEmail, updateUserEmail } from '../../data/userData';
 import { validateUserForm } from '../../utils/validation';
 import '../../styles/AdminStyle.css';
+import AdminNotificationModal from '../../components/AdminNotificationModal';
 
 const regionesYComunas = {
     "Biobío": ["Concepción", "Los Ángeles", "Talcahuano", "Coronel", "Chiguayante", "Hualpén"],
@@ -30,6 +31,9 @@ const AdminUserForm = () => {
     const navigate = useNavigate();
     const { rut } = useParams();
     const isEditMode = Boolean(rut);
+
+    const [showNotifyModal, setShowNotifyModal] = useState(false);
+    const [modalInfo, setModalInfo] = useState({ title: '', message: '' });
 
     useEffect(() => {
         if (isEditMode) {
@@ -63,6 +67,11 @@ const AdminUserForm = () => {
         const region = e.target.value;
         setFormData({ ...formData, region: region, comuna: '' });
         setComunas(regionesYComunas[region] || []);
+    };
+
+    const handleModalClose = () => {
+        setShowNotifyModal(false);
+        navigate('/admin/usuarios');
     };
 
     const handleSubmit = (e) => {
@@ -106,9 +115,10 @@ const AdminUserForm = () => {
                     return;
                 }
             }
-
-            alert(isEditMode ? 'Usuario actualizado con éxito' : 'Usuario guardado con éxito');
-            navigate('/admin/usuarios');
+            
+            const message = isEditMode ? 'Usuario actualizado con éxito' : 'Usuario guardado con éxito';
+            setModalInfo({ title: '¡Éxito!', message: message });
+            setShowNotifyModal(true);
         }
     };
 
@@ -230,6 +240,13 @@ const AdminUserForm = () => {
                     </Button>
                 </Form>
             </section>
+
+            <AdminNotificationModal
+                show={showNotifyModal}
+                onHide={handleModalClose}
+                title={modalInfo.title}
+                message={modalInfo.message}
+            />
         </>
     );
 };

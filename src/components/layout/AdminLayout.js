@@ -1,15 +1,39 @@
-import React from 'react';
-import { Outlet, Navigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Outlet, useNavigate } from 'react-router-dom';
 import AdminSidebar from './AdminSidebar';
 import { useAuth } from '../../context/AuthContext';
 import '../../styles/AdminStyle.css';
+import AdminNotificationModal from '../AdminNotificationModal';
 
 const AdminLayout = () => {
     const { currentUser } = useAuth();
+    const navigate = useNavigate();
+    const [showModal, setShowModal] = useState(false);
+
+    useEffect(() => {
+        if (!currentUser || currentUser.role !== 'Administrador') {
+            setShowModal(true);
+        }
+    }, [currentUser]);
+
+    const handleModalClose = () => {
+        setShowModal(false);
+        navigate('/login');
+    };
+
+    if (showModal) {
+        return (
+            <AdminNotificationModal
+                show={showModal}
+                onHide={handleModalClose}
+                title="Acceso Denegado"
+                message="Acceso denegado. Debes ser administrador para ver esta página."
+            />
+        );
+    }
 
     if (!currentUser || currentUser.role !== 'Administrador') {
-        alert("Acceso denegado. Debes ser administrador.");
-        return <Navigate to="/login" />;
+        return null;
     }
 
     return (

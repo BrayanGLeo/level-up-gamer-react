@@ -3,6 +3,7 @@ import { Form, Button } from 'react-bootstrap';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getProductByCode, saveProduct } from '../../data/productData';
 import { validateProductForm } from '../../utils/validation';
+import AdminNotificationModal from '../../components/AdminNotificationModal';
 
 const AdminProductForm = () => {
     const [formData, setFormData] = useState({
@@ -20,6 +21,9 @@ const AdminProductForm = () => {
     const { codigo } = useParams();
     const isEditMode = Boolean(codigo);
 
+    const [showNotifyModal, setShowNotifyModal] = useState(false);
+    const [modalInfo, setModalInfo] = useState({ title: '', message: '' });
+
     useEffect(() => {
         if (isEditMode) {
             const product = getProductByCode(codigo);
@@ -34,6 +38,11 @@ const AdminProductForm = () => {
         setFormData({ ...formData, [name]: value });
     };
 
+    const handleModalClose = () => {
+        setShowNotifyModal(false);
+        navigate('/admin/productos');
+    };
+    
     const handleSubmit = (e) => {
         e.preventDefault();
         const formErrors = validateProductForm(formData);
@@ -41,8 +50,9 @@ const AdminProductForm = () => {
 
         if (Object.keys(formErrors).length === 0) {
             saveProduct(formData);
-            alert(isEditMode ? 'Producto actualizado con éxito' : 'Producto guardado con éxito');
-            navigate('/admin/productos');
+            const message = isEditMode ? 'Producto actualizado con éxito' : 'Producto guardado con éxito';
+            setModalInfo({ title: '¡Éxito!', message: message });
+            setShowNotifyModal(true);
         }
     };
 
@@ -136,7 +146,6 @@ const AdminProductForm = () => {
                         <Form.Control.Feedback type="invalid">{errors.categoria}</Form.Control.Feedback>
                     </Form.Group>
 
-                    {/* URL Imagen */}
                     <Form.Group className="form-group" controlId="imagen">
                         <Form.Label>URL Imagen (Opcional):</Form.Label>
                         <Form.Control
@@ -152,6 +161,13 @@ const AdminProductForm = () => {
                     </Button>
                 </Form>
             </section>
+
+            <AdminNotificationModal
+                show={showNotifyModal}
+                onHide={handleModalClose}
+                title={modalInfo.title}
+                message={modalInfo.message}
+            />
         </>
     );
 };
