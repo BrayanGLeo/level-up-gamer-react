@@ -1,20 +1,25 @@
 :root {
-    --admin-bg: #f0f2f5;
+    --admin-bg: #ffffff;
+    
     --admin-sidebar-bg: #001529;
     --admin-sidebar-text: rgba(255, 255, 255, 0.75);
     --admin-sidebar-text-hover: #ffffff;
+    
     --admin-primary: #1E90FF;
     --admin-primary-hover: #007ae5;
+    
     --admin-card-bg: #ffffff;
-    --admin-card-border: #e0e0e0;
-    --admin-text-primary: #333;
-    --admin-text-secondary: #666;
+    --admin-card-border: #dee2e6; 
+    
+    --admin-text-primary: #212529;
+    --admin-text-secondary: #6c757d;
+    
     --admin-shadow: 0 4px 12px rgba(0,0,0,0.05);
 }
 
 body.admin-body {
-    background-color: var(--admin-bg);
-    color: var(--admin-text-primary);
+    background-color: var(--admin-bg) !important;
+    color: var(--admin-text-primary) !important;
     font-family: 'Roboto', sans-serif;
     margin: 0;
 }
@@ -27,13 +32,13 @@ body.admin-body {
 .admin-main-content {
     flex-grow: 1;
     padding: 2.5rem;
-    background-color: var(--admin-bg);
+    background-color: var(--admin-bg) !important;
 }
 
 .sidebar {
     width: 250px;
-    background-color: var(--admin-sidebar-bg);
-    color: var(--admin-sidebar-text);
+    background-color: var(--admin-sidebar-bg) !important;
+    color: var(--admin-sidebar-text) !important;
     display: flex;
     flex-direction: column;
     box-shadow: 2px 0 8px rgba(0,0,0,0.1);
@@ -56,7 +61,7 @@ body.admin-body {
 }
 
 .admin-nav .nav-link {
-    color: var(--admin-sidebar-text);
+    color: var(--admin-sidebar-text) !important;
     text-decoration: none;
     display: block;
     padding: 12px 15px;
@@ -67,13 +72,13 @@ body.admin-body {
 }
 
 .admin-nav .nav-link:hover {
-    background-color: var(--admin-primary);
-    color: var(--admin-sidebar-text-hover);
+    background-color: var(--admin-primary) !important;
+    color: var(--admin-sidebar-text-hover) !important;
 }
 
 .admin-nav .nav-link.active {
-    background-color: var(--admin-primary);
-    color: var(--admin-sidebar-text-hover);
+    background-color: var(--admin-primary) !important;
+    color: var(--admin-sidebar-text-hover) !important;
     font-weight: 600;
 }
 
@@ -83,25 +88,26 @@ body.admin-body {
 }
 
 .sidebar-footer hr {
-    border-color: #344b61;
+    border-color: #344b61 !important;
 }
 
 .sidebar-footer .nav-link {
-    color: rgba(255, 255, 255, 0.5);
+    color: rgba(255, 255, 255, 0.5) !important;
 }
 
 .sidebar-footer .nav-link:hover {
-    background-color: #c9302c;
-    color: #fff;
+    background-color: #c9302c !important;
+    color: #fff !important;
 }
 
+/* --- CABECERA Y TARJETAS (Ahora sobre fondo blanco) --- */
 .admin-page-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin: -2.5rem -2.5rem 2rem -2.5rem;
     padding: 1.5rem 2.5rem;
-    background-color: var(--admin-card-bg);
+    background-color: var(--admin-card-bg) !important;
     border-bottom: 1px solid var(--admin-card-border);
 }
 
@@ -109,22 +115,22 @@ body.admin-body {
     margin: 0;
     font-family: 'Orbitron', sans-serif;
     font-size: 1.75rem;
-    color: var(--admin-text-primary);
+    color: var(--admin-text-primary) !important;
 }
 
 .admin-page-header p {
     margin: 0;
     font-size: 1rem;
-    color: var(--admin-text-secondary);
+    color: var(--admin-text-secondary) !important;
 }
 
 .admin-card {
-    background-color: var(--admin-card-bg);
+    background-color: var(--admin-card-bg) !important;
     border-radius: 12px;
-    border: none;
-    box-shadow: var(--admin-shadow);
+    border: 1px solid var(--admin-card-border) !important;
+    box-shadow: none;
     margin-bottom: 2rem;
-    color: #333; 
+    color: var(--admin-text-primary) !important;
 }
 
 .admin-card .card-header {
@@ -134,16 +140,26 @@ body.admin-body {
     font-family: 'Orbitron', sans-serif;
     font-weight: 600;
     font-size: 1.1rem;
+    color: var(--admin-text-primary) !important;
 }
 
 .admin-card .card-body {
     padding: 1.5rem;
 }
 
+/* Esto arregla el texto "Esta sección está en desarrollo" */
+.admin-main-content .text-muted {
+    color: var(--admin-text-secondary) !important;
+}
+.admin-main-content h3 {
+    color: var(--admin-text-primary) !important;
+}
+
+
 h2.admin-section-title {
     font-family: 'Orbitron', sans-serif;
     font-size: 1.5rem;
-    color: var(--admin-text-primary);
+    color: var(--admin-text-primary) !important;
     margin-bottom: 20px;
     font-weight: 600;
 }
@@ -164,13 +180,14 @@ h2.admin-section-title {
     background-color: #007ae5 !important;
 }
 
+/* --- FORMULARIOS E INPUTS --- */
 .admin-form-container .form-group {
     margin-bottom: 1.25rem;
 }
 
 .admin-form-container .form-label {
     font-weight: 600;
-    color: #333;
+    color: var(--admin-text-primary) !important;
     margin-bottom: 0.5rem;
 }
 
@@ -179,34 +196,35 @@ h2.admin-section-title {
     width: 100%;
     padding: 10px;
     box-sizing: border-box;
-    border: 1px solid #1E90FF;
+    border: 1px solid #ced4da !important;
     border-radius: 4px;
-    background-color: #000000;
-    color: #ffffff;
+    background-color: #ffffff !important;
+    color: #000000 !important;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .admin-form-container .form-select option {
-    background-color: #000000;
-    color: #ffffff;
+    background-color: #ffffff !important;
+    color: #000000 !important;
 }
 
 .admin-form-container .form-control:focus,
 .admin-form-container .form-select:focus {
-    background-color: #000000;
-    color: #ffffff;
-    border-color: #39FF14;
-    box-shadow: 0 0 8px rgba(30, 144, 255, 0.5);
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    border-color: #1E90FF !important;
+    box-shadow: 0 0 8px rgba(30, 144, 255, 0.5) !important;
     outline: none;
 }
 
 .admin-form-container .form-control::placeholder {
-    color: #aaa;
+    color: #6c757d !important;
     opacity: 1;
 }
 
+/* --- TABLAS --- */
 .admin-table-container {
-    background-color: #fff;
+    background-color: #fff !important;
     padding: 20px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     border-radius: 8px;
@@ -219,21 +237,22 @@ h2.admin-section-title {
 .admin-table-container .table thead th {
     font-size: 0.85rem;
     font-weight: 600;
-    color: #666;
+    color: #666 !important;
     text-transform: uppercase;
-    background-color: #fafafa;
+    background-color: #fafafa !important;
     border-bottom: 2px solid #e0e0e0;
 }
 
 .admin-table-container .table tbody td {
     vertical-align: middle;
-    color: #333;
+    color: #333 !important;
 }
 
 .admin-table-container .table-hover tbody tr:hover {
-    background-color: #f5f5f5;
+    background-color: #f5f5f5 !important;
 }
 
+/* --- DASHBOARD STATS (Sin cambios) --- */
 .stats-card {
     display: flex;
     align-items: center;
@@ -282,7 +301,7 @@ h2.admin-section-title {
     line-height: 1.2;
 }
 
-
+/* --- DASHBOARD NAV CARDS (Fondo blanco) --- */
 .admin-nav-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -290,11 +309,11 @@ h2.admin-section-title {
 }
 
 .admin-nav-card {
-    background-color: #fff;
+    background-color: #fff !important;
     border: 1px solid #e0e0e0;
     border-radius: 10px;
     text-decoration: none;
-    color: #333;
+    color: #333 !important;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
     box-shadow: 0 4px 12px rgba(0,0,0,0.03);
     padding: 1.5rem;
@@ -305,7 +324,7 @@ h2.admin-section-title {
 .admin-nav-card:hover {
     transform: translateY(-5px);
     box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
-    color: var(--admin-primary);
+    color: var(--admin-primary) !important;
     text-decoration: none;
 }
 
@@ -320,14 +339,14 @@ h2.admin-section-title {
 .admin-nav-card .nav-card-title {
     font-family: 'Orbitron', sans-serif;
     font-weight: 600;
-    color: var(--admin-primary);
+    color: var(--admin-primary) !important;
     font-size: 1.1rem; 
     margin-bottom: 0.5rem;
 }
 
 .admin-nav-card .nav-card-text {
     font-size: 0.9rem; 
-    color: #666;
+    color: #666 !important;
     margin-bottom: 0;
 }
 
