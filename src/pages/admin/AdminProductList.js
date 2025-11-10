@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Button } from 'react-bootstrap';
+import { Table, Button, Card, Badge } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import { getProducts, deleteProductByCode } from '../../data/productData';
 import AdminConfirmModal from '../../components/AdminConfirmModal';
+import '../../styles/AdminStyle.css'; 
 
 const AdminProductList = () => {
     const [products, setProducts] = useState([]);
@@ -33,54 +34,72 @@ const AdminProductList = () => {
         handleModalClose();
     };
 
+    const getStockBadge = (stock, stockCritico) => {
+        if (stock <= (stockCritico || 5)) {
+            return <Badge bg="danger">Crítico ({stock})</Badge>;
+        }
+        if (stock < (stockCritico || 5) * 2) {
+            return <Badge bg="warning">Bajo ({stock})</Badge>;
+        }
+        return <Badge bg="success">{stock}</Badge>;
+    };
+
     return (
         <>
-            <header className="admin-header">
+            <div className="admin-page-header">
                 <h1>Productos</h1>
                 <Button as={Link} to="/admin/productos/nuevo" className="btn-admin">
                     Nuevo Producto
                 </Button>
-            </header>
-            <section className="admin-table-container">
-                <Table striped bordered hover>
-                    <thead>
-                        <tr>
-                            <th>Código</th>
-                            <th>Nombre</th>
-                            <th>Precio</th>
-                            <th>Stock</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {products.map(product => (
-                            <tr key={product.codigo}>
-                                <td>{product.codigo}</td>
-                                <td>{product.nombre}</td>
-                                <td>${product.precio.toLocaleString('es-CL')}</td>
-                                <td>{product.stock}</td>
-                                <td>
-                                    <Button
-                                        variant="warning"
-                                        size="sm"
-                                        className="me-2"
-                                        onClick={() => navigate(`/admin/productos/editar/${product.codigo}`)}
-                                    >
-                                        Editar
-                                    </Button>
-                                    <Button
-                                        variant="danger"
-                                        size="sm"
-                                        onClick={() => handleDeleteClick(product.codigo)}
-                                    >
-                                        Eliminar
-                                    </Button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </Table>
-            </section>
+            </div>
+
+            <Card className="admin-card">
+                <Card.Header>Inventario de Productos</Card.Header>
+                <Card.Body>
+                    <div className="admin-table-container" style={{padding: 0, boxShadow: 'none'}}>
+                        <Table hover responsive>
+                            <thead>
+                                <tr>
+                                    <th>Código</th>
+                                    <th>Nombre</th>
+                                    <th>Categoría</th>
+                                    <th>Precio</th>
+                                    <th>Stock</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {products.map(product => (
+                                    <tr key={product.codigo}>
+                                        <td><strong>{product.codigo}</strong></td>
+                                        <td>{product.nombre}</td>
+                                        <td>{product.categoria}</td>
+                                        <td>${product.precio.toLocaleString('es-CL')}</td>
+                                        <td>{getStockBadge(product.stock, product.stockCritico)}</td>
+                                        <td>
+                                            <Button
+                                                variant="warning"
+                                                size="sm"
+                                                onClick={() => navigate(`/admin/productos/editar/${product.codigo}`)}
+                                            >
+                                                Editar
+                                            </Button>
+                                            <Button
+                                                variant="danger"
+                                                size="sm"
+                                                className="ms-2"
+                                                onClick={() => handleDeleteClick(product.codigo)}
+                                            >
+                                                Eliminar
+                                            </Button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </Table>
+                    </div>
+                </Card.Body>
+            </Card>
 
             <AdminConfirmModal
                 show={showConfirmModal}

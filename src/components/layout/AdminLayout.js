@@ -11,9 +11,15 @@ const AdminLayout = () => {
     const [showModal, setShowModal] = useState(false);
 
     useEffect(() => {
+        document.body.classList.add('admin-body');
+
         if (!currentUser || currentUser.role !== 'Administrador') {
             setShowModal(true);
         }
+
+        return () => {
+            document.body.classList.remove('admin-body');
+        };
     }, [currentUser]);
 
     const handleModalClose = () => {

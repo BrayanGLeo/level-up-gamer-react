@@ -1,6 +1,21 @@
-body {
-    background-color: #f0f2f5;
-    color: #333;
+/* --- Base y Contenedor --- */
+:root {
+    --admin-bg: #f0f2f5;
+    --admin-sidebar-bg: #001529;
+    --admin-sidebar-text: rgba(255, 255, 255, 0.75);
+    --admin-sidebar-text-hover: #ffffff;
+    --admin-primary: #1E90FF;
+    --admin-primary-hover: #007ae5;
+    --admin-card-bg: #ffffff;
+    --admin-card-border: #e0e0e0;
+    --admin-text-primary: #333;
+    --admin-text-secondary: #666;
+    --admin-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+body.admin-body {
+    background-color: var(--admin-bg);
+    color: var(--admin-text-primary);
     font-family: 'Roboto', sans-serif;
     margin: 0;
 }
@@ -10,66 +25,138 @@ body {
     min-height: 100vh;
 }
 
+.main-content {
+    flex-grow: 1;
+    padding: 2.5rem;
+    background-color: var(--admin-bg);
+}
+
+/* --- Sidebar (Menú Lateral) --- */
 .sidebar {
-    width: 240px;
-    background-color: #001529;
-    color: #fff;
-    padding: 20px;
+    width: 250px;
+    background-color: var(--admin-sidebar-bg);
+    color: var(--admin-sidebar-text);
     display: flex;
     flex-direction: column;
+    box-shadow: 2px 0 8px rgba(0,0,0,0.1);
+    flex-shrink: 0;
 }
 
 .admin-logo {
     font-family: 'Orbitron', sans-serif;
     text-align: center;
-    color: #1E90FF;
+    color: var(--admin-primary);
     font-size: 1.8rem;
-    margin-bottom: 30px;
+    padding: 25px 0;
+    margin-bottom: 10px;
+    letter-spacing: 1px;
+    font-weight: 700;
 }
 
-.admin-nav ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
+.admin-nav {
+    padding: 0 15px;
 }
 
-.admin-nav a {
-    color: rgba(255, 255, 255, 0.8);
+.admin-nav .nav-link {
+    color: var(--admin-sidebar-text);
     text-decoration: none;
     display: block;
     padding: 12px 15px;
     border-radius: 6px;
     margin-bottom: 5px;
-    transition: background-color 0.3s ease;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    font-weight: 500;
 }
 
-.admin-nav a:hover, .admin-nav li.active a {
-    background-color: #1E90FF;
+.admin-nav .nav-link:hover {
+    background-color: var(--admin-primary);
+    color: var(--admin-sidebar-text-hover);
+}
+
+.admin-nav .nav-link.active {
+    background-color: var(--admin-primary);
+    color: var(--admin-sidebar-text-hover);
+    font-weight: 600;
+}
+
+.sidebar-footer {
+    margin-top: auto;
+    padding-bottom: 15px;
+}
+
+.sidebar-footer hr {
+    border-color: #344b61;
+}
+
+.sidebar-footer .nav-link {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.sidebar-footer .nav-link:hover {
+    background-color: #c9302c;
     color: #fff;
 }
 
-.main-content {
-    flex-grow: 1;
-    padding: 30px;
-}
 
-.admin-header {
+/* --- Header de Página --- */
+.admin-page-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid #ddd;
-    padding-bottom: 20px;
-    margin-bottom: 30px;
+    margin: -2.5rem -2.5rem 2rem -2.5rem;
+    padding: 1.5rem 2.5rem;
+    background-color: var(--admin-card-bg);
+    border-bottom: 1px solid var(--admin-card-border);
 }
 
-.admin-header h1 {
+.admin-page-header h1 {
     margin: 0;
     font-family: 'Orbitron', sans-serif;
+    font-size: 1.75rem;
+    color: var(--admin-text-primary);
 }
 
+.admin-page-header p {
+    margin: 0;
+    font-size: 1rem;
+    color: var(--admin-text-secondary);
+}
+
+/* --- Tarjeta Base --- */
+.admin-card {
+    background-color: var(--admin-card-bg);
+    border-radius: 12px;
+    border: none;
+    box-shadow: var(--admin-shadow);
+    margin-bottom: 2rem;
+    color: #333; 
+}
+
+.admin-card .card-header {
+    background-color: transparent;
+    border-bottom: 1px solid var(--admin-card-border);
+    padding: 1.25rem 1.5rem;
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.admin-card .card-body {
+    padding: 1.5rem;
+}
+
+h2.admin-section-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.5rem;
+    color: var(--admin-text-primary);
+    margin-bottom: 20px;
+    font-weight: 600;
+}
+
+/* --- Botones --- */
 .btn-admin {
-    background-color: #1E90FF;
-    color: #ffffff;
+    background-color: #1E90FF !important; 
+    color: #ffffff !important;
     padding: 10px 20px;
     text-decoration: none;
     font-weight: bold;
@@ -80,57 +167,23 @@ body {
 }
 
 .btn-admin:hover {
-    background-color: #007ae5;
+    background-color: #007ae5 !important;
 }
 
-.btn-action {
-    padding: 5px 10px;
-    border: none;
-    border-radius: 4px;
-    color: #fff;
-    cursor: pointer;
-    margin-right: 5px;
-}
-.btn-action.edit { background-color: #ffc107; }
-.btn-action.delete { background-color: #dc3545; }
 
-
-.admin-form-container, .admin-table-container {
-    background-color: transparent;
-    padding: 0;
-    box-shadow: none;
-    border-radius: 0;
-}
-
-.admin-table-container {
-    background-color: #fff;
-    padding: 20px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    border-radius: 8px;
-}
-
+/* --- Formularios (Estilo oscuro original) --- */
 .admin-form-container .form-group {
-    background-color: transparent; 
-    padding: 0;
-    border-radius: 0;
-    margin-bottom: 15px;
-    border: none;
+    margin-bottom: 1.25rem;
 }
 
-.form-group {
-    margin-bottom: 15px;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: bold;
+.admin-form-container .form-label {
+    font-weight: 600;
     color: #333;
+    margin-bottom: 0.5rem;
 }
 
-.admin-form-container .form-group input, 
-.admin-form-container .form-group select, 
-.admin-form-container .form-group textarea {
+.admin-form-container .form-control,
+.admin-form-container .form-select {
     width: 100%;
     padding: 10px;
     box-sizing: border-box;
@@ -138,16 +191,16 @@ body {
     border-radius: 4px;
     background-color: #000000;
     color: #ffffff;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.admin-form-container .form-group select option {
+.admin-form-container .form-select option {
     background-color: #000000;
     color: #ffffff;
 }
 
-.admin-form-container .form-group input:focus,
-.admin-form-container .form-group select:focus,
-.admin-form-container .form-group textarea:focus {
+.admin-form-container .form-control:focus,
+.admin-form-container .form-select:focus {
     background-color: #000000;
     color: #ffffff;
     border-color: #39FF14;
@@ -155,32 +208,156 @@ body {
     outline: none;
 }
 
-.admin-form-container .form-group input::placeholder,
-.admin-form-container .form-group textarea::placeholder {
+.admin-form-container .form-control::placeholder {
     color: #aaa;
     opacity: 1;
 }
 
-
-table {
-    width: 100%;
-    border-collapse: collapse;
+/* --- Tablas (Estilo claro original) --- */
+.admin-table-container {
+    background-color: #fff;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border-radius: 8px;
 }
 
-th, td {
-    padding: 12px 15px;
-    text-align: left;
-    border-bottom: 1px solid #f0f0f0;
+.admin-table-container .table {
+    margin-bottom: 0;
 }
 
-thead th {
+.admin-table-container .table thead th {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #666;
+    text-transform: uppercase;
     background-color: #fafafa;
+    border-bottom: 2px solid #e0e0e0;
 }
 
-.error-message {
-    color: #dc3545;
-    font-size: 0.85em;
+.admin-table-container .table tbody td {
+    vertical-align: middle;
+    color: #333;
+}
+
+.admin-table-container .table-hover tbody tr:hover {
+    background-color: #f5f5f5;
+}
+
+
+/* --- Dashboard Específico (Figura 9) --- */
+
+.stats-card {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 2rem 1.5rem;
+    border-radius: 8px;
+    color: white;
+    position: relative;
+    overflow: hidden;
+    height: 150px;
+    box-shadow: var(--admin-shadow);
+}
+
+.stats-card-compras { background-color: #007bff; }
+.stats-card-productos { background-color: #28a745; }
+.stats-card-usuarios { background-color: #ffc107; color: #333; }
+.stats-card-ordenes { background-color: #17a2b8; }
+
+.stats-card-icon {
+    font-size: 5rem;
+    opacity: 0.15;
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    user-select: none;
+}
+
+.stats-card-content {
+    display: flex;
+    flex-direction: column;
+    z-index: 1;
+}
+
+.stats-card-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    opacity: 0.9;
+}
+
+.stats-card-value {
+    font-size: 2.2rem;
+    font-weight: 700;
+    font-family: 'Orbitron', sans-serif;
+    line-height: 1.2;
+}
+
+
+/* ===== INICIO DE CAMBIOS AQUÍ ===== */
+
+/* --- Grilla de Navegación (Figura 9 - Abajo) --- */
+.nav-card-action {
+    background-color: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    text-decoration: none;
+    color: #333;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    /* Se elimina height: 100% */
+    /* Se elimina display: flex */
+    /* Se elimina flex-direction: column */
+}
+
+.nav-card-action .card-body {
+    text-align: center;
+    padding: 1.5rem; /* Este es el "poquitito más abajo" */
+    /* Se eliminan todas las propiedades flex */
+}
+
+.nav-card-action:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
+    color: #1E90FF;
+}
+
+.nav-card-action .nav-card-icon {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
     display: block;
-    margin-top: 5px;
-    height: 1em;
+    line-height: 1;
+    color: #1E90FF;
+}
+
+.nav-card-action .card-title {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 600;
+    color: #1E90FF;
+    font-size: 1.1rem; 
+    margin-bottom: 0.5rem;
+}
+
+.nav-card-action .card-text {
+    font-size: 0.9rem; 
+    color: #666;
+    margin-bottom: 0;
+}
+
+/* ===== FIN DE CAMBIOS AQUÍ ===== */
+
+
+.quick-list-table {
+    margin-top: 15px;
+}
+
+.quick-list-table thead th {
+    font-size: 0.9rem;
+    color: #666;
+    border-bottom-width: 2px;
+}
+
+.quick-list-table tbody td {
+    vertical-align: middle;
 }

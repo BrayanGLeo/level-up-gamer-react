@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Form, Button } from 'react-bootstrap';
+import { Form, Button, Card, Row, Col } from 'react-bootstrap';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getProductByCode, saveProduct } from '../../data/productData';
 import { validateProductForm } from '../../utils/validation';
 import AdminNotificationModal from '../../components/AdminNotificationModal';
+import '../../styles/AdminStyle.css';
 
 const AdminProductForm = () => {
     const [formData, setFormData] = useState({
@@ -12,7 +13,7 @@ const AdminProductForm = () => {
         descripcion: '',
         precio: 0,
         stock: 0,
-        stockCritico: 0,
+        stockCritico: 5, 
         categoria: '',
         imagen: ''
     });
@@ -56,111 +57,145 @@ const AdminProductForm = () => {
         }
     };
 
+    const handleCancel = () => {
+        navigate('/admin/productos');
+    };
+
     return (
         <>
-            <header className="admin-header">
+            <div className="admin-page-header">
                 <h1>{isEditMode ? 'Editar Producto' : 'Nuevo Producto'}</h1>
-            </header>
-            <section className="admin-form-container">
-                <Form id="nuevoProductoForm" onSubmit={handleSubmit} noValidate>
-                    {/* Código Producto */}
-                    <Form.Group className="form-group" controlId="codigo">
-                        <Form.Label>Código Producto:</Form.Label>
-                        <Form.Control
-                            type="text"
-                            name="codigo"
-                            value={formData.codigo}
-                            onChange={handleChange}
-                            readOnly={isEditMode}
-                            isInvalid={!!errors.codigo}
-                        />
-                        <Form.Control.Feedback type="invalid">{errors.codigo}</Form.Control.Feedback>
-                    </Form.Group>
+            </div>
 
-                    {/* Nombre */}
-                    <Form.Group className="form-group" controlId="nombre">
-                        <Form.Label>Nombre:</Form.Label>
-                        <Form.Control
-                            type="text"
-                            name="nombre"
-                            value={formData.nombre}
-                            onChange={handleChange}
-                            isInvalid={!!errors.nombre}
-                        />
-                        <Form.Control.Feedback type="invalid">{errors.nombre}</Form.Control.Feedback>
-                    </Form.Group>
+            <Card className="admin-card">
+                <Card.Header>{isEditMode ? `Editando: ${formData.nombre}` : 'Detalles del Nuevo Producto'}</Card.Header>
+                <Card.Body>
+                    <Form id="nuevoProductoForm" onSubmit={handleSubmit} className="admin-form-container">
+                        
+                        <Row>
+                            <Col md={4}>
+                                <Form.Group className="form-group" controlId="codigo">
+                                    <Form.Label>Código Producto:</Form.Label>
+                                    <Form.Control
+                                        type="text"
+                                        name="codigo"
+                                        value={formData.codigo}
+                                        onChange={handleChange}
+                                        readOnly={isEditMode}
+                                        isInvalid={!!errors.codigo}
+                                    />
+                                    <Form.Control.Feedback type="invalid">{errors.codigo}</Form.Control.Feedback>
+                                </Form.Group>
+                            </Col>
+                            <Col md={8}>
+                                <Form.Group className="form-group" controlId="nombre">
+                                    <Form.Label>Nombre:</Form.Label>
+                                    <Form.Control
+                                        type="text"
+                                        name="nombre"
+                                        value={formData.nombre}
+                                        onChange={handleChange}
+                                        isInvalid={!!errors.nombre}
+                                    />
+                                    <Form.Control.Feedback type="invalid">{errors.nombre}</Form.Control.Feedback>
+                                </Form.Group>
+                            </Col>
+                        </Row>
 
-                    {/* Descripción */}
-                    <Form.Group className="form-group" controlId="descripcion">
-                        <Form.Label>Descripción (Opcional):</Form.Label>
-                        <Form.Control
-                            as="textarea"
-                            rows={4}
-                            name="descripcion"
-                            value={formData.descripcion}
-                            onChange={handleChange}
-                        />
-                    </Form.Group>
+                        <Form.Group className="form-group" controlId="descripcion">
+                            <Form.Label>Descripción (Opcional):</Form.Label>
+                            <Form.Control
+                                as="textarea"
+                                rows={4}
+                                name="descripcion"
+                                value={formData.descripcion}
+                                onChange={handleChange}
+                            />
+                        </Form.Group>
 
-                    {/* Precio */}
-                    <Form.Group className="form-group" controlId="precio">
-                        <Form.Label>Precio:</Form.Label>
-                        <Form.Control
-                            type="number"
-                            step="0.01"
-                            name="precio"
-                            value={formData.precio}
-                            onChange={handleChange}
-                            isInvalid={!!errors.precio}
-                        />
-                        <Form.Control.Feedback type="invalid">{errors.precio}</Form.Control.Feedback>
-                    </Form.Group>
+                        <Row>
+                            <Col md={4}>
+                                <Form.Group className="form-group" controlId="precio">
+                                    <Form.Label>Precio:</Form.Label>
+                                    <Form.Control
+                                        type="number"
+                                        step="1"
+                                        name="precio"
+                                        value={formData.precio}
+                                        onChange={handleChange}
+                                        isInvalid={!!errors.precio}
+                                    />
+                                    <Form.Control.Feedback type="invalid">{errors.precio}</Form.Control.Feedback>
+                                </Form.Group>
+                            </Col>
+                            <Col md={4}>
+                                <Form.Group className="form-group" controlId="stock">
+                                    <Form.Label>Stock:</Form.Label>
+                                    <Form.Control
+                                        type="number"
+                                        name="stock"
+                                        value={formData.stock}
+                                        onChange={handleChange}
+                                        isInvalid={!!errors.stock}
+                                    />
+                                    <Form.Control.Feedback type="invalid">{errors.stock}</Form.Control.Feedback>
+                                </Form.Group>
+                            </Col>
+                            <Col md={4}>
+                                <Form.Group className="form-group" controlId="stockCritico">
+                                    <Form.Label>Stock Crítico (Opcional):</Form.Label>
+                                    <Form.Control
+                                        type="number"
+                                        name="stockCritico"
+                                        value={formData.stockCritico}
+                                        onChange={handleChange}
+                                    />
+                                </Form.Group>
+                            </Col>
+                        </Row>
 
-                    {/* Stock */}
-                    <Form.Group className="form-group" controlId="stock">
-                        <Form.Label>Stock:</Form.Label>
-                        <Form.Control
-                            type="number"
-                            name="stock"
-                            value={formData.stock}
-                            onChange={handleChange}
-                            isInvalid={!!errors.stock}
-                        />
-                        <Form.Control.Feedback type="invalid">{errors.stock}</Form.Control.Feedback>
-                    </Form.Group>
+                        <Row>
+                            <Col md={6}>
+                                <Form.Group className="form-group" controlId="categoria">
+                                    <Form.Label>Categoría:</Form.Label>
+                                    <Form.Select
+                                        name="categoria"
+                                        value={formData.categoria}
+                                        onChange={handleChange}
+                                        isInvalid={!!errors.categoria}
+                                    >
+                                        <option value="">Selecciona una categoría</option>
+                                        <option value="juegos">Juegos</option>
+                                        <option value="accesorios">Accesorios</option>
+                                        <option value="consolas">Consolas y PC</option>
+                                    </Form.Select>
+                                    <Form.Control.Feedback type="invalid">{errors.categoria}</Form.Control.Feedback>
+                                </Form.Group>
+                            </Col>
+                             <Col md={6}>
+                                <Form.Group className="form-group" controlId="imagen">
+                                    <Form.Label>URL Imagen (Opcional):</Form.Label>
+                                    <Form.Control
+                                        type="text"
+                                        name="imagen"
+                                        value={formData.imagen}
+                                        onChange={handleChange}
+                                    />
+                                </Form.Group>
+                            </Col>
+                        </Row>
 
-                    {/* Categoria */}
-                    <Form.Group className="form-group" controlId="categoria">
-                        <Form.Label>Categoría:</Form.Label>
-                        <Form.Select
-                            name="categoria"
-                            value={formData.categoria}
-                            onChange={handleChange}
-                            isInvalid={!!errors.categoria}
-                        >
-                            <option value="">Selecciona una categoría</option>
-                            <option value="juegos">Juegos de Mesa</option>
-                            <option value="accesorios">Accesorios</option>
-                            <option value="consolas">Consolas</option>
-                        </Form.Select>
-                        <Form.Control.Feedback type="invalid">{errors.categoria}</Form.Control.Feedback>
-                    </Form.Group>
-
-                    <Form.Group className="form-group" controlId="imagen">
-                        <Form.Label>URL Imagen (Opcional):</Form.Label>
-                        <Form.Control
-                            type="text"
-                            name="imagen"
-                            value={formData.imagen}
-                            onChange={handleChange}
-                        />
-                    </Form.Group>
-
-                    <Button type="submit" className="btn-admin">
-                        {isEditMode ? 'Actualizar Producto' : 'Guardar Producto'}
-                    </Button>
-                </Form>
-            </section>
+                        <div className="text-end mt-3">
+                            <Button type="button" variant="secondary" onClick={handleCancel}>
+                                Cancelar
+                            </Button>
+                            <Button type="submit" className="btn-admin ms-2">
+                                {isEditMode ? 'Actualizar Producto' : 'Guardar Producto'}
+                            </Button>
+                        </div>
+                    </Form>
+                </Card.Body>
+            </Card>
 
             <AdminNotificationModal
                 show={showNotifyModal}

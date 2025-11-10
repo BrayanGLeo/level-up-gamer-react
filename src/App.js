@@ -19,11 +19,17 @@ import PerfilPage from './pages/store/PerfilPage';
 import PrivacidadPage from './pages/store/PrivacidadPage';
 import PedidosPage from './pages/store/PedidosPage';
 import DireccionesPage from './pages/store/DireccionesPage';
+
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminProductList from './pages/admin/AdminProductList';
 import AdminProductForm from './pages/admin/AdminProductForm';
 import AdminUserList from './pages/admin/AdminUserList';
 import AdminUserForm from './pages/admin/AdminUserForm';
+
+import AdminOrdenes from './pages/admin/AdminOrdenes';
+import AdminCategorias from './pages/admin/AdminCategorias';
+import AdminReportes from './pages/admin/AdminReportes';
+import AdminPerfil from './pages/admin/AdminPerfil';
 
 
 function App() {
@@ -57,6 +63,11 @@ function App() {
             <Route path="usuarios" element={<AdminUserList />} />
             <Route path="usuarios/nuevo" element={<AdminUserForm />} />
             <Route path="usuarios/editar/:rut" element={<AdminUserForm />} />
+            
+            <Route path="ordenes" element={<AdminOrdenes />} />
+            <Route path="categorias" element={<AdminCategorias />} />
+            <Route path="reportes" element={<AdminReportes />} />
+            <Route path="perfil" element={<AdminPerfil />} />
           </Route>
         </Routes>
       </CartProvider>
