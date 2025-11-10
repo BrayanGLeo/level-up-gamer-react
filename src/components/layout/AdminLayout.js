@@ -45,7 +45,7 @@ const AdminLayout = () => {
     return (
         <div className="admin-container">
             <AdminSidebar />
-            <main className="main-content">
+            <main className="admin-main-content">
                 <Outlet />
             </main>
         </div>

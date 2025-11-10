@@ -24,7 +24,7 @@ body.admin-body {
     min-height: 100vh;
 }
 
-.main-content {
+.admin-main-content {
     flex-grow: 1;
     padding: 2.5rem;
     background-color: var(--admin-bg);

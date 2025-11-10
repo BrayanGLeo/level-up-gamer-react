@@ -1,5 +1,6 @@
 .main-content {
     padding-top: 80px;
+    background-color: transparent;
 }
 
 .about-us-section, .contact-section {
@@ -53,7 +54,7 @@
 }
 
 .contact-info a, .contact-social a {
-    color: #FFFFFF;
+    color: #ffffff;
     text-decoration: none;
     transition: color 0.3s ease;
 }
