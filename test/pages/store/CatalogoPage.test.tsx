@@ -1,37 +1,48 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
+import { describe, test, expect, vi, beforeEach, SpyInstance } from 'vitest';
 import CatalogoPage from '../../../src/pages/store/CatalogoPage';
-import { useCart } from '../../../src/context/CartContext';
+import { useCart, CartProvider } from '../../../src/context/CartContext';
 import * as productData from '../../../src/data/productData';
+import { Product } from '../../../src/data/productData';
 
-jest.mock('react-router-dom', () => ({
-    ...jest.requireActual('react-router-dom'),
-    Link: (props) => <a href={props.to} {...props}>{props.children}</a>
-}));
-jest.mock('../../context/CartContext', () => ({
-    useCart: jest.fn(),
-}));
+vi.mock('react-router-dom', async (importOriginal) => {
+    const actual = await importOriginal() as object;
+    return {
+        ...actual,
+        Link: (props: any) => <a href={props.to} {...props}>{props.children}</a>
+    };
+});
+vi.mock('../../../src/context/CartContext', async (importOriginal) => {
+    const actual = await importOriginal() as object;
+    return {
+        ...actual,
+        useCart: vi.fn(),
+    };
+});
 
-const mockProducts = [
-    { codigo: 'P001', nombre: 'Juego de PS5', categoria: 'juegos', precio: 50000, descripcion: 'Juego' },
-    { codigo: 'P002', nombre: 'Mouse Gamer', categoria: 'accesorios', precio: 30000, descripcion: 'Accesorio' },
-    { codigo: 'P003', nombre: 'Consola Xbox', categoria: 'consolas', precio: 500000, descripcion: 'Consola' }
+const mockProducts: Product[] = [
+    { codigo: 'P001', nombre: 'Juego de PS5', categoria: 'juegos', precio: 50000, descripcion: 'Juego', stock: 1, stockCritico: 1, imagen: '' },
+    { codigo: 'P002', nombre: 'Mouse Gamer', categoria: 'accesorios', precio: 30000, descripcion: 'Accesorio', stock: 1, stockCritico: 1, imagen: '' },
+    { codigo: 'P003', nombre: 'Consola Xbox', categoria: 'consolas', precio: 500000, descripcion: 'Consola', stock: 1, stockCritico: 1, imagen: '' }
 ];
 
-const mockGetProducts = jest.spyOn(productData, 'getProducts');
+let mockGetProducts: SpyInstance<[], Product[]>;
 
-const mockUseCart = useCart;
+const mockUseCart = useCart as vi.Mock;
 
 describe('CatalogoPage', () => {
 
     beforeEach(() => {
-        mockGetProducts.mockReturnValue(mockProducts);
-        mockUseCart.mockReturnValue({ addToCart: jest.fn() });
+        mockGetProducts = vi.spyOn(productData, 'getProducts').mockReturnValue(mockProducts);
+        mockUseCart.mockReturnValue({ addToCart: vi.fn() });
 
         render(
             <BrowserRouter>
-                <CatalogoPage />
+                <CartProvider>
+                    <CatalogoPage />
+                </CartProvider>
             </BrowserRouter>
         );
     });

@@ -1,43 +1,59 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
+import { describe, test, expect, beforeEach, vi } from 'vitest';
 import RegisterPage from '../../../src/pages/store/RegisterPage';
-import { useAuth } from '../../../src/context/AuthContext';
+import { useAuth, AuthContextType } from '../../../src/context/AuthContext';
 import * as validationUtils from '../../../src/utils/validation';
 
-const mockedNavigate = jest.fn();
-jest.mock('react-router-dom', () => ({
-    ...jest.requireActual('react-router-dom'),
-    useNavigate: () => mockedNavigate,
-    Link: (props) => <a href={props.to} {...props}>{props.children}</a>
+const mockedNavigate = vi.fn();
+
+vi.mock('react-router-dom', async (importOriginal) => {
+    const actual = await importOriginal() as object;
+    return {
+        ...actual,
+        useNavigate: () => mockedNavigate,
+        Link: (props: any) => <a href={props.to} {...props}>{props.children}</a>
+    };
+});
+
+vi.mock('../../../src/context/AuthContext', async (importOriginal) => {
+    const actual = await importOriginal() as object;
+    return {
+        ...actual,
+        useAuth: vi.fn(),
+    };
+});
+const mockUseAuth = useAuth as vi.Mock;
+
+vi.mock('../../../src/utils/validation', () => ({
+    validateEmail: vi.fn(),
+    validatePassword: vi.fn(),
+    validateTextField: vi.fn(),
+    validateRut: vi.fn(),
+    validateBirthdate: vi.fn(),
 }));
 
-jest.mock('../../context/AuthContext', () => ({
-    useAuth: jest.fn(),
-}));
-const mockUseAuth = useAuth;
+const mockValidateEmail = validationUtils.validateEmail as vi.Mock;
+const mockValidatePassword = validationUtils.validatePassword as vi.Mock;
+const mockValidateTextField = validationUtils.validateTextField as vi.Mock;
+const mockValidateRut = validationUtils.validateRut as vi.Mock;
+const mockValidateBirthdate = validationUtils.validateBirthdate as vi.Mock;
 
-jest.mock('../../utils/validation', () => ({
-    validateEmail: jest.fn(),
-    validatePassword: jest.fn(),
-    validateTextField: jest.fn(),
-    validateRut: jest.fn(),
-    validateBirthdate: jest.fn(),
-}));
 
 describe('RegisterPage', () => {
-    let mockRegister;
+    let mockRegister: vi.Mock;
 
     beforeEach(() => {
         mockedNavigate.mockClear();
-        mockRegister = jest.fn();
-        mockUseAuth.mockReturnValue({ register: mockRegister });
+        mockRegister = vi.fn();
+        mockUseAuth.mockReturnValue({ register: mockRegister } as Partial<AuthContextType>);
 
-        validationUtils.validateEmail.mockReturnValue(true);
-        validationUtils.validatePassword.mockReturnValue(true);
-        validationUtils.validateTextField.mockReturnValue(true);
-        validationUtils.validateRut.mockReturnValue(true);
-        validationUtils.validateBirthdate.mockReturnValue(true);
+        mockValidateEmail.mockReturnValue(true);
+        mockValidatePassword.mockReturnValue(true);
+        mockValidateTextField.mockReturnValue(true);
+        mockValidateRut.mockReturnValue(true);
+        mockValidateBirthdate.mockReturnValue(true);
     });
 
     const fillForm = () => {
@@ -57,8 +73,8 @@ describe('RegisterPage', () => {
     });
 
     test('muestra errores de validación si los campos son inválidos', async () => {
-        validationUtils.validateTextField.mockReturnValue(false);
-        validationUtils.validateRut.mockReturnValue(false);
+        mockValidateTextField.mockReturnValue(false);
+        mockValidateRut.mockReturnValue(false);
 
         render(<BrowserRouter><RegisterPage /></BrowserRouter>);
 

@@ -1,18 +1,24 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, test, expect, vi } from 'vitest';
 import ProductCard from '../../src/components/ProductCard';
+import { Product } from '../../src/data/productData';
 
-const mockProduct = {
+const mockProduct: Product = {
+    codigo: 'P001',
     nombre: 'Control de PS5',
     descripcion: 'Control de nueva generación.',
     precio: 69990,
-    imagen: 'test.jpg'
+    imagen: 'test.jpg',
+    stock: 10,
+    stockCritico: 2,
+    categoria: 'accesorios'
 };
 
 describe('ProductCard', () => {
 
     test('renderiza la información del producto correctamente', () => {
-        const mockAddToCart = jest.fn();
+        const mockAddToCart = vi.fn();
         
         render(<ProductCard product={mockProduct} onAddToCartClick={mockAddToCart} />);
 
@@ -23,7 +29,7 @@ describe('ProductCard', () => {
     });
 
     test('llama a onAddToCartClick cuando se hace clic en el botón', () => {
-        const mockAddToCart = jest.fn();
+        const mockAddToCart = vi.fn();
         
         render(<ProductCard product={mockProduct} onAddToCartClick={mockAddToCart} />);
         

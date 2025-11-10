@@ -1,26 +1,52 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
+import { describe, test, expect, vi, beforeEach } from 'vitest';
 import CartPage from '../../../src/pages/store/CartPage';
-import { useAuth } from '../../../src/context/AuthContext';
-import { useCart } from '../../../src/context/CartContext';
+import { useAuth, AuthProvider } from '../../../src/context/AuthContext';
+import { useCart, CartProvider, CartItem } from '../../../src/context/CartContext';
+import { User } from '../../../src/data/userData';
 
-const mockedNavigate = jest.fn();
-jest.mock('react-router-dom', () => ({
-    ...jest.requireActual('react-router-dom'),
-    useNavigate: () => mockedNavigate,
-    Link: (props) => <a href={props.to} {...props}>{props.children}</a>
-}));
+const mockedNavigate = vi.fn();
 
-jest.mock('../../context/AuthContext', () => ({
-    useAuth: jest.fn(),
-}));
-jest.mock('../../context/CartContext', () => ({
-    useCart: jest.fn(),
-}));
+vi.mock('react-router-dom', async (importOriginal) => {
+    const actual = await importOriginal() as object;
+    return {
+        ...actual,
+        useNavigate: () => mockedNavigate,
+        Link: (props: any) => <a href={props.to} {...props}>{props.children}</a>
+    };
+});
 
-const mockUseAuth = useAuth;
-const mockUseCart = useCart;
+vi.mock('../../../src/context/AuthContext', async (importOriginal) => {
+    const actual = await importOriginal() as object;
+    return {
+        ...actual,
+        useAuth: vi.fn(),
+    };
+});
+vi.mock('../../../src/context/CartContext', async (importOriginal) => {
+    const actual = await importOriginal() as object;
+    return {
+        ...actual,
+        useCart: vi.fn(),
+    };
+});
+
+const mockUseAuth = useAuth as vi.Mock;
+const mockUseCart = useCart as vi.Mock;
+
+const renderCartPage = () => {
+    render(
+        <BrowserRouter>
+            <AuthProvider>
+                <CartProvider>
+                    <CartPage />
+                </CartProvider>
+            </AuthProvider>
+        </BrowserRouter>
+    );
+};
 
 describe('CartPage', () => {
 
@@ -38,36 +64,28 @@ describe('CartPage', () => {
             getCartItemCount: () => 0,
         });
 
-        render(
-            <BrowserRouter>
-                <CartPage />
-            </BrowserRouter>
-        );
+        renderCartPage();
 
         expect(screen.getByText(/Tu carrito está vacío/i)).toBeInTheDocument();
         expect(screen.queryByText(/Total:/i)).not.toBeInTheDocument();
     });
 
     test('debe mostrar los productos y el total si hay items', () => {
-        const mockItems = [
-            { codigo: 'P001', nombre: 'Juego de PS5', precio: 49990, quantity: 1, imagen: 'img.jpg' },
-            { codigo: 'P002', nombre: 'Control Xbox', precio: 59990, quantity: 2, imagen: 'img.jpg' }
+        const mockItems: CartItem[] = [
+            { codigo: 'P001', nombre: 'Juego de PS5', precio: 49990, quantity: 1, imagen: 'img.jpg', categoria: 'juegos', descripcion: '', stock: 1, stockCritico: 1 },
+            { codigo: 'P002', nombre: 'Control Xbox', precio: 59990, quantity: 2, imagen: 'img.jpg', categoria: 'accesorios', descripcion: '', stock: 1, stockCritico: 1 }
         ];
         mockUseAuth.mockReturnValue({ currentUser: null });
         mockUseCart.mockReturnValue({
             cartItems: mockItems,
             getCartTotal: () => (49990 * 1) + (59990 * 2),
             getCartItemCount: () => 3,
-            updateQuantity: jest.fn(),
-            removeFromCart: jest.fn(),
-            clearCart: jest.fn(),
+            updateQuantity: vi.fn(),
+            removeFromCart: vi.fn(),
+            clearCart: vi.fn(),
         });
 
-        render(
-            <BrowserRouter>
-                <CartPage />
-            </BrowserRouter>
-        );
+        renderCartPage();
 
         expect(screen.getByText('Juego de PS5')).toBeInTheDocument();
         expect(screen.getByText('Control Xbox')).toBeInTheDocument();
@@ -77,8 +95,8 @@ describe('CartPage', () => {
     });
 
     test('debe mostrar el modal de "Iniciar Sesión" si un invitado finaliza la compra', () => {
-        const mockItems = [
-            { codigo: 'P001', nombre: 'Juego de PS5', precio: 49990, quantity: 1, imagen: 'img.jpg' }
+        const mockItems: CartItem[] = [
+            { codigo: 'P001', nombre: 'Juego de PS5', precio: 49990, quantity: 1, imagen: 'img.jpg', categoria: 'juegos', descripcion: '', stock: 1, stockCritico: 1 }
         ];
         mockUseAuth.mockReturnValue({ currentUser: null });
         mockUseCart.mockReturnValue({
@@ -87,11 +105,7 @@ describe('CartPage', () => {
             getCartItemCount: () => 1,
         });
 
-        render(
-            <BrowserRouter>
-                <CartPage />
-            </BrowserRouter>
-        );
+        renderCartPage();
         fireEvent.click(screen.getByText('Finalizar Compra'));
 
         expect(screen.getByText('¿Cómo quieres continuar?')).toBeInTheDocument();
@@ -99,21 +113,18 @@ describe('CartPage', () => {
     });
 
     test('debe navegar a /checkout si un usuario registrado finaliza la compra', () => {
-        const mockItems = [
-            { codigo: 'P001', nombre: 'Juego de PS5', precio: 49990, quantity: 1, imagen: 'img.jpg' }
+        const mockItems: CartItem[] = [
+            { codigo: 'P001', nombre: 'Juego de PS5', precio: 49990, quantity: 1, imagen: 'img.jpg', categoria: 'juegos', descripcion: '', stock: 1, stockCritico: 1 }
         ];
-        mockUseAuth.mockReturnValue({ currentUser: { name: 'Test' } });
+        const user: Partial<User> = { name: 'Test' };
+        mockUseAuth.mockReturnValue({ currentUser: user });
         mockUseCart.mockReturnValue({
             cartItems: mockItems,
             getCartTotal: () => 49990,
             getCartItemCount: () => 1,
         });
 
-        render(
-            <BrowserRouter>
-                <CartPage />
-            </BrowserRouter>
-        );
+        renderCartPage();
         fireEvent.click(screen.getByText('Finalizar Compra'));
 
         expect(screen.queryByText('¿Cómo quieres continuar?')).not.toBeInTheDocument();

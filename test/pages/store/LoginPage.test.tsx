@@ -1,5 +1,7 @@
+import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
+import { test, expect } from 'vitest';
 import { AuthProvider } from '../../../src/context/AuthContext';
 import LoginPage from '../../../src/pages/store/LoginPage';
 
@@ -24,8 +26,8 @@ test('renders login form correctly', () => {
 test('allows user to type into form fields', () => {
     render(<MockLoginPage />);
 
-    const emailInput = screen.getByLabelText(/Correo Electrónico:/i);
-    const passwordInput = screen.getByLabelText(/Contraseña:/i);
+    const emailInput = screen.getByLabelText(/Correo Electrónico:/i) as HTMLInputElement;
+    const passwordInput = screen.getByLabelText(/Contraseña:/i) as HTMLInputElement;
 
     fireEvent.change(emailInput, { target: { value: 'test@gmail.com' } });
     fireEvent.change(passwordInput, { target: { value: 'password123' } });

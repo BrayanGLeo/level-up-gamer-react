@@ -1,7 +1,7 @@
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { findUser, registerUser, User, RegisterData, Order, Address } from '../data/userData';
 
-interface AuthContextType {
+export interface AuthContextType {
     currentUser: User | null;
     login: (email: string, password: string) => LoginResult;
     register: (userData: RegisterData) => LoginResult;

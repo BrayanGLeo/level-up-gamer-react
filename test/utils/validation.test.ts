@@ -1,3 +1,4 @@
+import { describe, it, expect } from 'vitest';
 import { validateEmail, validateRut, validatePhone, validateBirthdate } from '../../src/utils/validation';
 
 describe('validateEmail', () => {
