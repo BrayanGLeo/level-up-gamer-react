@@ -1,6 +1,6 @@
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './context/AuthContext'; // Importamos useAuth
 import { CartProvider } from './context/CartContext';
 import StoreLayout from './components/layout/StoreLayout';
 import AdminLayout from './components/layout/AdminLayout';
@@ -31,6 +31,15 @@ import AdminCategorias from './pages/admin/AdminCategorias';
 import AdminReportes from './pages/admin/AdminReportes';
 import AdminPerfil from './pages/admin/AdminPerfil';
 
+const AdminOnlyRoute = ({ children }) => {
+  const { currentUser } = useAuth();
+  
+  if (currentUser && currentUser.role === 'Administrador') {
+    return children;
+  }
+  
+  return <Navigate to="/admin" replace />;
+};
 
 function App() {
   return (
@@ -56,18 +65,17 @@ function App() {
           </Route>
 
           <Route path="/admin" element={<AdminLayout />}>
-            <Route index element={<AdminDashboard />} />
+            <Route path="ordenes" element={<AdminOrdenes />} />
             <Route path="productos" element={<AdminProductList />} />
             <Route path="productos/nuevo" element={<AdminProductForm />} />
             <Route path="productos/editar/:codigo" element={<AdminProductForm />} />
-            <Route path="usuarios" element={<AdminUserList />} />
-            <Route path="usuarios/nuevo" element={<AdminUserForm />} />
-            <Route path="usuarios/editar/:rut" element={<AdminUserForm />} />
-            
-            <Route path="ordenes" element={<AdminOrdenes />} />
-            <Route path="categorias" element={<AdminCategorias />} />
-            <Route path="reportes" element={<AdminReportes />} />
-            <Route path="perfil" element={<AdminPerfil />} />
+            <Route index element={<AdminOnlyRoute><AdminDashboard /></AdminOnlyRoute>} />
+            <Route path="usuarios" element={<AdminOnlyRoute><AdminUserList /></AdminOnlyRoute>} />
+            <Route path="usuarios/nuevo" element={<AdminOnlyRoute><AdminUserForm /></AdminOnlyRoute>} />
+            <Route path="usuarios/editar/:rut" element={<AdminOnlyRoute><AdminUserForm /></AdminOnlyRoute>} />
+            <Route path="categorias" element={<AdminOnlyRoute><AdminCategorias /></AdminOnlyRoute>} />
+            <Route path="reportes" element={<AdminOnlyRoute><AdminReportes /></AdminOnlyRoute>} />
+            <Route path="perfil" element={<AdminOnlyRoute><AdminPerfil /></AdminOnlyRoute>} />
           </Route>
         </Routes>
       </CartProvider>

@@ -67,12 +67,21 @@ export const registerUser = (newUser) => {
     }
 
     let users = getInitialUsers();
-    const isAdmin = newUser.email.endsWith('@admin.cl');
+    
+    let role = 'Cliente';
+    let isOriginalAdmin = false;
+    const emailDomain = newUser.email.split('@')[1];
 
+    if (emailDomain === 'admin.cl') {
+        role = 'Administrador';
+        isOriginalAdmin = true;
+    } else if (emailDomain === 'vendedor.cl' || emailDomain === 'vendedor.com') {
+        role = 'Vendedor';
+    }
     const userToSave = {
         ...newUser,
-        role: isAdmin ? 'Administrador' : 'Cliente',
-        isOriginalAdmin: isAdmin,
+        role: role, 
+        isOriginalAdmin: isOriginalAdmin, 
         emailHistory: [newUser.email],
         addresses: [],
         orders: []
@@ -104,10 +113,21 @@ export const saveUser = (user) => {
             isOriginalAdmin: isOriginalAdmin
         };
     } else {
-        const isAdmin = user.email.endsWith('@admin.cl');
+        let role = user.role || 'Cliente';
+        let isOriginalAdmin = false;
+        const emailDomain = user.email.split('@')[1];
+
+        if (emailDomain === 'admin.cl') {
+            role = 'Administrador';
+            isOriginalAdmin = true;
+        } else if (emailDomain === 'vendedor.cl' || emailDomain === 'vendedor.com') {
+            role = 'Vendedor';
+        }
+        
         users.push({
             ...user,
-            isOriginalAdmin: isAdmin,
+            role: role,
+            isOriginalAdmin: isOriginalAdmin,
             emailHistory: [user.email],
             addresses: [],
             orders: []
@@ -136,18 +156,25 @@ export const updateUserEmail = (rut, newEmail) => {
 
     if (index > -1) {
         const user = users[index];
-        const newEmailIsAdmin = newEmail.endsWith('@admin.cl');
+        const newEmailDomain = newEmail.split('@')[1];
 
-        if (!user.isOriginalAdmin && newEmailIsAdmin) {
-            throw new Error('No tienes permisos para asignar un dominio de administrador.');
-        }
-
-        if (user.isOriginalAdmin && newEmailIsAdmin) {
-            user.role = 'Administrador';
+        if (newEmailDomain === 'admin.cl') {
+            if (user.isOriginalAdmin) {
+                user.role = 'Administrador';
+            } else {
+                throw new Error('No tienes permisos para asignar un dominio de administrador.');
+            }
+        } else if (newEmailDomain === 'vendedor.cl' || newEmailDomain === 'vendedor.com') {
+            if (user.role === 'Administrador' || user.role === 'Vendedor') {
+                user.role = 'Vendedor';
+            } else {
+                throw new Error('No tienes permisos para asignar un dominio de vendedor.');
+            }
         } else {
-            user.role = 'Cliente';
+            if (!user.isOriginalAdmin) {
+                user.role = 'Cliente';
+            }
         }
-
         if (!user.emailHistory) {
             user.emailHistory = [];
         }
@@ -218,6 +245,7 @@ export const addOrderToUser = (rut, newOrder) => {
             users[userIndex].orders = [];
         }
         
+        // Asignamos el estado pendiente al añadir la orden
         const orderWithStatus = {
             ...newOrder,
             status: newOrder.status || 'Pendiente'
@@ -243,7 +271,6 @@ export const updateOrderStatus = (userRUT, orderNumber, newStatus) => {
         
         if (orderIndex > -1) {
             users[userIndex].orders[orderIndex].status = newStatus;
-            
             localStorage.setItem(USERS_KEY, JSON.stringify(users));
             
             const currentUser = JSON.parse(localStorage.getItem('currentUser'));
@@ -253,7 +280,7 @@ export const updateOrderStatus = (userRUT, orderNumber, newStatus) => {
             return true;
         }
     }
- 
+    
     console.error("No se pudo encontrar la orden para actualizar.");
     return false;
 };

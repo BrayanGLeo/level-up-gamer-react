@@ -1,6 +1,6 @@
 export const validateEmail = (email) => {
     if (!email) return false;
-    const emailRegex = /^[^\s@]+@((duoc\.cl)|(profesor\.duoc\.cl)|(gmail\.com)|(admin\.cl))$/;
+    const emailRegex = /^[^\s@]+@((duoc\.cl)|(profesor\.duoc\.cl)|(gmail\.com)|(admin\.cl)|(vendedor\.cl)|(vendedor\.com))$/;
     return emailRegex.test(String(email).toLowerCase());
 };
 
@@ -63,7 +63,6 @@ export const validateRut = (rutCompleto) => {
     return dv === dvCalculado;
 };
 
-// Valida que el usuario sea mayor de 18 años.
 export const validateBirthdate = (birthdate) => {
     if (!birthdate) return true;
 
@@ -91,8 +90,6 @@ export const validatePhone = (phone) => {
     return phoneRegex.test(phone.trim());
 };
 
-
-// Validaciones de Formulario de Producto
 export const validateProductForm = (product) => {
     const errors = {};
 
@@ -127,7 +124,6 @@ export const validateProductForm = (product) => {
     return errors;
 };
 
-// Validaciones de Formulario de Usuario
 export const validateUserForm = (user) => {
     const errors = {};
 

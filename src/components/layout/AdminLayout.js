@@ -15,7 +15,7 @@ const AdminLayout = () => {
     useEffect(() => {
         document.body.classList.add('admin-body');
 
-        if (!currentUser || currentUser.role !== 'Administrador') {
+        if (!currentUser || (currentUser.role !== 'Administrador' && currentUser.role !== 'Vendedor')) {
             setShowModal(true);
         }
 
@@ -40,8 +40,8 @@ const AdminLayout = () => {
         );
     }
 
-    if (!currentUser || currentUser.role !== 'Administrador') {
-        return null;
+    if (!currentUser || (currentUser.role !== 'Administrador' && currentUser.role !== 'Vendedor')) {
+        return null; 
     }
 
     return (
