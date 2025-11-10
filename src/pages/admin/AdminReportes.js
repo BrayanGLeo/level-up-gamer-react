@@ -1,24 +1,124 @@
-import React from 'react';
-import { Card } from 'react-bootstrap';
+import React, { useState, useEffect } from 'react';
+import { Card, Row, Col, Table, Badge } from 'react-bootstrap';
+import { getUsers } from '../../data/userData';
+import { getProducts } from '../../data/productData';
+import '../../styles/AdminStyle.css';
 
 const AdminReportes = () => {
+    const [topSellers, setTopSellers] = useState([]);
+    const [lowStock, setLowStock] = useState([]);
+
+    useEffect(() => {
+        const products = getProducts();
+        const users = getUsers();
+        const allOrders = users.flatMap(u => u.orders || []);
+
+        const lowStockProducts = products
+            .filter(p => p.stock <= (p.stockCritico || 5)) 
+            .sort((a, b) => a.stock - b.stock);
+        
+        setLowStock(lowStockProducts);
+
+        const salesCount = {};
+        
+        allOrders.forEach(order => {
+            order.items.forEach(item => {
+                salesCount[item.codigo] = (salesCount[item.codigo] || 0) + item.quantity;
+            });
+        });
+
+        const topSellersList = Object.keys(salesCount)
+            .map(codigo => {
+                const product = products.find(p => p.codigo === codigo);
+                return {
+                    codigo: codigo,
+                    nombre: product ? product.nombre : `Producto (ID: ${codigo})`,
+                    quantity: salesCount[codigo]
+                };
+            })
+            .sort((a, b) => b.quantity - a.quantity); 
+            
+        setTopSellers(topSellersList);
+
+    }, []);
+
+    const getStockBadge = (stock, stockCritico) => {
+        if (stock <= (stockCritico || 5)) {
+            return <Badge bg="danger">Crítico ({stock})</Badge>;
+        }
+        if (stock < (stockCritico || 5) * 2) {
+            return <Badge bg="warning">Bajo ({stock})</Badge>;
+        }
+        return <Badge bg="success">{stock}</Badge>;
+    };
+
     return (
         <>
             <div className="admin-page-header">
                 <h1>Reportes</h1>
             </div>
-            <Card className="admin-card">
-                <Card.Body>
-                    <div className="text-center p-5">
-                        <span style={{ fontSize: '3rem' }}>📊</span>
-                        <h3 className="mt-3">Módulo de Reportes</h3>
-                        <p className="text-muted">
-                            Esta sección está en desarrollo. Aquí podrás generar reportes
-                            de ventas, ver productos más vendidos y más.
-                        </p>
-                    </div>
-                </Card.Body>
-            </Card>
+
+            <Row>
+                <Col md={6} className="mb-4">
+                    <Card className="admin-card h-100">
+                        <Card.Header>Productos Más Vendidos</Card.Header>
+                        <Card.Body>
+                            <div className="admin-table-container" style={{padding: 0, boxShadow: 'none'}}>
+                                {topSellers.length === 0 ? (
+                                    <p className="text-center p-3 text-muted">Aún no se han registrado ventas.</p>
+                                ) : (
+                                    <Table hover responsive>
+                                        <thead>
+                                            <tr>
+                                                <th>Producto</th>
+                                                <th>Unidades Vendidas</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {topSellers.map(product => (
+                                                <tr key={product.codigo}>
+                                                    <td><strong>{product.nombre}</strong></td>
+                                                    <td>{product.quantity}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </Table>
+                                )}
+                            </div>
+                        </Card.Body>
+                    </Card>
+                </Col>
+
+                <Col md={6} className="mb-4">
+                    <Card className="admin-card h-100">
+                        <Card.Header>Productos con Stock Bajo</Card.Header>
+                        <Card.Body>
+                            <div className="admin-table-container" style={{padding: 0, boxShadow: 'none'}}>
+                                {lowStock.length === 0 ? (
+                                    <p className="text-center p-3 text-muted">No hay productos con stock bajo.</p>
+                                ) : (
+                                    <Table hover responsive>
+                                        <thead>
+                                            <tr>
+                                                <th>Producto</th>
+                                                <th>Stock Actual</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {lowStock.map(product => (
+                                                <tr key={product.codigo}>
+                                                    <td><strong>{product.nombre}</strong></td>
+                                                    <td>{getStockBadge(product.stock, product.stockCritico)}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </Table>
+                                )}
+                            </div>
+                        </Card.Body>
+                    </Card>
+                </Col>
+            </Row>
         </>
     );
 };
