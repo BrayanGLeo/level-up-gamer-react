@@ -1,22 +1,41 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
+import { Product } from '../data/productData';
 
-const CartContext = createContext(null);
+export interface CartItem extends Product {
+    quantity: number;
+}
 
-export const CartProvider = ({ children }) => {
-    const [cartItems, setCartItems] = useState([]);
+interface CartContextType {
+    cartItems: CartItem[];
+    addToCart: (product: Product) => void;
+    updateQuantity: (codigo: string, amount: number) => void;
+    removeFromCart: (codigo: string) => void;
+    clearCart: () => void;
+    getCartTotal: () => number;
+    getCartItemCount: () => number;
+}
+
+interface CartProviderProps {
+    children: ReactNode;
+}
+
+const CartContext = createContext<CartContextType>(null!);
+
+export const CartProvider = ({ children }: CartProviderProps) => {
+    const [cartItems, setCartItems] = useState<CartItem[]>([]);
 
     useEffect(() => {
         const storedCart = localStorage.getItem('carrito');
         if (storedCart) {
-            setCartItems(JSON.parse(storedCart));
+            setCartItems(JSON.parse(storedCart) as CartItem[]);
         }
     }, []);
 
-    const updateLocalStorage = (items) => {
+    const updateLocalStorage = (items: CartItem[]) => {
         localStorage.setItem('carrito', JSON.stringify(items));
     };
 
-    const addToCart = (product) => {
+    const addToCart = (product: Product) => {
         let newCart = [...cartItems];
         const existingItem = newCart.find(item => item.codigo === product.codigo);
 
@@ -30,7 +49,7 @@ export const CartProvider = ({ children }) => {
         updateLocalStorage(newCart);
     };
 
-    const updateQuantity = (codigo, amount) => {
+    const updateQuantity = (codigo: string, amount: number) => {
         let newCart = cartItems.map(item =>
             item.codigo === codigo ? { ...item, quantity: Math.max(0, item.quantity + amount) } : item
         );
@@ -41,7 +60,7 @@ export const CartProvider = ({ children }) => {
         updateLocalStorage(newCart);
     };
 
-    const removeFromCart = (codigo) => {
+    const removeFromCart = (codigo: string) => {
         const newCart = cartItems.filter(item => item.codigo !== codigo);
         setCartItems(newCart);
         updateLocalStorage(newCart);
@@ -52,11 +71,11 @@ export const CartProvider = ({ children }) => {
         updateLocalStorage([]);
     };
 
-    const getCartTotal = () => {
+    const getCartTotal = (): number => {
         return cartItems.reduce((total, item) => total + (item.precio * item.quantity), 0);
     };
 
-    const getCartItemCount = () => {
+    const getCartItemCount = (): number => {
         return cartItems.reduce((total, item) => total + item.quantity, 0);
     };
 
