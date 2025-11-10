@@ -130,20 +130,22 @@ const CheckoutPage = () => {
             } : { type: 'Retiro en Tienda' }
         };
         
+        clearCart();
+
         if (currentUser) {
             const updatedUser = addOrderToUser(currentUser.rut, newOrder);
             updateCurrentUser(updatedUser);
+            setModalInfo({
+                show: true,
+                title: '¡Compra Exitosa!',
+                message: `¡Gracias por tu compra, ${formData.nombre}! Tu pedido #${newOrder.number} ha sido realizado con éxito.`
+            });
         } else {
             const orders = JSON.parse(localStorage.getItem('orders')) || [];
             orders.push(newOrder);
             localStorage.setItem('orders', JSON.stringify(orders));
+            navigate('/compra-exitosa', { state: { order: newOrder } });
         }
-        clearCart();
-        setModalInfo({
-            show: true,
-            title: '¡Compra Exitosa!',
-            message: `¡Gracias por tu compra, ${formData.nombre}! Tu pedido #${newOrder.number} ha sido realizado con éxito.`
-        });
     };
 
     const handleModalClose = () => {
