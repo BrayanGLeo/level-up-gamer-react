@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Table, Button, Badge, Form } from 'react-bootstrap';
-// 1. Importamos las interfaces
 import { getUsers, updateOrderStatus, Order } from '../../data/userData';
 import OrderDetailModal from '../../components/OrderDetailModal';
 import '../../styles/AdminStyle.css';
@@ -117,7 +116,7 @@ const AdminOrdenes = () => {
                                             <td>{order.date}</td>
                                             <td>{order.clientName}</td>
                                             <td>${order.total.toLocaleString('es-CL')}</td>
-                                            <td>{getStatusBadge(order.status)}</td>
+                                            <td>{getStatusBadge(order.status!)}</td>
                                             <td>
                                                 <Form.Select
                                                     size="sm"

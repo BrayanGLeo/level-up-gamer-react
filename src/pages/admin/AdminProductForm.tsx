@@ -54,7 +54,7 @@ const AdminProductForm = () => {
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         
-        const formErrors = validateProductForm(formData);
+        const formErrors = validateProductForm(formData as any);
 
         if (!isEditMode) {
             const existingProduct = getProductByCode(formData.codigo);

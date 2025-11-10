@@ -132,7 +132,7 @@ const AdminPerfil = () => {
     const handlePasswordSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setPasswordErrors({});
-
+        
         if (!currentUser) {
             setPasswordErrors({ form: "No se ha encontrado el usuario actual." });
             return;
@@ -164,9 +164,12 @@ const AdminPerfil = () => {
             setShowNotifyModal(true);
             setPasswords({ current: '', new: '', confirm: '' });
 
-        } catch (error) {
-            setModalInfo({ title: 'Error', message: 'No se pudo actualizar la contraseña.' });
-            setShowNotifyModal(true);
+        } catch (error: any) {
+            setModalInfo({
+                show: true,
+                title: 'Error',
+                message: 'No se pudo actualizar la contraseña.'
+            });
         }
     };
 

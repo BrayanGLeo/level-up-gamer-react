@@ -23,6 +23,7 @@ export interface Order {
         phone: string;
     };
     shipping: any;
+    status?: string;
 }
 
 export interface User {
@@ -38,6 +39,10 @@ export interface User {
     addresses: Address[];
     orders: Order[];
     profilePic?: string;
+    birthdate?: string;
+    direccion?: string;
+    region?: string;
+    comuna?: string;
 }
 
 export interface RegisterData {
@@ -136,33 +141,35 @@ export const registerUser = (newUser: RegisterData): User => {
     return userToSave;
 };
 
-export const saveUser = (user: User): User => {
+export const saveUser = (user: Partial<User>): User => {
     let users = getInitialUsers();
     const index = users.findIndex(u => u.rut === user.rut);
 
     if (index > -1) {
-        const existingAddresses = users[index].addresses || [];
-        const existingOrders = users[index].orders || [];
-        const existingHistory = users[index].emailHistory || [users[index].email];
-        
-        const existingPic = users[index].profilePic || undefined;
-
-        const isOriginalAdmin = users[index].isOriginalAdmin || false;
-        const registeredAt = users[index].registeredAt || new Date().toLocaleDateString('es-CL');
-
+        const existingUser = users[index];
         users[index] = {
+            ...existingUser,
             ...user,
-            addresses: existingAddresses,
-            orders: existingOrders,
-            emailHistory: existingHistory,
-            profilePic: existingPic,
-            isOriginalAdmin: isOriginalAdmin,
-            registeredAt: registeredAt
+            rut: existingUser.rut,
+            email: user.email || existingUser.email,
+            name: user.name || existingUser.name,
+            surname: user.surname || existingUser.surname,
+            password: user.password || existingUser.password,
+            role: user.role || existingUser.role,
         };
     } else {
+        if (!user.rut || !user.email || !user.name || !user.surname || !user.password || !user.role) {
+            throw new Error("Faltan datos obligatorios para crear un nuevo usuario.");
+        }
         const isAdmin = user.email.endsWith('@admin.cl');
         users.push({
             ...user,
+            rut: user.rut,
+            email: user.email,
+            name: user.name,
+            surname: user.surname,
+            password: user.password,
+            role: user.role,
             registeredAt: new Date().toLocaleDateString('es-CL'),
             isOriginalAdmin: isAdmin,
             emailHistory: [user.email],
@@ -174,11 +181,13 @@ export const saveUser = (user: User): User => {
     localStorage.setItem(USERS_KEY, JSON.stringify(users));
 
     const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null') as User | null;
-    if (currentUser && currentUser.rut === user.rut) {
-        localStorage.setItem('currentUser', JSON.stringify(users[index > -1 ? index : users.length - 1]));
+    const updatedUser = users[index > -1 ? index : users.length - 1];
+
+    if (currentUser && currentUser.rut === updatedUser.rut) {
+        localStorage.setItem('currentUser', JSON.stringify(updatedUser));
     }
 
-    return users[index > -1 ? index : users.length - 1];
+    return updatedUser;
 }
 
 export const updateUserEmail = (rut: string, newEmail: string): User => {
@@ -199,9 +208,9 @@ export const updateUserEmail = (rut: string, newEmail: string): User => {
             throw new Error('No tienes permisos para asignar un dominio de administrador.');
         }
 
-        if (user.isOriginalAdmin && newEmailIsAdmin) {
+        if (newEmailIsAdmin) {
             user.role = 'Administrador';
-        } else {
+        } else if (user.role === 'Administrador' && !user.isOriginalAdmin) {
             user.role = 'Cliente';
         }
 
@@ -240,7 +249,7 @@ export const addAddress = (rut: string, newAddress: Omit<Address, 'id'>): User |
         if (!users[userIndex].addresses) {
             users[userIndex].addresses = [];
         }
-        
+
         const addressWithId: Address = {
             ...newAddress,
             id: Date.now()
@@ -249,7 +258,8 @@ export const addAddress = (rut: string, newAddress: Omit<Address, 'id'>): User |
         users[userIndex].addresses.push(addressWithId);
 
         localStorage.setItem(USERS_KEY, JSON.stringify(users));
-        if (JSON.parse(localStorage.getItem('currentUser') || 'null').rut === rut) {
+        const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null') as User | null;
+        if (currentUser && currentUser.rut === rut) {
             localStorage.setItem('currentUser', JSON.stringify(users[userIndex]));
         }
         return users[userIndex];
@@ -265,14 +275,14 @@ export const updateAddress = (rut: string, updatedAddress: Address): User | null
         if (!users[userIndex].addresses) {
             users[userIndex].addresses = [];
         }
-        
+
         const addressIndex = users[userIndex].addresses.findIndex(addr => addr.id === updatedAddress.id);
-        
+
         if (addressIndex > -1) {
             users[userIndex].addresses[addressIndex] = updatedAddress;
 
             localStorage.setItem(USERS_KEY, JSON.stringify(users));
-            
+
             const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null') as User | null;
             if (currentUser && currentUser.rut === rut) {
                 localStorage.setItem('currentUser', JSON.stringify(users[userIndex]));
@@ -290,7 +300,8 @@ export const deleteAddress = (rut: string, addressId: number): User | null => {
         users[userIndex].addresses = users[userIndex].addresses.filter(addr => addr.id !== addressId);
 
         localStorage.setItem(USERS_KEY, JSON.stringify(users));
-        if (JSON.parse(localStorage.getItem('currentUser') || 'null').rut === rut) {
+        const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null') as User | null;
+        if (currentUser && currentUser.rut === rut) {
             localStorage.setItem('currentUser', JSON.stringify(users[userIndex]));
         }
         return users[userIndex];
@@ -305,13 +316,40 @@ export const addOrderToUser = (rut: string, newOrder: Order): User | null => {
         if (!users[userIndex].orders) {
             users[userIndex].orders = [];
         }
+        newOrder.status = 'Pendiente';
         users[userIndex].orders.push(newOrder);
 
         localStorage.setItem(USERS_KEY, JSON.stringify(users));
-        if (JSON.parse(localStorage.getItem('currentUser') || 'null').rut === rut) {
+        const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null') as User | null;
+        if (currentUser && currentUser.rut === rut) {
             localStorage.setItem('currentUser', JSON.stringify(users[userIndex]));
         }
         return users[userIndex];
+    }
+    return null;
+};
+
+export const updateOrderStatus = (rut: string, orderNumber: number, newStatus: string): User | null => {
+    let users = getInitialUsers();
+    const userIndex = users.findIndex(u => u.rut === rut);
+
+    if (userIndex > -1) {
+        const user = users[userIndex];
+        if (user.orders) {
+            const orderIndex = user.orders.findIndex(o => o.number === orderNumber);
+            if (orderIndex > -1) {
+                user.orders[orderIndex].status = newStatus;
+
+                localStorage.setItem(USERS_KEY, JSON.stringify(users));
+
+                const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null') as User | null;
+                if (currentUser && currentUser.rut === rut) {
+                    localStorage.setItem('currentUser', JSON.stringify(user));
+                }
+
+                return user;
+            }
+        }
     }
     return null;
 };

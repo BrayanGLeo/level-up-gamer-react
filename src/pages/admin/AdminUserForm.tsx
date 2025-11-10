@@ -1,14 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { Form, Button, Row, Col, Card } from 'react-bootstrap';
 import { useNavigate, useParams } from 'react-router-dom';
-import { findUserByRut, saveUser, findUserByEmail, updateUserEmail } from '../../data/userData';
+import { findUserByRut, saveUser, findUserByEmail, updateUserEmail, User } from '../../data/userData';
 import { validateUserForm } from '../../utils/validation';
 import { regionesData } from '../../data/chileData';
 import '../../styles/AdminStyle.css';
 import AdminNotificationModal from '../../components/AdminNotificationModal';
 
+interface IUserFormData {
+    run: string;
+    nombre: string;
+    apellidos: string;
+    email: string;
+    fechaNacimiento: string;
+    direccion: string;
+    region: string;
+    comuna: string;
+    role: User['role'];
+}
+
 const AdminUserForm = () => {
-    const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState<IUserFormData>({
         run: '',
         nombre: '',
         apellidos: '',
@@ -19,21 +31,22 @@ const AdminUserForm = () => {
         comuna: '',
         role: 'Cliente'
     });
-    const [errors, setErrors] = useState({});
-    const [comunas, setComunas] = useState([]);
+
+    const [errors, setErrors] = useState<Record<string, string>>({});
+    const [comunas, setComunas] = useState<string[]>([]);
     const navigate = useNavigate();
-    const { rut } = useParams();
+    const { rut } = useParams<{ rut: string }>();
     const isEditMode = Boolean(rut);
 
     const [showNotifyModal, setShowNotifyModal] = useState(false);
     const [modalInfo, setModalInfo] = useState({ title: '', message: '' });
 
     useEffect(() => {
-        if (isEditMode) {
+        if (isEditMode && rut) {
             const user = findUserByRut(rut);
             if (user) {
                 setFormData({
-                    run: user.rut || '',
+                    run: user.rut,
                     nombre: user.name,
                     apellidos: user.surname,
                     email: user.email,
@@ -52,12 +65,16 @@ const AdminUserForm = () => {
         }
     }, [isEditMode, rut]);
 
-    const handleChange = (e) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
-        setFormData({ ...formData, [name]: value });
+        if (name === 'role') {
+            setFormData({ ...formData, [name]: value as User['role'] });
+        } else {
+            setFormData({ ...formData, [name]: value });
+        }
     };
 
-    const handleRegionChange = (e) => {
+    const handleRegionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const region = e.target.value;
         setFormData({ ...formData, region: region, comuna: '' });
         const regionEncontrada = regionesData.find(r => r.nombre === region);
@@ -73,9 +90,10 @@ const AdminUserForm = () => {
         navigate('/admin/usuarios');
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        const formErrors = validateUserForm(formData); 
+
+        const formErrors = validateUserForm(formData as any);
         const existingUserByEmail = findUserByEmail(formData.email);
         const existingUserByRut = findUserByRut(formData.run);
 
@@ -95,26 +113,31 @@ const AdminUserForm = () => {
         setErrors(formErrors);
 
         if (Object.keys(formErrors).length === 0) {
-            const userToSave = {
-                ...formData,
+            const userToSave: Partial<User> = {
                 rut: formData.run,
                 name: formData.nombre,
                 surname: formData.apellidos,
+                email: formData.email,
                 birthdate: formData.fechaNacimiento,
+                direccion: formData.direccion,
+                region: formData.region,
+                comuna: formData.comuna,
+                role: formData.role
             };
 
-            const userOriginal = isEditMode ? findUserByRut(formData.run) : null;
+            const userOriginal = isEditMode && rut ? findUserByRut(rut) : null;
+
             saveUser(userToSave);
 
-            if (isEditMode && userOriginal.email !== formData.email) {
+            if (isEditMode && userOriginal && userOriginal.email !== formData.email) {
                 try {
                     updateUserEmail(formData.run, formData.email);
-                } catch (error) {
+                } catch (error: any) {
                     setErrors({ email: error.message });
-                    return; 
+                    return;
                 }
             }
-            
+
             const message = isEditMode ? 'Usuario actualizado con éxito' : 'Usuario guardado con éxito';
             setModalInfo({ title: '¡Éxito!', message: message });
             setShowNotifyModal(true);
@@ -187,7 +210,7 @@ const AdminUserForm = () => {
                             />
                             <Form.Control.Feedback type="invalid">{errors.email}</Form.Control.Feedback>
                         </Form.Group>
-                        
+
                         <Form.Group className="form-group" controlId="fechaNacimiento">
                             <Form.Label>Fecha de Nacimiento:</Form.Label>
                             <Form.Control
@@ -244,7 +267,7 @@ const AdminUserForm = () => {
                             <Form.Select name="role" value={formData.role} onChange={handleChange} isInvalid={!!errors.role}>
                                 <option value="">Seleccione un tipo</option>
                                 <option value="Administrador">Administrador</option>
-                                <option value="Vendedor">Vendedor</option> 
+                                <option value="Vendedor">Vendedor</option>
                                 <option value="Cliente">Cliente</option>
                             </Form.Select>
                             <Form.Control.Feedback type="invalid">{errors.role}</Form.Control.Feedback>
