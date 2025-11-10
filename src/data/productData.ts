@@ -1,5 +1,15 @@
-// Usamos los mismos datos que extrajimos de tu catalogo.html
-let products = [
+export interface Product {
+    codigo: string;
+    nombre: string;
+    descripcion: string;
+    precio: number;
+    stock: number;
+    stockCritico: number;
+    categoria: string;
+    imagen: string;
+}
+
+let products: Product[] = [
     {
         codigo: 'JM001',
         nombre: 'Catan',
@@ -102,15 +112,15 @@ let products = [
     }
 ];
 
-export const getProducts = () => {
+export const getProducts = (): Product[] => {
     return products;
 };
 
-export const getProductByCode = (codigo) => {
+export const getProductByCode = (codigo: string): Product | undefined => {
     return products.find(p => p.codigo === codigo);
 };
 
-export const saveProduct = (product) => {
+export const saveProduct = (product: Product): Product => {
     const index = products.findIndex(p => p.codigo === product.codigo);
     if (index > -1) {
         products[index] = product;
@@ -120,7 +130,7 @@ export const saveProduct = (product) => {
     return product;
 };
 
-export const deleteProductByCode = (codigo) => {
+export const deleteProductByCode = (codigo: string): boolean => {
     products = products.filter(p => p.codigo !== codigo);
     return true;
 };

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Form, Button, Card, Row, Col } from 'react-bootstrap';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getProductByCode, saveProduct } from '../../data/productData';
-import { getCategories } from '../../data/categoryData'; 
+import { getCategories } from '../../data/categoryData';
 import { validateProductForm } from '../../utils/validation';
 import AdminNotificationModal from '../../components/AdminNotificationModal';
 import '../../styles/AdminStyle.css';
@@ -14,7 +14,7 @@ const AdminProductForm = () => {
         descripcion: '',
         precio: 0,
         stock: 0,
-        stockCritico: 5, 
+        stockCritico: 5,
         categoria: '',
         imagen: ''
     });
@@ -23,7 +23,7 @@ const AdminProductForm = () => {
     const { codigo } = useParams();
     const isEditMode = Boolean(codigo);
 
-    const [categories, setCategories] = useState([]); 
+    const [categories, setCategories] = useState([]);
 
     const [showNotifyModal, setShowNotifyModal] = useState(false);
     const [modalInfo, setModalInfo] = useState({ title: '', message: '' });
@@ -48,7 +48,7 @@ const AdminProductForm = () => {
         setShowNotifyModal(false);
         navigate('/admin/productos');
     };
-    
+
     const handleSubmit = (e) => {
         e.preventDefault();
         const formErrors = validateProductForm(formData);
@@ -59,7 +59,7 @@ const AdminProductForm = () => {
                 formErrors.codigo = 'Este código de producto ya existe. Por favor, ingrese uno diferente.';
             }
         }
-        
+
         setErrors(formErrors);
 
         if (Object.keys(formErrors).length === 0) {
@@ -84,7 +84,7 @@ const AdminProductForm = () => {
                 <Card.Header>{isEditMode ? `Editando: ${formData.nombre}` : 'Detalles del Nuevo Producto'}</Card.Header>
                 <Card.Body>
                     <Form id="nuevoProductoForm" onSubmit={handleSubmit} className="admin-form-container">
-                        
+
                         <Row>
                             <Col md={4}>
                                 <Form.Group className="form-group" controlId="codigo">
@@ -187,7 +187,7 @@ const AdminProductForm = () => {
                                     <Form.Control.Feedback type="invalid">{errors.categoria}</Form.Control.Feedback>
                                 </Form.Group>
                             </Col>
-                             <Col md={6}>
+                            <Col md={6}>
                                 <Form.Group className="form-group" controlId="imagen">
                                     <Form.Label>URL Imagen (Opcional):</Form.Label>
                                     <Form.Control

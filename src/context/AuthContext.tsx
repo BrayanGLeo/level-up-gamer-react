@@ -1,24 +1,42 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
-import { findUser, registerUser } from '../data/userData';
+import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
+import { findUser, registerUser, User, RegisterData, Order, Address } from '../data/userData';
 
-const AuthContext = createContext(null);
+interface AuthContextType {
+    currentUser: User | null;
+    login: (email: string, password: string) => LoginResult;
+    register: (userData: RegisterData) => LoginResult;
+    logout: () => LoginResult;
+    updateCurrentUser: (user: User) => void;
+}
 
-export const AuthProvider = ({ children }) => {
-    const [currentUser, setCurrentUser] = useState(null);
+interface LoginResult {
+    success: boolean;
+    redirect?: string;
+    message: string;
+}
+
+interface AuthProviderProps {
+    children: ReactNode;
+}
+
+const AuthContext = createContext<AuthContextType>(null!);
+
+export const AuthProvider = ({ children }: AuthProviderProps) => {
+    const [currentUser, setCurrentUser] = useState<User | null>(null);
 
     useEffect(() => {
         const storedUser = localStorage.getItem('currentUser');
         if (storedUser) {
-            setCurrentUser(JSON.parse(storedUser));
+            setCurrentUser(JSON.parse(storedUser) as User);
         }
     }, []);
 
-    const updateCurrentUser = (user) => {
+    const updateCurrentUser = (user: User) => {
         localStorage.setItem('currentUser', JSON.stringify(user));
         setCurrentUser(user);
     };
 
-    const login = (email, password) => {
+    const login = (email: string, password: string): LoginResult => {
         const user = findUser(email, password);
         if (user) {
             updateCurrentUser(user);
@@ -33,7 +51,7 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    const register = (userData) => {
+    const register = (userData: RegisterData): LoginResult => {
         try {
             const newUser = registerUser(userData);
             updateCurrentUser(newUser);
@@ -43,12 +61,12 @@ export const AuthProvider = ({ children }) => {
             } else {
                 return { success: true, redirect: '/', message: '¡Registro Exitoso! Bienvenido.' };
             }
-        } catch (error) {
+        } catch (error: any) {
             return { success: false, message: error.message };
         }
     };
 
-    const logout = () => {
+    const logout = (): LoginResult => {
         localStorage.removeItem('currentUser');
         setCurrentUser(null);
         return { success: true, message: 'Has cerrado la sesión.', redirect: '/' };
