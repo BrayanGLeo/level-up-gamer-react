@@ -20,7 +20,15 @@ const initialFormState: Product = {
 
 const AdminProductForm = () => {
     const [formData, setFormData] = useState<Product>(initialFormState);
-    const [errors, setErrors] = useState<Record<string, string>>({});
+    interface FormErrors {
+        codigo?: string;
+        nombre?: string;
+        precio?: string;
+        stock?: string;
+        categoria?: string;
+    }
+    
+    const [errors, setErrors] = useState<FormErrors>({});
     const navigate = useNavigate();
     const { codigo } = useParams();
     const isEditMode = Boolean(codigo);
@@ -54,7 +62,7 @@ const AdminProductForm = () => {
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         
-        const formErrors = validateProductForm(formData as any);
+        const formErrors: FormErrors = validateProductForm(formData as any);
 
         if (!isEditMode) {
             const existingProduct = getProductByCode(formData.codigo);

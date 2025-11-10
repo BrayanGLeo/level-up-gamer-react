@@ -60,8 +60,8 @@ const AdminPerfil = () => {
         }
     }, [currentUser]);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-        const { name, value } = e.target;
+    const handleChange = (e: React.ChangeEvent<any>) => {
+        const { name, value } = e.target as HTMLInputElement | HTMLSelectElement;
         setFormData({ ...formData, [name]: value });
     };
 
@@ -166,7 +166,6 @@ const AdminPerfil = () => {
 
         } catch (error: any) {
             setModalInfo({
-                show: true,
                 title: 'Error',
                 message: 'No se pudo actualizar la contraseña.'
             });
@@ -211,7 +210,7 @@ const AdminPerfil = () => {
 
                                 <Form.Group className="form-group" controlId="email">
                                     <Form.Label>Correo Electrónico:</Form.Label>
-                                    <Form.Control type="email" name="email" value={formData.email} onChange={handleChange} isInvalid={!!errors.email} />
+                                    <Form.Control type="email" name="email" value={formData.email} onChange={(e) => handleChange(e as React.ChangeEvent<HTMLInputElement>)} isInvalid={!!errors.email} />
                                     <Form.Control.Feedback type="invalid">{errors.email}</Form.Control.Feedback>
                                 </Form.Group>
                                 

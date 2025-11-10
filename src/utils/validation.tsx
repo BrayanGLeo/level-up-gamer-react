@@ -1,26 +1,26 @@
-export const validateEmail = (email) => {
+export const validateEmail = (email: string | null) => {
     if (!email) return false;
     const emailRegex = /^[^\s@]+@((duoc\.cl)|(profesor\.duoc\.cl)|(gmail\.com)|(admin\.cl)|(vendedor\.cl)|(vendedor\.com))$/;
     return emailRegex.test(String(email).toLowerCase());
 };
 
-export const validatePassword = (password) => {
+export const validatePassword = (password: string | any[]) => {
     if (!password) return false;
     return password.length >= 6;
 };
 
-export const validateLoginPassword = (password) => {
+export const validateLoginPassword = (password: string | any[]) => {
     if (!password) return false;
     return password.length >= 6;
 };
 
-export const validateRequiredField = (value, maxLength) => {
+export const validateRequiredField = (value: string, maxLength: number) => {
     if (!value || value.trim() === '') return false;
     if (maxLength && value.length > maxLength) return false;
     return true;
 };
 
-export const validateTextField = (value, maxLength) => {
+export const validateTextField = (value: string, maxLength: number) => {
     if (!value || value.trim() === '') return false;
     if (maxLength && value.length > maxLength) return false;
     const regex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
@@ -29,7 +29,7 @@ export const validateTextField = (value, maxLength) => {
 
 
 // Valida el formato Y el dígito verificador
-export const validateRut = (rutCompleto) => {
+export const validateRut = (rutCompleto: string) => {
     if (!rutCompleto) return false;
 
     const rutLimpio = rutCompleto.replace(/\./g, '').replace('-', '');
@@ -41,7 +41,7 @@ export const validateRut = (rutCompleto) => {
     if (!/^\d+$/.test(cuerpo)) return false;
 
     const primerDigito = cuerpo.charAt(0);
-    const todosIguales = cuerpo.split('').every(char => char === primerDigito);
+    const todosIguales = cuerpo.split('').every((char: any) => char === primerDigito);
     if (todosIguales) {
         return false;
     }
@@ -63,7 +63,7 @@ export const validateRut = (rutCompleto) => {
     return dv === dvCalculado;
 };
 
-export const validateBirthdate = (birthdate) => {
+export const validateBirthdate = (birthdate: string | number | Date) => {
     if (!birthdate) return true;
 
     const birthDate = new Date(birthdate);
@@ -84,14 +84,14 @@ export const validateBirthdate = (birthdate) => {
     return age >= 18;
 };
 
-export const validatePhone = (phone) => {
+export const validatePhone = (phone: string) => {
     if (!phone) return false;
     const phoneRegex = /^(?:\+?56)?(?:\s?)(?:9\s?|09\s?|9)\s?[1-9]\d{3}\s?\d{4}$/;
     return phoneRegex.test(phone.trim());
 };
 
-export const validateProductForm = (product) => {
-    const errors = {};
+export const validateProductForm = (product: { codigo: string | any[]; nombre: string | any[]; precio: string | null; stock: string | null; categoria: any; }) => {
+    const errors: { [key: string]: string } = {};
 
     if (!product.codigo) {
         errors.codigo = 'El código del producto es requerido.';
@@ -124,8 +124,8 @@ export const validateProductForm = (product) => {
     return errors;
 };
 
-export const validateUserForm = (user) => {
-    const errors = {};
+export const validateUserForm = (user: { run: any; nombre: any; apellidos: any; email: any; fechaNacimiento: any; direccion: any; region: any; comuna: any; role: any; }) => {
+    const errors: { [key: string]: string } = {};
 
     if (!validateRut(user.run)) {
         errors.run = 'El RUN ingresado no es válido.';

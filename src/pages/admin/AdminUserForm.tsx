@@ -65,8 +65,8 @@ const AdminUserForm = () => {
         }
     }, [isEditMode, rut]);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-        const { name, value } = e.target;
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+        const { name, value } = e.target as HTMLInputElement | HTMLSelectElement;
         if (name === 'role') {
             setFormData({ ...formData, [name]: value as User['role'] });
         } else {
@@ -93,7 +93,7 @@ const AdminUserForm = () => {
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
-        const formErrors = validateUserForm(formData as any);
+        const formErrors: Record<string, string> = validateUserForm(formData as any);
         const existingUserByEmail = findUserByEmail(formData.email);
         const existingUserByRut = findUserByRut(formData.run);
 

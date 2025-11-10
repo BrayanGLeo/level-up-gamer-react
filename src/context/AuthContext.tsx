@@ -9,7 +9,7 @@ interface AuthContextType {
     updateCurrentUser: (user: User) => void;
 }
 
-interface LoginResult {
+export interface LoginResult {
     success: boolean;
     redirect?: string;
     message: string;

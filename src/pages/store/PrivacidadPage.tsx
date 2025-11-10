@@ -8,7 +8,7 @@ import '../../styles/Forms.css';
 import '../../styles/Perfil.css';
 
 const PrivacidadPage = () => {
-    const { currentUser, updateCurrentUser }_ = useAuth();
+    const { currentUser, updateCurrentUser } = useAuth();
 
     const [newEmail, setNewEmail] = useState('');
     const [emailError, setEmailError] = useState('');

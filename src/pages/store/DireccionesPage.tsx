@@ -32,8 +32,9 @@ const DireccionesPage = () => {
         }
     }, [currentUser]);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+    const handleChange = (e: React.ChangeEvent<any>) => {
+        const target = e.target as HTMLInputElement | HTMLSelectElement;
+        setFormData({ ...formData, [target.name]: target.value });
     };
 
     const handleRegionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
