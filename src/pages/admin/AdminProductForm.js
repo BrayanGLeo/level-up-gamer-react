@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Form, Button, Card, Row, Col } from 'react-bootstrap';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getProductByCode, saveProduct } from '../../data/productData';
+import { getCategories } from '../../data/categoryData'; 
 import { validateProductForm } from '../../utils/validation';
 import AdminNotificationModal from '../../components/AdminNotificationModal';
 import '../../styles/AdminStyle.css';
@@ -22,10 +23,14 @@ const AdminProductForm = () => {
     const { codigo } = useParams();
     const isEditMode = Boolean(codigo);
 
+    const [categories, setCategories] = useState([]); 
+
     const [showNotifyModal, setShowNotifyModal] = useState(false);
     const [modalInfo, setModalInfo] = useState({ title: '', message: '' });
 
     useEffect(() => {
+        setCategories(getCategories());
+
         if (isEditMode) {
             const product = getProductByCode(codigo);
             if (product) {
@@ -54,6 +59,7 @@ const AdminProductForm = () => {
                 formErrors.codigo = 'Este código de producto ya existe. Por favor, ingrese uno diferente.';
             }
         }
+        
         setErrors(formErrors);
 
         if (Object.keys(formErrors).length === 0) {
@@ -172,9 +178,11 @@ const AdminProductForm = () => {
                                         isInvalid={!!errors.categoria}
                                     >
                                         <option value="">Selecciona una categoría</option>
-                                        <option value="juegos">Juegos</option>
-                                        <option value="accesorios">Accesorios</option>
-                                        <option value="consolas">Consolas y PC</option>
+                                        {categories.map(cat => (
+                                            <option key={cat.id} value={cat.nombre}>
+                                                {cat.nombre}
+                                            </option>
+                                        ))}
                                     </Form.Select>
                                     <Form.Control.Feedback type="invalid">{errors.categoria}</Form.Control.Feedback>
                                 </Form.Group>

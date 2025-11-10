@@ -9,11 +9,13 @@ import { getUsers } from '../../data/userData';
 const AdminDashboard = () => {
     const { currentUser } = useAuth();
     const allProducts = getProducts();
+    const allUsers = getUsers();
+    const allOrders = allUsers.flatMap(user => user.orders || []);
+    const totalSales = allOrders.reduce((sum, order) => sum + order.total, 0);
+    const purchaseCount = allOrders.length;
     const productCount = allProducts.length;
-    const userCount = getUsers().length;
+    const userCount = allUsers.length;
     
-    const purchaseCount = 1234; 
-    const totalSales = 5839020; 
 
     return (
         <>
