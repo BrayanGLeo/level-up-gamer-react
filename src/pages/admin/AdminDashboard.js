@@ -62,80 +62,49 @@ const AdminDashboard = () => {
                     </div>
                 </Col>
             </Row>
-            <Row className="admin-nav-grid">
-                <Col md={4} lg={3} className="mb-4">
-                    <Card as={Link} to="/admin" className="nav-card-action">
-                        <Card.Body className="text-center">
-                            <div className="nav-card-icon">🏠</div>
-                            <Card.Title>Dashboard</Card.Title>
-                            <Card.Text>Visión general de todas las métricas y estadísticas.</Card.Text>
-                        </Card.Body>
-                    </Card>
-                </Col>
-                <Col md={4} lg={3} className="mb-4">
-                    <Card as={Link} to="/admin/ordenes" className="nav-card-action">
-                        <Card.Body className="text-center">
-                            <div className="nav-card-icon">🛒</div>
-                            <Card.Title>Órdenes</Card.Title>
-                            <Card.Text>Gestión y seguimiento de todas las órdenes de compra.</Card.Text>
-                        </Card.Body>
-                    </Card>
-                </Col>
-                <Col md={4} lg={3} className="mb-4">
-                    <Card as={Link} to="/admin/productos" className="nav-card-action">
-                        <Card.Body className="text-center">
-                            <div className="nav-card-icon">📦</div>
-                            <Card.Title>Productos</Card.Title>
-                            <Card.Text>Administrar inventario y detalles de los productos.</Card.Text>
-                        </Card.Body>
-                    </Card>
-                </Col>
-                <Col md={4} lg={3} className="mb-4">
-                    <Card as={Link} to="/admin/categorias" className="nav-card-action">
-                        <Card.Body className="text-center">
-                            <div className="nav-card-icon">🏷️</div>
-                            <Card.Title>Categorías</Card.Title>
-                            <Card.Text>Organizar productos en categorías para facilitar su navegación.</Card.Text>
-                        </Card.Body>
-                    </Card>
-                </Col>
-                <Col md={4} lg={3} className="mb-4">
-                    <Card as={Link} to="/admin/usuarios" className="nav-card-action">
-                        <Card.Body className="text-center">
-                            <div className="nav-card-icon">👥</div>
-                            <Card.Title>Usuarios</Card.Title>
-                            <Card.Text>Gestión de cuentas de usuario y sus roles del sistema.</Card.Text>
-                        </Card.Body>
-                    </Card>
-                </Col>
-                <Col md={4} lg={3} className="mb-4">
-                    <Card as={Link} to="/admin/reportes" className="nav-card-action">
-                        <Card.Body className="text-center">
-                            <div className="nav-card-icon">📊</div>
-                            <Card.Title>Reportes</Card.Title>
-                            <Card.Text>Generación de informes detallados sobre las operaciones.</Card.Text>
-                        </Card.Body>
-                    </Card>
-                </Col>
-                <Col md={4} lg={3} className="mb-4">
-                    <Card as={Link} to="/admin/perfil" className="nav-card-action">
-                        <Card.Body className="text-center">
-                            <div className="nav-card-icon">👤</div>
-                            <Card.Title>Perfil</Card.Title>
-                            <Card.Text>Administración de la información personal y configuraciones.</Card.Text>
-                        </Card.Body>
-                    </Card>
-                </Col>
-                <Col md={4} lg={3} className="mb-4">
-                    <Card as={Link} to="/" className="nav-card-action">
-                        <Card.Body className="text-center">
-                            <div className="nav-card-icon">🌐</div>
-                            <Card.Title>Tienda</Card.Title>
-                            <Card.Text>Visualizar la tienda en tiempo real y ver los reportes de usuario.</Card.Text>
-                        </Card.Body>
-                    </Card>
-                </Col>
-            </Row>
+
+            <div className="admin-nav-grid">
+                <Link to="/admin" className="admin-nav-card">
+                    <div className="nav-card-icon">🏠</div>
+                    <h5 className="nav-card-title">Dashboard</h5>
+                    <p className="nav-card-text">Visión general de todas las métricas y estadísticas.</p>
+                </Link>
+                <Link to="/admin/ordenes" className="admin-nav-card">
+                    <div className="nav-card-icon">🛒</div>
+                    <h5 className="nav-card-title">Órdenes</h5>
+                    <p className="nav-card-text">Gestión y seguimiento de todas las órdenes de compra.</p>
+                </Link>
+                <Link to="/admin/productos" className="admin-nav-card">
+                    <div className="nav-card-icon">📦</div>
+                    <h5 className="nav-card-title">Productos</h5>
+                    <p className="nav-card-text">Administrar inventario y detalles de los productos.</p>
+                </Link>
+                <Link to="/admin/categorias" className="admin-nav-card">
+                    <div className="nav-card-icon">🏷️</div>
+                    <h5 className="nav-card-title">Categorías</h5>
+                    <p className="nav-card-text">Organizar productos en categorías para facilitar su navegación.</p>
+                </Link>
+                <Link to="/admin/usuarios" className="admin-nav-card">
+                    <div className="nav-card-icon">👥</div>
+                    <h5 className="nav-card-title">Usuarios</h5>
+                    <p className="nav-card-text">Gestión de cuentas de usuario y sus roles del sistema.</p>
+                </Link>
+                <Link to="/admin/reportes" className="admin-nav-card">
+                    <div className="nav-card-icon">📊</div>
+                    <h5 className="nav-card-title">Reportes</h5>
+                    <p className="nav-card-text">Generación de informes detallados sobre las operaciones.</p>
+                </Link>
+                <Link to="/admin/perfil" className="admin-nav-card">
+                    <div className="nav-card-icon">👤</div>
+                    <h5 className="nav-card-title">Perfil</h5>
+                    <p className="nav-card-text">Administración de la información personal y configuraciones.</p>
+                </Link>
+                <Link to="/" className="admin-nav-card">
+                    <div className="nav-card-icon">🌐</div>
+                    <h5 className="nav-card-title">Tienda</h5>
+                    <p className="nav-card-text">Visualizar la tienda en tiempo real y ver los reportes de usuario.</p>
+                </Link>
+            </div>
         </>
     );
 };
