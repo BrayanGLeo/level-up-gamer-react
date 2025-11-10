@@ -217,7 +217,12 @@ export const addOrderToUser = (rut, newOrder) => {
         if (!users[userIndex].orders) {
             users[userIndex].orders = [];
         }
-        users[userIndex].orders.push(newOrder);
+        
+        const orderWithStatus = {
+            ...newOrder,
+            status: newOrder.status || 'Pendiente'
+        };
+        users[userIndex].orders.push(orderWithStatus);
 
         localStorage.setItem(USERS_KEY, JSON.stringify(users));
         if (JSON.parse(localStorage.getItem('currentUser')).rut === rut) {
@@ -226,4 +231,29 @@ export const addOrderToUser = (rut, newOrder) => {
         return users[userIndex];
     }
     return null;
+};
+
+export const updateOrderStatus = (userRUT, orderNumber, newStatus) => {
+    let users = getInitialUsers();
+    
+    const userIndex = users.findIndex(u => u.rut === userRUT);
+    
+    if (userIndex > -1) {
+        const orderIndex = users[userIndex].orders.findIndex(o => o.number === orderNumber);
+        
+        if (orderIndex > -1) {
+            users[userIndex].orders[orderIndex].status = newStatus;
+            
+            localStorage.setItem(USERS_KEY, JSON.stringify(users));
+            
+            const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+            if (currentUser && currentUser.rut === userRUT) {
+                localStorage.setItem('currentUser', JSON.stringify(users[userIndex]));
+            }
+            return true;
+        }
+    }
+ 
+    console.error("No se pudo encontrar la orden para actualizar.");
+    return false;
 };
