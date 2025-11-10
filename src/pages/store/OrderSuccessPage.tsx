@@ -1,18 +1,24 @@
 import React from 'react';
 import { Container, Alert, Button } from 'react-bootstrap';
-import { Link, useLocation } from 'react-router-dom';
+import { LinkContainer } from 'react-router-bootstrap';
+import { useLocation } from 'react-router-dom';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { Order } from '../../data/userData';
+
+interface LocationState {
+    order: Order;
+}
 
 const OrderSuccessPage = () => {
     const location = useLocation();
-    const order = location.state?.order;
+    const order = (location.state as LocationState | null)?.order;
 
-    const handleDownloadBoleta = (orderToDownload) => {
+    const handleDownloadBoleta = (orderToDownload: Order | undefined | null) => {
         if (!orderToDownload) return;
 
         const doc = new jsPDF();
-        const formatPrice = (price) => `$${price.toLocaleString('es-CL')}`;
+        const formatPrice = (price: number) => `$${price.toLocaleString('es-CL')}`;
 
         doc.setFontSize(20);
         doc.text("Resumen de Compra", 14, 22);
@@ -41,7 +47,7 @@ const OrderSuccessPage = () => {
         }
 
         const tableColumn = ["Producto", "Cantidad", "Precio Unitario", "Total"];
-        const tableRows = [];
+        const tableRows: (string | number)[] [] = [];
 
         orderToDownload.items.forEach(item => {
             const itemData = [
@@ -59,7 +65,7 @@ const OrderSuccessPage = () => {
             body: tableRows,
         });
 
-        const finalY = doc.lastAutoTable.finalY || 130;
+        const finalY = (doc as any).lastAutoTable.finalY || 130;
         doc.setFontSize(18);
         doc.text(`Total: ${formatPrice(orderToDownload.total)}`, 14, finalY + 15);
 
@@ -81,9 +87,12 @@ const OrderSuccessPage = () => {
             </Alert>
 
             <div className="d-flex justify-content-start gap-2">
-                <Button as={Link} to="/catalogo" variant="primary">
-                    Seguir comprando
-                </Button>
+                
+                <LinkContainer to="/catalogo">
+                    <Button variant="primary">
+                        Seguir comprando
+                    </Button>
+                </LinkContainer>
 
                 {order && (
                     <Button variant="success" onClick={() => handleDownloadBoleta(order)}>

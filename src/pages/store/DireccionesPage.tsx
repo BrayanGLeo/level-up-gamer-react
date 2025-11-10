@@ -1,26 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Form } from 'react-bootstrap';
 import { useAuth } from '../../context/AuthContext';
-import { addAddress, deleteAddress, updateAddress } from '../../data/userData';
+import { addAddress, deleteAddress, updateAddress, Address } from '../../data/userData';
 import { regionesData } from '../../data/chileData';
 import { validatePhone, validateRequiredField } from '../../utils/validation';
 import '../../styles/Perfil.css';
 import '../../styles/Forms.css';
 
-const initialFormState = {
+interface IAddressForm {
+    alias: string; region: string; comuna: string; calle: string; numero: string; depto: string;
+    recibeNombre: string; recibeApellido: string; recibeTelefono: string;
+}
+
+const initialFormState: IAddressForm = {
     alias: '', region: '', comuna: '', calle: '', numero: '', depto: '',
     recibeNombre: '', recibeApellido: '', recibeTelefono: ''
 };
 
 const DireccionesPage = () => {
     const { currentUser, updateCurrentUser } = useAuth();
-    const [addresses, setAddresses] = useState([]);
+    const [addresses, setAddresses] = useState<Address[]>([]);
     const [showForm, setShowForm] = useState(false);
-    const [formData, setFormData] = useState(initialFormState);
-    const [comunas, setComunas] = useState([]);
-    const [errors, setErrors] = useState({});
-
-    const [editingAddressId, setEditingAddressId] = useState(null);
+    const [formData, setFormData] = useState<IAddressForm>(initialFormState);
+    const [comunas, setComunas] = useState<string[]>([]);
+    const [errors, setErrors] = useState<Record<string, string>>({});
+    const [editingAddressId, setEditingAddressId] = useState<number | null>(null);
 
     useEffect(() => {
         if (currentUser && currentUser.addresses) {
@@ -28,11 +32,11 @@ const DireccionesPage = () => {
         }
     }, [currentUser]);
 
-    const handleChange = (e) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    const handleRegionChange = (e) => {
+    const handleRegionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const regionNombre = e.target.value;
         setFormData({ ...formData, region: regionNombre, comuna: '' });
         const regionEncontrada = regionesData.find(r => r.nombre === regionNombre);
@@ -40,7 +44,7 @@ const DireccionesPage = () => {
     };
 
     const validateForm = () => {
-        const newErrors = {};
+        const newErrors: Record<string, string> = {};
         if (!validateRequiredField(formData.alias, 50)) newErrors.alias = 'El alias es requerido.';
         if (!formData.region) newErrors.region = 'La región es requerida.';
         if (!formData.comuna) newErrors.comuna = 'La comuna es requerida.';
@@ -54,7 +58,7 @@ const DireccionesPage = () => {
         return Object.keys(newErrors).length === 0;
     };
 
-    const handleEdit = (address) => {
+    const handleEdit = (address: Address) => {
         setEditingAddressId(address.id);
         setFormData(address);
         
@@ -73,7 +77,7 @@ const DireccionesPage = () => {
         setComunas([]);
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (validateForm() && currentUser) {
             let updatedUser;
@@ -93,7 +97,7 @@ const DireccionesPage = () => {
         }
     };
 
-    const handleDelete = (addressId) => {
+    const handleDelete = (addressId: number) => {
         if (window.confirm('¿Estás seguro de que quieres eliminar esta dirección?') && currentUser) {
             const updatedUser = deleteAddress(currentUser.rut, addressId);
             if (updatedUser) {

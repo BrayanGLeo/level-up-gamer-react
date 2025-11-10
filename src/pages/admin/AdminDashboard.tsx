@@ -4,18 +4,20 @@ import { Row, Col, Card } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import '../../styles/AdminStyle.css';
 import { getProducts } from '../../data/productData';
-import { getUsers } from '../../data/userData';
+import { getUsers, Order } from '../../data/userData';
 
 const AdminDashboard = () => {
     const { currentUser } = useAuth();
     const allProducts = getProducts();
     const allUsers = getUsers();
-    const allOrders = allUsers.flatMap(user => user.orders || []);
+
+    const allOrders: Order[] = allUsers.flatMap(user => user.orders || []);
+
     const totalSales = allOrders.reduce((sum, order) => sum + order.total, 0);
     const purchaseCount = allOrders.length;
     const productCount = allProducts.length;
     const userCount = allUsers.length;
-    
+
 
     return (
         <>
@@ -54,7 +56,7 @@ const AdminDashboard = () => {
                         </div>
                     </div>
                 </Col>
-                 <Col md={6} lg={3} className="mb-4">
+                <Col md={6} lg={3} className="mb-4">
                     <div className="stats-card stats-card-ordenes">
                         <span className="stats-card-icon">🧾</span>
                         <div className="stats-card-content">

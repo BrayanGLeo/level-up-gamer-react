@@ -1,22 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Button, Card, Badge } from 'react-bootstrap';
-import { Link, useNavigate } from 'react-router-dom';
-import { getProducts, deleteProductByCode } from '../../data/productData';
+import { useNavigate } from 'react-router-dom';
+import { LinkContainer } from 'react-router-bootstrap';
+import { getProducts, deleteProductByCode, Product } from '../../data/productData';
 import AdminConfirmModal from '../../components/AdminConfirmModal';
-import '../../styles/AdminStyle.css'; 
+import '../../styles/AdminStyle.css';
 
 const AdminProductList = () => {
-    const [products, setProducts] = useState([]);
+    const [products, setProducts] = useState<Product[]>([]);
     const navigate = useNavigate();
     
     const [showConfirmModal, setShowConfirmModal] = useState(false);
-    const [productToDelete, setProductToDelete] = useState(null);
+    const [productToDelete, setProductToDelete] = useState<string | null>(null);
 
     useEffect(() => {
         setProducts(getProducts());
     }, []);
 
-    const handleDeleteClick = (codigo) => {
+    const handleDeleteClick = (codigo: string) => {
         setProductToDelete(codigo);
         setShowConfirmModal(true);
     };
@@ -34,7 +35,7 @@ const AdminProductList = () => {
         handleModalClose();
     };
 
-    const getStockBadge = (stock, stockCritico) => {
+    const getStockBadge = (stock: number, stockCritico: number) => {
         if (stock <= (stockCritico || 5)) {
             return <Badge bg="danger">Crítico ({stock})</Badge>;
         }
@@ -48,9 +49,12 @@ const AdminProductList = () => {
         <>
             <div className="admin-page-header">
                 <h1>Productos</h1>
-                <Button as={Link} to="/admin/productos/nuevo" className="btn-admin">
-                    Nuevo Producto
-                </Button>
+                
+                <LinkContainer to="/admin/productos/nuevo">
+                    <Button className="btn-admin">
+                        Nuevo Producto
+                    </Button>
+                </LinkContainer>
             </div>
 
             <Card className="admin-card">

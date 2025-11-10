@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Container, Button, Modal } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
-import { useCart } from '../../context/CartContext';
+import { LinkContainer } from 'react-router-bootstrap';
+import { useCart, CartItem } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import '../../styles/Carrito.css';
 import RemoveFromCartModal from '../../components/RemoveFromCartModal';
@@ -14,7 +15,8 @@ const CartPage = () => {
 
     const [showLoginModal, setShowLoginModal] = useState(false);
     const [showRemoveModal, setShowRemoveModal] = useState(false);
-    const [productToRemove, setProductToRemove] = useState(null);
+
+    const [productToRemove, setProductToRemove] = useState<CartItem | null>(null);
     const [showClearModal, setShowClearModal] = useState(false);
 
     const handleCheckoutClick = () => {
@@ -29,7 +31,7 @@ const CartPage = () => {
         navigate('/checkout');
     };
 
-    const handleOpenRemoveModal = (product) => {
+    const handleOpenRemoveModal = (product: CartItem) => {
         setProductToRemove(product);
         setShowRemoveModal(true);
     };
@@ -90,7 +92,7 @@ const CartPage = () => {
                                                 <p className="carrito-item-precio">
                                                     ${(item.precio * item.quantity).toLocaleString('es-CL')}
                                                 </p>
-                                                
+
                                                 <button
                                                     className="btn-remove-item"
                                                     onClick={() => handleOpenRemoveModal(item)}
@@ -98,7 +100,7 @@ const CartPage = () => {
                                                 >
                                                     X
                                                 </button>
-                                                
+
                                             </div>
                                         </div>
                                     ))}
@@ -132,12 +134,19 @@ const CartPage = () => {
                     <p>Para continuar con tu compra, puedes iniciar sesión o registrarte. Si lo prefieres, puedes avanzar como invitado.</p>
                 </Modal.Body>
                 <Modal.Footer className="d-flex justify-content-between w-100">
-                    <Button variant="primary" as={Link} to="/login" onClick={() => setShowLoginModal(false)}>
-                        Iniciar Sesión
-                    </Button>
-                    <Button variant="success" as={Link} to="/register" onClick={() => setShowLoginModal(false)}>
-                        Registrarse
-                    </Button>
+
+                    <LinkContainer to="/login">
+                        <Button variant="primary" onClick={() => setShowLoginModal(false)}>
+                            Iniciar Sesión
+                        </Button>
+                    </LinkContainer>
+
+                    <LinkContainer to="/register">
+                        <Button variant="success" onClick={() => setShowLoginModal(false)}>
+                            Registrarse
+                        </Button>
+                    </LinkContainer>
+
                     <Button variant="secondary" onClick={handleGuestCheckout}>
                         Avanzar como Invitado
                     </Button>

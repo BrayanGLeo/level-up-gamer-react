@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import OrderDetailModal from '../../components/OrderDetailModal';
 import '../../styles/Perfil.css';
+import { Order } from '../../data/userData';
 
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -12,9 +13,9 @@ const PedidosPage = () => {
     const { currentUser } = useAuth();
 
     const [showModal, setShowModal] = useState(false);
-    const [selectedOrder, setSelectedOrder] = useState(null);
+    const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
-    let orders = [];
+    let orders: Order[] = [];
     let noOrdersMessage = <p>Inicia sesión para ver tu historial de pedidos.</p>;
 
     if (currentUser) {
@@ -22,7 +23,7 @@ const PedidosPage = () => {
         noOrdersMessage = <p>Aún no has realizado ningún pedido. ¡<Link to="/catalogo">Explora nuestro catálogo</Link> para empezar!</p>;
     }
 
-    const handleShowModal = (order) => {
+    const handleShowModal = (order: Order) => {
         setSelectedOrder(order);
         setShowModal(true);
     };
@@ -32,13 +33,13 @@ const PedidosPage = () => {
         setSelectedOrder(null);
     };
 
-    const handleDownloadBoleta = (order) => {
+    const handleDownloadBoleta = (order: Order) => {
         const doc = new jsPDF();
-        const formatPrice = (price) => `$${price.toLocaleString('es-CL')}`;
+        const formatPrice = (price: number) => `$${price.toLocaleString('es-CL')}`;
 
         doc.setFontSize(20);
         doc.text("Resumen de Compra", 14, 22);
-        
+
         doc.setFontSize(12);
         doc.text(`N° de orden: ${order.number}`, 14, 30);
         doc.text(`Fecha de compra: ${order.date}`, 14, 36);
@@ -64,7 +65,7 @@ const PedidosPage = () => {
         }
 
         const tableColumn = ["Producto", "Cantidad", "Precio Unitario", "Total"];
-        const tableRows = [];
+        const tableRows: (string | number)[][] = [];
 
         order.items.forEach(item => {
             const itemData = [
@@ -82,8 +83,7 @@ const PedidosPage = () => {
             body: tableRows,
         });
 
-        // Total
-        const finalY = doc.lastAutoTable.finalY || 130;
+        const finalY = (doc as any).lastAutoTable.finalY || 130;
         doc.setFontSize(18);
         doc.text(`Total: ${formatPrice(order.total)}`, 14, finalY + 15);
 
@@ -125,7 +125,7 @@ const PedidosPage = () => {
                                                     >
                                                         Detalles
                                                     </Button>
-                                                    
+
                                                     <Button
                                                         className="btn btn-small ms-2"
                                                         variant="success"

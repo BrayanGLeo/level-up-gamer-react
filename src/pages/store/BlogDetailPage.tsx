@@ -1,12 +1,13 @@
 import React from 'react';
 import { Container, Image } from 'react-bootstrap';
 import { useParams, Link } from 'react-router-dom';
-import { getBlogPostById } from '../../data/blogData';
+import { getBlogPostById, BlogPost } from '../../data/blogData';
 import '../../styles/Blog.css';
 
 const BlogDetailPage = () => {
-    const { id } = useParams();
-    const post = getBlogPostById(parseInt(id));
+    const { id } = useParams<{ id: string }>();
+    
+    const post: BlogPost | undefined = id ? getBlogPostById(parseInt(id)) : undefined;
 
     if (!post) {
         return (

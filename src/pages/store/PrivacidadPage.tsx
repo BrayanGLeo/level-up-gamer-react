@@ -8,7 +8,7 @@ import '../../styles/Forms.css';
 import '../../styles/Perfil.css';
 
 const PrivacidadPage = () => {
-    const { currentUser, updateCurrentUser } = useAuth();
+    const { currentUser, updateCurrentUser }_ = useAuth();
 
     const [newEmail, setNewEmail] = useState('');
     const [emailError, setEmailError] = useState('');
@@ -18,16 +18,21 @@ const PrivacidadPage = () => {
         new: '',
         confirm: ''
     });
-    const [passwordErrors, setPasswordErrors] = useState({});
+    const [passwordErrors, setPasswordErrors] = useState<Record<string, string>>({});
     const [modalInfo, setModalInfo] = useState({ show: false, title: '', message: '' });
 
-    const handlePasswordChange = (e) => {
+    const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setPasswords({ ...passwords, [e.target.name]: e.target.value });
     };
 
-    const handleEmailSubmit = (e) => {
+    const handleEmailSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setEmailError('');
+
+        if (!currentUser) {
+            setEmailError('No se pudo encontrar el usuario actual.');
+            return;
+        }
 
         if (!validateEmail(newEmail)) {
             setEmailError('El correo no es válido (solo dominios permitidos).');
@@ -56,7 +61,7 @@ const PrivacidadPage = () => {
             });
             setNewEmail('');
 
-        } catch (error) {
+        } catch (error: any) {
             setModalInfo({
                 show: true,
                 title: 'Error',
@@ -65,10 +70,16 @@ const PrivacidadPage = () => {
         }
     };
 
-    const handlePasswordSubmit = (e) => {
+    const handlePasswordSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setPasswordErrors({});
-        const newErrors = {};
+        
+        if (!currentUser) {
+            setPasswordErrors({ form: 'No se pudo encontrar el usuario actual.' });
+            return;
+        }
+
+        const newErrors: Record<string, string> = {};
 
         if (passwords.current !== currentUser.password) {
             newErrors.current = 'La contraseña actual no es correcta.';
@@ -97,7 +108,7 @@ const PrivacidadPage = () => {
             });
             setPasswords({ current: '', new: '', confirm: '' });
 
-        } catch (error) {
+        } catch (error: any) {
             setModalInfo({
                 show: true,
                 title: 'Error',

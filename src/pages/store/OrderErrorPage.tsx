@@ -1,6 +1,6 @@
 import React from 'react';
 import { Container, Alert, Button } from 'react-bootstrap';
-import { Link } from 'react-router-dom';
+import { LinkContainer } from 'react-router-bootstrap';
 import '../../styles/App.css';
 
 const OrderErrorPage = () => {
@@ -21,12 +21,18 @@ const OrderErrorPage = () => {
             </Alert>
 
             <div style={{ marginTop: '20px' }}>
-                <Button as={Link} to="/checkout" variant="danger" className="me-2 btn">
-                    Volver a Realizar el Pago
-                </Button>
-                <Button as={Link} to="/catalogo" variant="outline-light">
-                    Volver al Catálogo
-                </Button>
+                
+                <LinkContainer to="/checkout">
+                    <Button variant="danger" className="me-2 btn">
+                        Volver a Realizar el Pago
+                    </Button>
+                </LinkContainer>
+
+                <LinkContainer to="/catalogo">
+                    <Button variant="outline-light">
+                        Volver al Catálogo
+                    </Button>
+                </LinkContainer>
             </div>
         </Container>
     );

@@ -1,167 +1,292 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Button, Card, Badge } from 'react-bootstrap';
-import { Link, useNavigate } from 'react-router-dom';
-import { getUsers, deleteUserByRut } from '../../data/userData';
-import { useAuth } from '../../context/AuthContext';
-import EmailHistoryModal from '../../components/EmailHistoryModal';
-import AdminConfirmModal from '../../components/AdminConfirmModal';
-import AdminNotificationModal from '../../components/AdminNotificationModal';
+import { Form, Button, Row, Col, Card } from 'react-bootstrap';
+import { useNavigate, useParams } from 'react-router-dom';
+import { findUserByRut, saveUser, findUserByEmail, updateUserEmail, User } from '../../data/userData';
+import { validateUserForm } from '../../utils/validation';
+import { regionesData } from '../../data/chileData';
 import '../../styles/AdminStyle.css';
+import AdminNotificationModal from '../../components/AdminNotificationModal';
 
-const AdminUserList = () => {
-    const [users, setUsers] = useState([]);
+interface IFormData {
+    run: string;
+    nombre: string;
+    apellidos: string;
+    email: string;
+    fechaNacimiento: string;
+    direccion: string;
+    region: string;
+    comuna: string;
+    role: User['role'];
+}
+
+const AdminUserForm = () => {
+    const [formData, setFormData] = useState<IFormData>({
+        run: '',
+        nombre: '',
+        apellidos: '',
+        email: '',
+        fechaNacimiento: '',
+        direccion: '',
+        region: '',
+        comuna: '',
+        role: 'Cliente'
+    });
+
+    const [errors, setErrors] = useState<Record<string, string>>({});
+    const [comunas, setComunas] = useState<string[]>([]);
     const navigate = useNavigate();
-    const { currentUser } = useAuth();
+    const { rut } = useParams();
+    const isEditMode = Boolean(rut);
 
-    const [showHistoryModal, setShowHistoryModal] = useState(false);
-    const [selectedUser, setSelectedUser] = useState(null);
-
-    const [showConfirmModal, setShowConfirmModal] = useState(false);
-    const [userToDelete, setUserToDelete] = useState(null);
     const [showNotifyModal, setShowNotifyModal] = useState(false);
-    const [notifyInfo, setNotifyInfo] = useState({ title: '', message: '' });
+    const [modalInfo, setModalInfo] = useState({ title: '', message: '' });
 
     useEffect(() => {
-        setUsers(getUsers());
-    }, [currentUser]);
+        if (isEditMode && rut) {
+            const user = findUserByRut(rut);
+            if (user) {
+                setFormData({
+                    run: user.rut || '',
+                    nombre: user.name,
+                    apellidos: user.surname,
+                    email: user.email,
+                    fechaNacimiento: user.birthdate || '',
+                    direccion: user.direccion || '',
+                    region: user.region || '',
+                    comuna: user.comuna || '',
+                    role: user.role
+                });
 
-    const handleDelete = (rut) => {
-        if (rut === '12345678-9') {
-            setNotifyInfo({ title: 'Error', message: 'No puedes eliminar al administrador principal.' });
-            setShowNotifyModal(true);
-            return;
+                if (user.region) {
+                    const regionEncontrada = regionesData.find(r => r.nombre === user.region);
+                    setComunas(regionEncontrada ? regionEncontrada.comunas : []);
+                }
+            }
         }
+    }, [isEditMode, rut]);
 
-        setUserToDelete(rut);
-        setShowConfirmModal(true);
-    };
-
-    const handleConfirmDelete = () => {
-        if (userToDelete) {
-            deleteUserByRut(userToDelete);
-            setUsers(getUsers());
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+        const { name, value } = e.target;
+        if (name === 'role') {
+            setFormData({ ...formData, [name]: value as User['role'] });
+        } else {
+            setFormData({ ...formData, [name]: value });
         }
-        setShowConfirmModal(false);
-        setUserToDelete(null);
     };
 
-    const handleCloseConfirm = () => {
-        setShowConfirmModal(false);
-        setUserToDelete(null);
+    const handleRegionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const region = e.target.value;
+        setFormData({ ...formData, region: region, comuna: '' });
+        const regionEncontrada = regionesData.find(r => r.nombre === region);
+        setComunas(regionEncontrada ? regionEncontrada.comunas : []);
     };
 
-    const handleCloseNotify = () => {
+    const handleModalClose = () => {
         setShowNotifyModal(false);
-        setNotifyInfo({ title: '', message: '' });
+        navigate('/admin/usuarios');
     };
 
-    const handleShowHistory = (user) => {
-        setSelectedUser(user);
-        setShowHistoryModal(true);
+    const handleCancel = () => {
+        navigate('/admin/usuarios');
     };
 
-    const handleCloseHistory = () => {
-        setShowHistoryModal(false);
-        setSelectedUser(null);
-    };
+    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        const formErrors = validateUserForm(formData as any);
+        const existingUserByEmail = findUserByEmail(formData.email);
+        const existingUserByRut = findUserByRut(formData.run);
 
-    const getRoleBadge = (role) => {
-        if (role === 'Administrador') {
-            return <Badge bg="primary">{role}</Badge>;
+        if (isEditMode) {
+            if (existingUserByEmail && existingUserByEmail.rut !== formData.run) {
+                formErrors.email = 'Este correo ya está en uso por otro usuario.';
+            }
+        } else {
+            if (existingUserByEmail) {
+                formErrors.email = 'Este correo ya está en uso.';
+            }
+            if (existingUserByRut) {
+                formErrors.run = 'Este RUT ya está en uso.';
+            }
         }
-        if (role === 'Vendedor') {
-            return <Badge bg="info">{role}</Badge>;
+
+        setErrors(formErrors);
+
+        if (Object.keys(formErrors).length === 0) {
+            const userToSave = {
+                ...formData,
+                rut: formData.run,
+                name: formData.nombre,
+                surname: formData.apellidos,
+                birthdate: formData.fechaNacimiento,
+            };
+
+            const userOriginal = isEditMode && rut ? findUserByRut(rut) : null;
+
+            saveUser(userToSave as any);
+
+            if (isEditMode && userOriginal && userOriginal.email !== formData.email) {
+                try {
+                    updateUserEmail(formData.run, formData.email);
+                } catch (error: any) {
+                    setErrors({ email: error.message });
+                    return;
+                }
+            }
+
+            const message = isEditMode ? 'Usuario actualizado con éxito' : 'Usuario guardado con éxito';
+            setModalInfo({ title: '¡Éxito!', message: message });
+            setShowNotifyModal(true);
         }
-        return <Badge bg="secondary">{role}</Badge>;
     };
 
     return (
         <>
             <div className="admin-page-header">
-                <h1>Usuarios</h1>
-                <Button as={Link} to="/admin/usuarios/nuevo" className="btn-admin">
-                    Nuevo Usuario
-                </Button>
+                <h1>{isEditMode ? 'Editar Usuario' : 'Nuevo Usuario'}</h1>
             </div>
 
             <Card className="admin-card">
-                <Card.Header>Lista de Usuarios Registrados</Card.Header>
+                <Card.Header>{isEditMode ? `Editando: ${formData.nombre} ${formData.apellidos}` : 'Detalles del Nuevo Usuario'}</Card.Header>
                 <Card.Body>
-                    <div className="admin-table-container" style={{padding: 0, boxShadow: 'none'}}>
-                        <Table hover responsive>
-                            <thead>
-                                <tr>
-                                    <th>RUN</th>
-                                    <th>Nombre</th>
-                                    <th>Correo</th>
-                                    <th>Tipo</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {users.map(user => (
-                                    <tr key={user.rut}>
-                                        <td>{user.rut || 'N/A'}</td>
-                                        <td>{user.name} {user.surname}</td>
-                                        <td>{user.email}</td>
-                                        <td>{getRoleBadge(user.role)}</td>
-                                        <td>
-                                            <Button
-                                                variant="warning"
-                                                size="sm"
-                                                onClick={() => navigate(`/admin/usuarios/editar/${user.rut}`)}
-                                            >
-                                                Editar
-                                            </Button>
+                    <Form id="nuevoUsuarioForm" onSubmit={handleSubmit} className="admin-form-container">
 
-                                            <Button
-                                                variant="info"
-                                                size="sm"
-                                                className="ms-2"
-                                                onClick={() => handleShowHistory(user)}
-                                            >
-                                                Historial
-                                            </Button>
+                        <Form.Group className="form-group" controlId="run">
+                            <Form.Label>RUN:</Form.Label>
+                            <Form.Control
+                                type="text"
+                                name="run"
+                                placeholder="12345678-K"
+                                value={formData.run}
+                                onChange={handleChange}
+                                readOnly={isEditMode}
+                                isInvalid={!!errors.run}
+                            />
+                            <Form.Control.Feedback type="invalid">{errors.run}</Form.Control.Feedback>
+                        </Form.Group>
 
-                                            <Button
-                                                variant="danger"
-                                                size="sm"
-                                                className="ms-2"
-                                                onClick={() => handleDelete(user.rut)}
-                                            >
-                                                Eliminar
-                                            </Button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </Table>
-                    </div>
+                        <Row>
+                            <Col md={6}>
+                                <Form.Group className="form-group" controlId="nombre">
+                                    <Form.Label>Nombre:</Form.Label>
+                                    <Form.Control
+                                        type="text"
+                                        name="nombre"
+                                        value={formData.nombre}
+                                        onChange={handleChange}
+                                        isInvalid={!!errors.nombre}
+                                    />
+                                    <Form.Control.Feedback type="invalid">{errors.nombre}</Form.Control.Feedback>
+                                </Form.Group>
+                            </Col>
+                            <Col md={6}>
+                                <Form.Group className="form-group" controlId="apellidos">
+                                    <Form.Label>Apellidos:</Form.Label>
+                                    <Form.Control
+                                        type="text"
+                                        name="apellidos"
+                                        value={formData.apellidos}
+                                        onChange={handleChange}
+                                        isInvalid={!!errors.apellidos}
+                                    />
+                                    <Form.Control.Feedback type="invalid">{errors.apellidos}</Form.Control.Feedback>
+                                </Form.Group>
+                            </Col>
+                        </Row>
+
+                        <Form.Group className="form-group" controlId="email">
+                            <Form.Label>Correo Electrónico:</Form.Label>
+                            <Form.Control
+                                type="email"
+                                name="email"
+                                value={formData.email}
+                                onChange={handleChange}
+                                readOnly={false}
+                                isInvalid={!!errors.email}
+                            />
+                            <Form.Control.Feedback type="invalid">{errors.email}</Form.Control.Feedback>
+                        </Form.Group>
+
+                        <Form.Group className="form-group" controlId="fechaNacimiento">
+                            <Form.Label>Fecha de Nacimiento:</Form.Label>
+                            <Form.Control
+                                type="date"
+                                name="fechaNacimiento"
+                                value={formData.fechaNacimiento}
+                                onChange={handleChange}
+                                isInvalid={!!errors.fechaNacimiento}
+                            />
+                            <Form.Control.Feedback type="invalid">{errors.fechaNacimiento}</Form.Control.Feedback>
+                        </Form.Group>
+
+                        <Form.Group className="form-group" controlId="direccion">
+                            <Form.Label>Dirección:</Form.Label>
+                            <Form.Control
+                                type="text"
+                                name="direccion"
+                                value={formData.direccion}
+                                onChange={handleChange}
+                                isInvalid={!!errors.direccion}
+                            />
+                            <Form.Control.Feedback type="invalid">{errors.direccion}</Form.Control.Feedback>
+                        </Form.Group>
+
+                        <Row>
+                            <Col md={6}>
+                                <Form.Group className="form-group" controlId="region">
+                                    <Form.Label>Región:</Form.Label>
+                                    <Form.Select name="region" value={formData.region} onChange={handleRegionChange} isInvalid={!!errors.region}>
+                                        <option value="">Seleccione una región</option>
+                                        {regionesData.map(region => (
+                                            <option key={region.nombre} value={region.nombre}>{region.nombre}</option>
+                                        ))}
+                                    </Form.Select>
+                                    <Form.Control.Feedback type="invalid">{errors.region}</Form.Control.Feedback>
+                                </Form.Group>
+                            </Col>
+                            <Col md={6}>
+                                <Form.Group className="form-group" controlId="comuna">
+                                    <Form.Label>Comuna:</Form.Label>
+                                    <Form.Select name="comuna" value={formData.comuna} onChange={handleChange} isInvalid={!!errors.comuna} disabled={comunas.length === 0}>
+                                        <option value="">Seleccione una comuna</option>
+                                        {comunas.map(comuna => (
+                                            <option key={comuna} value={comuna}>{comuna}</option>
+                                        ))}
+                                    </Form.Select>
+                                    <Form.Control.Feedback type="invalid">{errors.comuna}</Form.Control.Feedback>
+                                </Form.Group>
+                            </Col>
+                        </Row>
+
+                        <Form.Group className="form-group" controlId="role">
+                            <Form.Label>Tipo de Usuario:</Form.Label>
+                            <Form.Select name="role" value={formData.role} onChange={handleChange} isInvalid={!!errors.role}>
+                                <option value="">Seleccione un tipo</option>
+                                <option value="Administrador">Administrador</option>
+                                <option value="Vendedor">Vendedor</option>
+                                <option value="Cliente">Cliente</option>
+                            </Form.Select>
+                            <Form.Control.Feedback type="invalid">{errors.role}</Form.Control.Feedback>
+                        </Form.Group>
+                        <div className="text-end mt-3">
+                            <Button type="button" variant="secondary" onClick={handleCancel}>
+                                Cancelar
+                            </Button>
+                            <Button type="submit" className="btn-admin ms-2">
+                                {isEditMode ? 'Actualizar Usuario' : 'Registrar Usuario'}
+                            </Button>
+                        </div>
+                    </Form>
                 </Card.Body>
             </Card>
 
-            <EmailHistoryModal
-                show={showHistoryModal}
-                onHide={handleCloseHistory}
-                user={selectedUser}
-            />
-
-            <AdminConfirmModal
-                show={showConfirmModal}
-                onHide={handleCloseConfirm}
-                onConfirm={handleConfirmDelete}
-                title="Confirmar Eliminación"
-                message="¿Estás seguro de que quieres eliminar este usuario?"
-            />
-            
             <AdminNotificationModal
                 show={showNotifyModal}
-                onHide={handleCloseNotify}
-                title={notifyInfo.title}
-                message={notifyInfo.message}
+                onHide={handleModalClose}
+                title={modalInfo.title}
+                message={modalInfo.message}
             />
         </>
     );
 };
 
-export default AdminUserList;
+export default AdminUserForm;

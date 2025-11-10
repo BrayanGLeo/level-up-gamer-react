@@ -1,6 +1,7 @@
 import React from 'react';
 import { Modal, Button, Image } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
+import { LinkContainer } from 'react-router-bootstrap';
 import '../styles/Modal.css';
 import { Product } from '../data/productData';
 
@@ -31,9 +32,13 @@ const AddToCartModal = ({ show, onHide, product }: AddToCartModalProps) => {
                 <Button variant="outline-light" onClick={onHide}>
                     Seguir Comprando
                 </Button>
-                <Button as={Link} to="/carrito" className="btn" onClick={onHide}>
-                    Ir al Carrito
-                </Button>
+
+                <LinkContainer to="/carrito">
+                    <Button className="btn" onClick={onHide}>
+                        Ir al Carrito
+                    </Button>
+                </LinkContainer>
+                
             </Modal.Footer>
         </Modal>
     );

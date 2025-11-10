@@ -3,14 +3,20 @@ import { Container, Button, Image } from 'react-bootstrap';
 import { useAuth } from '../../context/AuthContext';
 import '../../styles/Perfil.css';
 
+interface IProfileData {
+    name: string;
+    email: string;
+    memberSince: string;
+}
+
 const PerfilPage = () => {
     const { currentUser, updateCurrentUser } = useAuth();
 
-    const [profilePic, setProfilePic] = useState(
+    const [profilePic, setProfilePic] = useState<string>(
         currentUser?.profilePic || 'https://via.placeholder.com/150'
     );
 
-    const [profileData, setProfileData] = useState({
+    const [profileData, setProfileData] = useState<IProfileData>({
         name: '',
         email: '',
         memberSince: 'Cargando...'
@@ -28,18 +34,19 @@ const PerfilPage = () => {
         }
     }, [currentUser]);
 
-    const handlePicChange = (event) => {
-        const file = event.target.files[0];
+    const handlePicChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
         if (file) {
             const reader = new FileReader();
             reader.onload = (e) => {
-                const picData = e.target.result;
-                
-                setProfilePic(picData);
+                const picData = e.target?.result as string;
+                if (picData) {
+                    setProfilePic(picData);
 
-                if (currentUser) {
-                    const updatedUser = { ...currentUser, profilePic: picData };
-                    updateCurrentUser(updatedUser);
+                    if (currentUser) {
+                        const updatedUser = { ...currentUser, profilePic: picData };
+                        updateCurrentUser(updatedUser);
+                    }
                 }
             };
             reader.readAsDataURL(file);
@@ -47,7 +54,7 @@ const PerfilPage = () => {
     };
 
     const triggerFileInput = () => {
-        document.getElementById('file-input').click();
+        document.getElementById('file-input')!.click();
     };
 
 

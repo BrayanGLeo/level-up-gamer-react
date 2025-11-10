@@ -1,40 +1,48 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Table, Button, Badge, Form } from 'react-bootstrap';
-import { getUsers, updateOrderStatus } from '../../data/userData';
+// 1. Importamos las interfaces
+import { getUsers, updateOrderStatus, Order } from '../../data/userData';
 import OrderDetailModal from '../../components/OrderDetailModal';
 import '../../styles/AdminStyle.css';
 
-const AdminOrdenes = () => {
-    const [allOrders, setAllOrders] = useState([]);
-    const [showModal, setShowModal] = useState(false);
-    const [selectedOrder, setSelectedOrder] = useState(null);
+type AdminOrder = Order & {
+    status: string;
+    clientName: string;
+    userRUT: string;
+};
 
-    const ESTADOS_ORDEN = [
-        "Pendiente", 
-        "Procesando", 
-        "En preparación", 
-        "En tránsito", 
-        "Completado"
-    ];
+const ESTADOS_ORDEN: string[] = [
+    "Pendiente",
+    "Procesando",
+    "En preparación",
+    "En tránsito",
+    "Completado"
+];
+
+const AdminOrdenes = () => {
+    const [allOrders, setAllOrders] = useState<AdminOrder[]>([]);
+    const [showModal, setShowModal] = useState(false);
+    const [selectedOrder, setSelectedOrder] = useState<AdminOrder | null>(null);
+
 
     useEffect(() => {
         const users = getUsers();
-        
-        const ordersFromAllUsers = users.flatMap(user => 
-            (user.orders || []).map(order => ({
+
+        const ordersFromAllUsers: AdminOrder[] = users.flatMap(user =>
+            (user.orders || []).map((order: Order) => ({
                 ...order,
                 status: order.status || 'Pendiente',
                 clientName: `${user.name} ${user.surname}`,
-                userRUT: user.rut 
+                userRUT: user.rut
             }))
         );
 
         ordersFromAllUsers.sort((a, b) => b.number - a.number);
-        
+
         setAllOrders(ordersFromAllUsers);
     }, []);
 
-    const handleShowModal = (order) => {
+    const handleShowModal = (order: AdminOrder) => {
         setSelectedOrder(order);
         setShowModal(true);
     };
@@ -44,9 +52,9 @@ const AdminOrdenes = () => {
         setSelectedOrder(null);
     };
 
-    const handleStatusChange = (userRUT, orderNumber, newStatus) => {
+    const handleStatusChange = (userRUT: string, orderNumber: number, newStatus: string) => {
         updateOrderStatus(userRUT, orderNumber, newStatus);
-        
+
         setAllOrders(prevOrders =>
             prevOrders.map(order =>
                 order.number === orderNumber ? { ...order, status: newStatus } : order
@@ -54,7 +62,7 @@ const AdminOrdenes = () => {
         );
     };
 
-    const getStatusBadge = (status) => {
+    const getStatusBadge = (status: string) => {
         switch (status) {
             case 'Pendiente':
                 return <Badge bg="secondary">{status}</Badge>;
@@ -76,11 +84,11 @@ const AdminOrdenes = () => {
             <div className="admin-page-header">
                 <h1>Órdenes</h1>
             </div>
-            
+
             <Card className="admin-card">
                 <Card.Header>Historial de Órdenes</Card.Header>
                 <Card.Body>
-                    <div className="admin-table-container" style={{padding: 0, boxShadow: 'none'}}>
+                    <div className="admin-table-container" style={{ padding: 0, boxShadow: 'none' }}>
                         {allOrders.length === 0 ? (
                             <div className="text-center p-5">
                                 <span style={{ fontSize: '3rem' }}>🛒</span>
@@ -98,7 +106,7 @@ const AdminOrdenes = () => {
                                         <th>Cliente</th>
                                         <th>Total</th>
                                         <th>Estado</th>
-                                        <th>Cambiar Estado</th> 
+                                        <th>Cambiar Estado</th>
                                         <th>Acciones</th>
                                     </tr>
                                 </thead>
@@ -114,8 +122,8 @@ const AdminOrdenes = () => {
                                                 <Form.Select
                                                     size="sm"
                                                     value={order.status}
-                                                    onChange={(e) => handleStatusChange(order.userRUT, order.number, e.target.value)}
-                                                    className="admin-form-container" 
+                                                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => handleStatusChange(order.userRUT, order.number, e.target.value)}
+                                                    className="admin-form-container"
                                                 >
                                                     {ESTADOS_ORDEN.map(estado => (
                                                         <option key={estado} value={estado}>

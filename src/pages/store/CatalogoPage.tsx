@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Container, Row, Col, Form, Dropdown } from 'react-bootstrap';
 import ProductCard from '../../components/ProductCard';
-import { getProducts } from '../../data/productData';
+import { getProducts, Product } from '../../data/productData';
 import '../../styles/Catalogo.css';
 import { useCart } from '../../context/CartContext';
 import AddToCartModal from '../../components/AddToCartModal';
@@ -14,13 +14,14 @@ const CatalogoPage = () => {
 
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('todos');
-    
+
     const [showModal, setShowModal] = useState(false);
-    const [selectedProduct, setSelectedProduct] = useState(null);
+
+    const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
     const handleCloseModal = () => setShowModal(false);
 
-    const handleAddToCart = (product) => {
+    const handleAddToCart = (product: Product) => {
         addToCart(product);
         setSelectedProduct(product);
         setShowModal(true);
@@ -34,7 +35,7 @@ const CatalogoPage = () => {
         return categoryMatch && searchMatch;
     });
 
-    const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+    const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
     return (
         <>
@@ -53,7 +54,7 @@ const CatalogoPage = () => {
                                 />
                             </Form.Group>
                         </Col>
-                        
+
                         <Col md={7} lg={8}>
                             <Dropdown>
                                 <Dropdown.Toggle variant="primary" id="filter-dropdown" className="btn">

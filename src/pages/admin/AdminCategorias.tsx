@@ -1,16 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Table, Button, Form, Modal } from 'react-bootstrap';
-import { getCategories, saveCategory, deleteCategory } from '../../data/categoryData';
+import { getCategories, saveCategory, deleteCategory, Category } from '../../data/categoryData';
 import AdminConfirmModal from '../../components/AdminConfirmModal';
 import '../../styles/AdminStyle.css';
 
+type CategoryFormState = {
+    id: number | null;
+    nombre: string;
+}
+
 const AdminCategorias = () => {
-    const [categories, setCategories] = useState([]);
+    const [categories, setCategories] = useState<Category[]>([]);
     const [showModal, setShowModal] = useState(false);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     
-    const [currentCategory, setCurrentCategory] = useState({ id: null, nombre: '' });
-    const [categoryToDelete, setCategoryToDelete] = useState(null);
+    const [currentCategory, setCurrentCategory] = useState<CategoryFormState>({ id: null, nombre: '' });
+    const [categoryToDelete, setCategoryToDelete] = useState<number | null>(null);
     
     const [error, setError] = useState('');
     const [isEditMode, setIsEditMode] = useState(false);
@@ -36,17 +41,17 @@ const AdminCategorias = () => {
         setShowModal(true);
     };
 
-    const handleShowEditModal = (category) => {
+    const handleShowEditModal = (category: Category) => {
         setIsEditMode(true);
         setCurrentCategory(category);
         setShowModal(true);
     };
 
-    const handleChange = (e) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setCurrentCategory({ ...currentCategory, nombre: e.target.value });
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (!currentCategory.nombre.trim()) {
             setError('El nombre de la categoría no puede estar vacío.');
@@ -67,7 +72,7 @@ const AdminCategorias = () => {
         handleCloseModal();
     };
 
-    const handleDelete = (id) => {
+    const handleDelete = (id: number) => {
         setCategoryToDelete(id);
         setShowConfirmModal(true);
     };

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Container, Form, Button, Row, Col } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth, LoginResult } from '../../context/AuthContext';
 import { validateEmail, validatePassword, validateTextField, validateRut, validateBirthdate } from '../../utils/validation';
 import NotificationModal from '../../components/NotificationModal';
 import '../../styles/Forms.css';
@@ -16,22 +16,22 @@ const RegisterPage = () => {
         password: '',
         confirmPassword: ''
     });
-    const [errors, setErrors] = useState({});
+    const [errors, setErrors] = useState<Record<string, string>>({});
     const { register } = useAuth();
     const navigate = useNavigate();
 
     const [modalInfo, setModalInfo] = useState({ show: false, title: '', message: '' });
 
-    const [registrationResult, setRegistrationResult] = useState(null);
+    const [registrationResult, setRegistrationResult] = useState<LoginResult | null>(null);
 
-    const handleChange = (e) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setFormData({ ...formData, [name]: value });
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        let newErrors = {};
+        let newErrors: Record<string, string> = {};
 
         if (!validateTextField(formData.names, 30)) newErrors.names = 'El nombre solo debe contener letras y espacios (máx 30 caracteres).';
         if (!validateTextField(formData.surnames, 30)) newErrors.surnames = 'El apellido solo debe contener letras y espacios (máx 30 caracteres).';

@@ -4,37 +4,42 @@ import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import { regionesData } from '../../data/chileData';
-import { addOrderToUser, addAddress } from '../../data/userData';
+import { addOrderToUser, addAddress, Address, Order } from '../../data/userData'; 
 import { validateRut, validateEmail, validatePhone, validateRequiredField } from '../../utils/validation';
 import NotificationModal from '../../components/NotificationModal';
 import '../../styles/Forms.css';
 import '../../styles/Checkout.css';
 
-const initialFormState = {
+interface ICheckoutForm {
+    nombre: string; apellidos: string; rut: string; email: string; telefono: string;
+    region: string; comuna: string; calle: string; numero: string; depto: string;
+    recibeNombre: string; recibeApellido: string; recibeTelefono: string;
+}
+
+const initialFormState: ICheckoutForm = {
     nombre: '', apellidos: '', rut: '', email: '', telefono: '',
     region: '', comuna: '', calle: '', numero: '', depto: '',
     recibeNombre: '', recibeApellido: '', recibeTelefono: ''
 };
 
-const initialAddressState = {
+const initialAddressState: Partial<ICheckoutForm> = {
     region: '', comuna: '', calle: '', numero: '', depto: '',
     recibeNombre: '', recibeApellido: '', recibeTelefono: ''
 };
 
 const CheckoutPage = () => {
     const [step, setStep] = useState(1);
-    const [formData, setFormData] = useState(initialFormState);
-    const [errors, setErrors] = useState({});
-
-    const [deliveryMethod, setDeliveryMethod] = useState(null);
-
-    const [comunas, setComunas] = useState([]);
+    const [formData, setFormData] = useState<ICheckoutForm>(initialFormState);
+    const [errors, setErrors] = useState<Record<string, string>>({});
+    const [deliveryMethod, setDeliveryMethod] = useState<string | null>(null);
+    const [comunas, setComunas] = useState<string[]>([]);
+    
     const { currentUser, updateCurrentUser } = useAuth();
     const { cartItems, getCartTotal, clearCart } = useCart();
     const navigate = useNavigate();
 
-    const [savedAddresses, setSavedAddresses] = useState([]);
-    const [selectedAddressId, setSelectedAddressId] = useState(null);
+    const [savedAddresses, setSavedAddresses] = useState<Address[]>([]);
+    const [selectedAddressId, setSelectedAddressId] = useState<number | string | null>(null); // 'new' es un string
     const [modalInfo, setModalInfo] = useState({ show: false, title: '', message: '' });
     const [showSaveToast, setShowSaveToast] = useState(false);
 
@@ -54,7 +59,7 @@ const CheckoutPage = () => {
     }, [currentUser]);
 
     const validateStep1 = () => {
-        const newErrors = {};
+        const newErrors: Record<string, string> = {};
         if (!validateRequiredField(formData.nombre, 50)) newErrors.nombre = 'El nombre es requerido.';
         if (!validateRequiredField(formData.apellidos, 100)) newErrors.apellidos = 'El apellido es requerido.';
         if (!validateRut(formData.rut)) newErrors.rut = 'El RUT no es válido.';
@@ -65,7 +70,7 @@ const CheckoutPage = () => {
     };
 
     const validateStep2 = () => {
-        const newErrors = {};
+        const newErrors: Record<string, string> = {};
         if (!deliveryMethod) {
             newErrors.deliveryMethod = 'Debes seleccionar una forma de entrega.';
         }
@@ -82,24 +87,25 @@ const CheckoutPage = () => {
         return Object.keys(newErrors).length === 0;
     };
 
-    const handleChange = (e) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
         setSelectedAddressId('new');
     };
-    const handleRegionChange = (e) => {
+    const handleRegionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const regionNombre = e.target.value;
         setFormData({ ...formData, region: regionNombre, comuna: '' });
         const regionEncontrada = regionesData.find(r => r.nombre === regionNombre);
         setComunas(regionEncontrada ? regionEncontrada.comunas : []);
         setSelectedAddressId('new');
     };
-    const handleSelectAddress = (address) => {
+    const handleSelectAddress = (address: Address) => {
         setFormData({ ...formData, ...address });
         setSelectedAddressId(address.id);
         const regionEncontrada = regionesData.find(r => r.nombre === address.region);
         setComunas(regionEncontrada ? regionEncontrada.comunas : []);
         setErrors({});
     };
+
     const nextStep = () => {
         let isValid = false;
         if (step === 1) isValid = validateStep1();
@@ -111,20 +117,23 @@ const CheckoutPage = () => {
         }
     };
     const prevStep = () => setStep(prev => prev - 1);
+    
     const getPickupDate = () => {
         const date = new Date(Date.now() + 10 * 24 * 60 * 60 * 1000);
         return date.toLocaleDateString('es-CL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
     };
 
-    const handleSimulatedPayment = (e) => {
+    const handleSimulatedPayment = (e: React.MouseEvent<HTMLButtonElement>) => {
         e.preventDefault();
-        const newOrder = {
+        
+        const newOrder: Order = {
             number: Date.now(),
             date: new Date().toLocaleDateString('es-CL'),
             items: cartItems,
             total: getCartTotal(),
-            customer: { name: formData.nombre, surname: formData.apellidos, email: formData.email, phone: formData.telefono, },
+            customer: { name: formData.nombre, surname: formData.apellidos, email: formData.email, phone: formData.telefono },
             shipping: deliveryMethod === 'despacho' ? {
+                type: 'Despacho a Domicilio',
                 calle: formData.calle, numero: formData.numero, depto: formData.depto, comuna: formData.comuna, region: formData.region,
                 recibeNombre: formData.recibeNombre, recibeApellido: formData.recibeApellido, recibeTelefono: formData.recibeTelefono
             } : { type: 'Retiro en Tienda' }
@@ -134,14 +143,16 @@ const CheckoutPage = () => {
 
         if (currentUser) {
             const updatedUser = addOrderToUser(currentUser.rut, newOrder);
-            updateCurrentUser(updatedUser);
+            if (updatedUser) {
+                updateCurrentUser(updatedUser);
+            }
             setModalInfo({
                 show: true,
                 title: '¡Compra Exitosa!',
                 message: `¡Gracias por tu compra, ${formData.nombre}! Tu pedido #${newOrder.number} ha sido realizado con éxito.`
             });
         } else {
-            const orders = JSON.parse(localStorage.getItem('orders')) || [];
+            const orders = JSON.parse(localStorage.getItem('orders') || '[]') as Order[];
             orders.push(newOrder);
             localStorage.setItem('orders', JSON.stringify(orders));
             navigate('/compra-exitosa', { state: { order: newOrder } });
@@ -155,7 +166,7 @@ const CheckoutPage = () => {
 
     const handleSaveAddress = () => {
         if (validateStep2() && currentUser) {
-            const newAddress = {
+            const newAddress: Omit<Address, 'id'> = {
                 alias: `${formData.calle} ${formData.numero}` || 'Dirección Nueva',
                 region: formData.region,
                 comuna: formData.comuna,
@@ -168,13 +179,13 @@ const CheckoutPage = () => {
             };
 
             const updatedUser = addAddress(currentUser.rut, newAddress);
-            updateCurrentUser(updatedUser);
-
-            setSavedAddresses(updatedUser.addresses);
-            const newId = updatedUser.addresses[updatedUser.addresses.length - 1].id;
-            setSelectedAddressId(newId);
-
-            setShowSaveToast(true);
+            if(updatedUser) {
+                updateCurrentUser(updatedUser);
+                setSavedAddresses(updatedUser.addresses);
+                const newId = updatedUser.addresses[updatedUser.addresses.length - 1].id;
+                setSelectedAddressId(newId);
+                setShowSaveToast(true);
+            }
         } else if (!currentUser) {
         } else {
             setModalInfo({

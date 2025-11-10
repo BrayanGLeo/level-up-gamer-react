@@ -1,16 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import { Form, Button, Row, Col, Card } from 'react-bootstrap';
 import { useAuth } from '../../context/AuthContext';
-import { saveUser, updateUserEmail } from '../../data/userData';
+import { saveUser, updateUserEmail, User } from '../../data/userData';
 import { validateTextField, validateEmail, validateBirthdate, validateRequiredField, validatePassword } from '../../utils/validation';
 import { regionesData } from '../../data/chileData';
 import AdminNotificationModal from '../../components/AdminNotificationModal';
 import '../../styles/AdminStyle.css';
 
+interface IFormData {
+    run: string;
+    nombre: string;
+    apellidos: string;
+    email: string;
+    fechaNacimiento: string;
+    direccion: string;
+    region: string;
+    comuna: string;
+}
+
 const AdminPerfil = () => {
     const { currentUser, updateCurrentUser } = useAuth();
     
-    const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState<IFormData>({
         run: '',
         nombre: '',
         apellidos: '',
@@ -20,11 +31,11 @@ const AdminPerfil = () => {
         region: '',
         comuna: ''
     });
-    const [errors, setErrors] = useState({});
-    const [comunas, setComunas] = useState([]);
+    const [errors, setErrors] = useState<Record<string, string>>({});
+    const [comunas, setComunas] = useState<string[]>([]);
 
     const [passwords, setPasswords] = useState({ current: '', new: '', confirm: '' });
-    const [passwordErrors, setPasswordErrors] = useState({});
+    const [passwordErrors, setPasswordErrors] = useState<Record<string, string>>({});
 
     const [showNotifyModal, setShowNotifyModal] = useState(false);
     const [modalInfo, setModalInfo] = useState({ title: '', message: '' });
@@ -49,16 +60,16 @@ const AdminPerfil = () => {
         }
     }, [currentUser]);
 
-    const handleChange = (e) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setFormData({ ...formData, [name]: value });
     };
 
-    const handlePasswordChange = (e) => {
+    const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setPasswords({ ...passwords, [e.target.name]: e.target.value });
     };
 
-    const handleRegionChange = (e) => {
+    const handleRegionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const region = e.target.value;
         setFormData({ ...formData, region: region, comuna: '' });
         const regionEncontrada = regionesData.find(r => r.nombre === region);
@@ -69,9 +80,15 @@ const AdminPerfil = () => {
         setShowNotifyModal(false);
     };
 
-    const handleProfileSubmit = (e) => {
+    const handleProfileSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        const formErrors = {};
+        
+        if (!currentUser) {
+            setErrors({ form: "No se ha encontrado el usuario actual." });
+            return;
+        }
+
+        const formErrors: Record<string, string> = {};
         
         if (!validateTextField(formData.nombre, 30)) formErrors.nombre = 'Nombre inválido.';
         if (!validateTextField(formData.apellidos, 30)) formErrors.apellidos = 'Apellidos inválidos.';
@@ -84,7 +101,7 @@ const AdminPerfil = () => {
         setErrors(formErrors);
 
         if (Object.keys(formErrors).length === 0) {
-            let userToSave = {
+            let userToSave: User = {
                 ...currentUser,
                 name: formData.nombre,
                 surname: formData.apellidos,
@@ -97,7 +114,7 @@ const AdminPerfil = () => {
             if (currentUser.email !== formData.email) {
                 try {
                     userToSave = updateUserEmail(currentUser.rut, formData.email);
-                } catch (error) {
+                } catch (error: any) {
                     setErrors({ email: error.message });
                     return;
                 }
@@ -112,10 +129,16 @@ const AdminPerfil = () => {
         }
     };
 
-    const handlePasswordSubmit = (e) => {
+    const handlePasswordSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setPasswordErrors({});
-        const newErrors = {};
+
+        if (!currentUser) {
+            setPasswordErrors({ form: "No se ha encontrado el usuario actual." });
+            return;
+        }
+
+        const newErrors: Record<string, string> = {};
 
         if (passwords.current !== currentUser.password) {
             newErrors.current = 'La contraseña actual no es correcta.';

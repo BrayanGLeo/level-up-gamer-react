@@ -1,29 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import { Form, Button, Card, Row, Col } from 'react-bootstrap';
 import { useNavigate, useParams } from 'react-router-dom';
-import { getProductByCode, saveProduct } from '../../data/productData';
-import { getCategories } from '../../data/categoryData';
+import { getProductByCode, saveProduct, Product } from '../../data/productData';
+import { getCategories, Category } from '../../data/categoryData';
 import { validateProductForm } from '../../utils/validation';
 import AdminNotificationModal from '../../components/AdminNotificationModal';
 import '../../styles/AdminStyle.css';
 
+const initialFormState: Product = {
+    codigo: '',
+    nombre: '',
+    descripcion: '',
+    precio: 0,
+    stock: 0,
+    stockCritico: 5,
+    categoria: '',
+    imagen: ''
+};
+
 const AdminProductForm = () => {
-    const [formData, setFormData] = useState({
-        codigo: '',
-        nombre: '',
-        descripcion: '',
-        precio: 0,
-        stock: 0,
-        stockCritico: 5,
-        categoria: '',
-        imagen: ''
-    });
-    const [errors, setErrors] = useState({});
+    const [formData, setFormData] = useState<Product>(initialFormState);
+    const [errors, setErrors] = useState<Record<string, string>>({});
     const navigate = useNavigate();
     const { codigo } = useParams();
     const isEditMode = Boolean(codigo);
 
-    const [categories, setCategories] = useState([]);
+    const [categories, setCategories] = useState<Category[]>([]);
 
     const [showNotifyModal, setShowNotifyModal] = useState(false);
     const [modalInfo, setModalInfo] = useState({ title: '', message: '' });
@@ -31,7 +33,7 @@ const AdminProductForm = () => {
     useEffect(() => {
         setCategories(getCategories());
 
-        if (isEditMode) {
+        if (isEditMode && codigo) {
             const product = getProductByCode(codigo);
             if (product) {
                 setFormData(product);
@@ -39,7 +41,7 @@ const AdminProductForm = () => {
         }
     }, [isEditMode, codigo]);
 
-    const handleChange = (e) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setFormData({ ...formData, [name]: value });
     };
@@ -49,8 +51,9 @@ const AdminProductForm = () => {
         navigate('/admin/productos');
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        
         const formErrors = validateProductForm(formData);
 
         if (!isEditMode) {
@@ -63,7 +66,16 @@ const AdminProductForm = () => {
         setErrors(formErrors);
 
         if (Object.keys(formErrors).length === 0) {
-            saveProduct(formData);
+            
+            const productToSave: Product = {
+                ...formData,
+                precio: parseFloat(String(formData.precio)) || 0,
+                stock: parseInt(String(formData.stock)) || 0,
+                stockCritico: parseInt(String(formData.stockCritico)) || 5,
+            };
+
+            saveProduct(productToSave);
+            
             const message = isEditMode ? 'Producto actualizado con éxito' : 'Producto guardado con éxito';
             setModalInfo({ title: '¡Éxito!', message: message });
             setShowNotifyModal(true);

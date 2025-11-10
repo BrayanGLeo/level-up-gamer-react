@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Container, Form, Button } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth, LoginResult } from '../../context/AuthContext';
 import { validateEmail, validateLoginPassword } from '../../utils/validation';
 import NotificationModal from '../../components/NotificationModal';
 import '../../styles/Forms.css';
@@ -9,14 +9,16 @@ import '../../styles/Forms.css';
 const LoginPage = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [errors, setErrors] = useState({});
+    const [errors, setErrors] = useState<Record<string, string>>({});
     const { login } = useAuth();
     const navigate = useNavigate();
     const [modalInfo, setModalInfo] = useState({ show: false, title: '', message: '' });
-    const [loginResult, setLoginResult] = useState(null);
-    const handleSubmit = (e) => {
+
+    const [loginResult, setLoginResult] = useState<LoginResult | null>(null);
+
+    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        const newErrors = {};
+        const newErrors: Record<string, string> = {};
         const emailToValidate = email.trim().toLowerCase();
 
         if (!validateEmail(emailToValidate)) {

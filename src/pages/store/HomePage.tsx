@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Container, Row, Col } from 'react-bootstrap';
 import ProductCard from '../../components/ProductCard';
 import BlogPostSummary from '../../components/BlogPostSummary';
-import { getProducts } from '../../data/productData';
+import { getProducts, Product } from '../../data/productData';
 import { getBlogPosts } from '../../data/blogData';
 import heroBackground from '../../assets/Fondo.png';
 import { useCart } from '../../context/CartContext';
@@ -14,9 +14,10 @@ const HomePage = () => {
     const featuredPosts = getBlogPosts().slice(0, 2);
     const { addToCart } = useCart();
     const [showModal, setShowModal] = useState(false);
-    const [selectedProduct, setSelectedProduct] = useState(null);
 
-    const handleAddToCart = (product) => {
+    const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+
+    const handleAddToCart = (product: Product) => {
         addToCart(product);
         setSelectedProduct(product);
         setShowModal(true);
