@@ -18,15 +18,15 @@ const getInitialUsers = () => {
             addresses: [
                 {
                     id: 1,
-                    alias: 'Casa (Ejemplo SP Digital)',
+                    alias: 'Casa',
                     region: 'Biobío',
                     comuna: 'Hualpén',
-                    calle: 'Pasaje Greenlandia',
-                    numero: '#2457',
+                    calle: 'Pasaje La vida',
+                    numero: '1234',
                     depto: '',
-                    recibeNombre: 'Brayan',
-                    recibeApellido: 'Godoy',
-                    recibeTelefono: '+56978979900'
+                    recibeNombre: 'Juan',
+                    recibeApellido: 'Soto',
+                    recibeTelefono: '+56912345678'
                 }
             ],
             orders: []
