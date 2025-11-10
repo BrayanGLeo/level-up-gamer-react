@@ -13,7 +13,7 @@ const PerfilPage = () => {
     const [profileData, setProfileData] = useState({
         name: '',
         email: '',
-        memberSince: 'Septiembre 2025'
+        memberSince: 'Cargando...'
     });
 
     useEffect(() => {
@@ -21,7 +21,7 @@ const PerfilPage = () => {
             setProfileData({
                 name: `${currentUser.name} ${currentUser.surname}`,
                 email: currentUser.email,
-                memberSince: 'Septiembre 2025'
+                memberSince: currentUser.registeredAt || 'Fecha no registrada'
             });
 
             setProfilePic(currentUser.profilePic || 'https://via.placeholder.com/150');

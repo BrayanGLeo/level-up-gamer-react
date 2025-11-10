@@ -80,8 +80,9 @@ export const registerUser = (newUser) => {
     }
     const userToSave = {
         ...newUser,
-        role: role, 
-        isOriginalAdmin: isOriginalAdmin, 
+        role: role,
+        registeredAt: new Date().toLocaleDateString('es-CL'),
+        isOriginalAdmin: isOriginalAdmin,
         emailHistory: [newUser.email],
         addresses: [],
         orders: []
@@ -244,8 +245,6 @@ export const addOrderToUser = (rut, newOrder) => {
         if (!users[userIndex].orders) {
             users[userIndex].orders = [];
         }
-        
-        // Asignamos el estado pendiente al añadir la orden
         const orderWithStatus = {
             ...newOrder,
             status: newOrder.status || 'Pendiente'

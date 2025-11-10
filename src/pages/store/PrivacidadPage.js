@@ -124,8 +124,7 @@ const PrivacidadPage = () => {
                                 <Form.Control
                                     type="email"
                                     value={currentUser ? currentUser.email : ''}
-                                    disabled
-                                    readOnly
+                                    readOnly // <-- CAMBIO DE 'disabled' A 'readOnly'
                                 />
                             </Form.Group>
 
