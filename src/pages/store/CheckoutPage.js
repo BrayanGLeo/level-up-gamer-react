@@ -123,7 +123,6 @@ const CheckoutPage = () => {
             date: new Date().toLocaleDateString('es-CL'),
             items: cartItems,
             total: getCartTotal(),
-            status: 'Pendiente', // <-- AQUÍ SE AÑADE EL ESTADO INICIAL
             customer: { name: formData.nombre, surname: formData.apellidos, email: formData.email, phone: formData.telefono, },
             shipping: deliveryMethod === 'despacho' ? {
                 calle: formData.calle, numero: formData.numero, depto: formData.depto, comuna: formData.comuna, region: formData.region,
@@ -219,6 +218,7 @@ const CheckoutPage = () => {
                             value="despacho"
                             checked={deliveryMethod === 'despacho'}
                             onChange={(e) => setDeliveryMethod(e.target.value)}
+                            className={deliveryMethod === 'despacho' ? 'active' : ''}
                             label={
                                 <>
                                     <strong>Despacho a Domicilio</strong>
@@ -233,6 +233,7 @@ const CheckoutPage = () => {
                             value="retiro"
                             checked={deliveryMethod === 'retiro'}
                             onChange={(e) => setDeliveryMethod(e.target.value)}
+                            className={deliveryMethod === 'retiro' ? 'active' : ''}
                             label={
                                 <>
                                     <strong>Retiro en Tienda</strong>
