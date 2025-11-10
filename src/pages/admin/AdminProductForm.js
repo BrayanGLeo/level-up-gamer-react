@@ -47,6 +47,13 @@ const AdminProductForm = () => {
     const handleSubmit = (e) => {
         e.preventDefault();
         const formErrors = validateProductForm(formData);
+
+        if (!isEditMode) {
+            const existingProduct = getProductByCode(formData.codigo);
+            if (existingProduct) {
+                formErrors.codigo = 'Este código de producto ya existe. Por favor, ingrese uno diferente.';
+            }
+        }
         setErrors(formErrors);
 
         if (Object.keys(formErrors).length === 0) {
