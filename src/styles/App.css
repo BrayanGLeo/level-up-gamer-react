@@ -1,10 +1,18 @@
-body,#root,.card {
+body,#root{
     background-color: #000000 !important;
     color: #ffffff !important;
     font-family: 'Roboto', sans-serif;
     margin: 0;
     padding: 0;
     min-height: 100vh;
+}
+
+.card{
+    background-color: rgb(8, 8, 32) !important;
+    color: #ffffff !important;
+    font-family: 'Roboto', sans-serif;
+    margin: 0;
+    padding: 0;
 }
 
 .hidden {
