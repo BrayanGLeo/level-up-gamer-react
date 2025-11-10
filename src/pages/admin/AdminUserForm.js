@@ -244,11 +244,11 @@ const AdminUserForm = () => {
                             <Form.Select name="role" value={formData.role} onChange={handleChange} isInvalid={!!errors.role}>
                                 <option value="">Seleccione un tipo</option>
                                 <option value="Administrador">Administrador</option>
+                                <option value="Vendedor">Vendedor</option> 
                                 <option value="Cliente">Cliente</option>
                             </Form.Select>
                             <Form.Control.Feedback type="invalid">{errors.role}</Form.Control.Feedback>
                         </Form.Group>
-
                         <div className="text-end mt-3">
                             <Button type="button" variant="secondary" onClick={handleCancel}>
                                 Cancelar
