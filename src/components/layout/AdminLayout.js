@@ -9,6 +9,8 @@ const AdminLayout = () => {
     const { currentUser } = useAuth();
     const navigate = useNavigate();
     const [showModal, setShowModal] = useState(false);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
     useEffect(() => {
         document.body.classList.add('admin-body');
@@ -20,7 +22,7 @@ const AdminLayout = () => {
         return () => {
             document.body.classList.remove('admin-body');
         };
-    }, [currentUser]);
+    }, [currentUser, navigate]);
 
     const handleModalClose = () => {
         setShowModal(false);
@@ -43,9 +45,16 @@ const AdminLayout = () => {
     }
 
     return (
-        <div className="admin-container">
-            <AdminSidebar />
+        <div className={`admin-container ${isSidebarOpen ? 'sidebar-open' : ''}`}>
+            
+            <AdminSidebar toggleSidebar={toggleSidebar} />
+            
             <main className="admin-main-content">
+                
+                <button className="admin-hamburger-btn" onClick={toggleSidebar}>
+                    &#9776;
+                </button>
+
                 <Outlet />
             </main>
         </div>

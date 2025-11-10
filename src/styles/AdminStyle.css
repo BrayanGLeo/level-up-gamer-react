@@ -1,20 +1,20 @@
 :root {
     --admin-bg: #ffffff;
-    
+
     --admin-sidebar-bg: #001529;
     --admin-sidebar-text: rgba(255, 255, 255, 0.75);
     --admin-sidebar-text-hover: #ffffff;
-    
+
     --admin-primary: #1E90FF;
     --admin-primary-hover: #007ae5;
-    
+
     --admin-card-bg: #ffffff;
-    --admin-card-border: #dee2e6; 
-    
+    --admin-card-border: #dee2e6;
+
     --admin-text-primary: #212529;
     --admin-text-secondary: #6c757d;
-    
-    --admin-shadow: 0 4px 12px rgba(0,0,0,0.05);
+
+    --admin-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 body.admin-body {
@@ -41,7 +41,7 @@ body.admin-body {
     color: var(--admin-sidebar-text) !important;
     display: flex;
     flex-direction: column;
-    box-shadow: 2px 0 8px rgba(0,0,0,0.1);
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
     flex-shrink: 0;
 }
 
@@ -151,6 +151,7 @@ body.admin-body {
 .admin-main-content .text-muted {
     color: var(--admin-text-secondary) !important;
 }
+
 .admin-main-content h3 {
     color: var(--admin-text-primary) !important;
 }
@@ -165,7 +166,7 @@ h2.admin-section-title {
 }
 
 .btn-admin {
-    background-color: #1E90FF !important; 
+    background-color: #1E90FF !important;
     color: #ffffff !important;
     padding: 10px 20px;
     text-decoration: none;
@@ -226,7 +227,7 @@ h2.admin-section-title {
 .admin-table-container {
     background-color: #fff !important;
     padding: 20px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     border-radius: 8px;
 }
 
@@ -266,10 +267,22 @@ h2.admin-section-title {
     box-shadow: var(--admin-shadow);
 }
 
-.stats-card-compras { background-color: #007bff; }
-.stats-card-productos { background-color: #28a745; }
-.stats-card-usuarios { background-color: #ffc107; color: #333; }
-.stats-card-ordenes { background-color: #17a2b8; }
+.stats-card-compras {
+    background-color: #007bff;
+}
+
+.stats-card-productos {
+    background-color: #28a745;
+}
+
+.stats-card-usuarios {
+    background-color: #ffc107;
+    color: #333;
+}
+
+.stats-card-ordenes {
+    background-color: #17a2b8;
+}
 
 .stats-card-icon {
     font-size: 5rem;
@@ -315,10 +328,10 @@ h2.admin-section-title {
     text-decoration: none;
     color: #333 !important;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
     padding: 1.5rem;
     text-align: center;
-    display: block; 
+    display: block;
 }
 
 .admin-nav-card:hover {
@@ -340,12 +353,12 @@ h2.admin-section-title {
     font-family: 'Orbitron', sans-serif;
     font-weight: 600;
     color: var(--admin-primary) !important;
-    font-size: 1.1rem; 
+    font-size: 1.1rem;
     margin-bottom: 0.5rem;
 }
 
 .admin-nav-card .nav-card-text {
-    font-size: 0.9rem; 
+    font-size: 0.9rem;
     color: #666 !important;
     margin-bottom: 0;
 }
@@ -362,4 +375,67 @@ h2.admin-section-title {
 
 .quick-list-table tbody td {
     vertical-align: middle;
+}
+
+.admin-hamburger-btn {
+    display: none;
+    position: absolute;
+    top: 1.5rem;
+    left: 1.5rem;
+    z-index: 1040;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 5px 10px;
+    font-size: 1.5rem;
+}
+
+.admin-sidebar-close {
+    display: none;
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    background: none;
+    border: none;
+    color: var(--admin-sidebar-text);
+    font-size: 2rem;
+    line-height: 1;
+}
+
+@media (max-width: 767px) {
+    .admin-container {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        height: 100vh;
+        z-index: 1050;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease-in-out;
+    }
+
+    .admin-container.sidebar-open .sidebar {
+        transform: translateX(0);
+    }
+
+    .admin-main-content {
+        width: 100%;
+        padding-top: 5rem;
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+        padding-bottom: 1.5rem;
+    }
+
+    .admin-hamburger-btn,
+    .admin-sidebar-close {
+        display: block;
+    }
+    
+    .admin-page-header {
+        margin: -5rem -1.5rem 1.5rem -1.5rem;
+        padding: 1rem 1.5rem;
+    }
 }
