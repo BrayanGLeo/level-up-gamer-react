@@ -18,15 +18,15 @@ const getInitialUsers = () => {
             addresses: [
                 {
                     id: 1,
-                    alias: 'Casa (Ejemplo SP Digital)',
+                    alias: 'Casa',
                     region: 'Biobío',
                     comuna: 'Hualpén',
-                    calle: 'Pasaje Greenlandia',
-                    numero: '#2457',
+                    calle: 'Pasaje La vida',
+                    numero: '1234',
                     depto: '',
-                    recibeNombre: 'Brayan',
-                    recibeApellido: 'Godoy',
-                    recibeTelefono: '+56978979900'
+                    recibeNombre: 'Juan',
+                    recibeApellido: 'Soto',
+                    recibeTelefono: '+56912345678'
                 }
             ],
             orders: []
@@ -282,4 +282,30 @@ export const updateOrderStatus = (userRUT, orderNumber, newStatus) => {
     
     console.error("No se pudo encontrar la orden para actualizar.");
     return false;
+};
+
+export const updateAddress = (rut, updatedAddress) => {
+    let users = getInitialUsers();
+    const userIndex = users.findIndex(u => u.rut === rut);
+
+    if (userIndex > -1) {
+        if (!users[userIndex].addresses) {
+            users[userIndex].addresses = [];
+        }
+        
+        const addressIndex = users[userIndex].addresses.findIndex(addr => addr.id === updatedAddress.id);
+        
+        if (addressIndex > -1) {
+            users[userIndex].addresses[addressIndex] = updatedAddress;
+
+            localStorage.setItem(USERS_KEY, JSON.stringify(users));
+            
+            const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+            if (currentUser && currentUser.rut === rut) {
+                localStorage.setItem('currentUser', JSON.stringify(users[userIndex]));
+            }
+            return users[userIndex];
+        }
+    }
+    return null;
 };

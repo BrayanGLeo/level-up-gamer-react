@@ -1,22 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Form } from 'react-bootstrap';
 import { useAuth } from '../../context/AuthContext';
-import { addAddress, deleteAddress } from '../../data/userData';
+import { addAddress, deleteAddress, updateAddress } from '../../data/userData';
 import { regionesData } from '../../data/chileData';
 import { validatePhone, validateRequiredField } from '../../utils/validation';
 import '../../styles/Perfil.css';
 import '../../styles/Forms.css';
 
+const initialFormState = {
+    alias: '', region: '', comuna: '', calle: '', numero: '', depto: '',
+    recibeNombre: '', recibeApellido: '', recibeTelefono: ''
+};
+
 const DireccionesPage = () => {
     const { currentUser, updateCurrentUser } = useAuth();
     const [addresses, setAddresses] = useState([]);
     const [showForm, setShowForm] = useState(false);
-    const [formData, setFormData] = useState({
-        alias: '', region: '', comuna: '', calle: '', numero: '', depto: '',
-        recibeNombre: '', recibeApellido: '', recibeTelefono: ''
-    });
+    const [formData, setFormData] = useState(initialFormState);
     const [comunas, setComunas] = useState([]);
     const [errors, setErrors] = useState({});
+
+    const [editingAddressId, setEditingAddressId] = useState(null);
 
     useEffect(() => {
         if (currentUser && currentUser.addresses) {
@@ -50,30 +54,52 @@ const DireccionesPage = () => {
         return Object.keys(newErrors).length === 0;
     };
 
+    const handleEdit = (address) => {
+        setEditingAddressId(address.id);
+        setFormData(address);
+        
+        const regionEncontrada = regionesData.find(r => r.nombre === address.region);
+        setComunas(regionEncontrada ? regionEncontrada.comunas : []);
+
+        setShowForm(true);
+        window.scrollTo(0, document.body.scrollHeight);
+    };
+
+    const handleCancel = () => {
+        setShowForm(false);
+        setEditingAddressId(null);
+        setFormData(initialFormState);
+        setErrors({});
+        setComunas([]);
+    };
 
     const handleSubmit = (e) => {
         e.preventDefault();
         if (validateForm() && currentUser) {
+            let updatedUser;
 
-            const updatedUser = addAddress(currentUser.rut, formData);
-            updateCurrentUser(updatedUser);
+            if (editingAddressId) {
+                updatedUser = updateAddress(currentUser.rut, { ...formData, id: editingAddressId });
+            } else {
+                updatedUser = addAddress(currentUser.rut, formData);
+            }
 
-            setAddresses(updatedUser.addresses);
-            setShowForm(false);
-            setFormData({
-                alias: '', region: '', comuna: '', calle: '', numero: '', depto: '',
-                recibeNombre: '', recibeApellido: '', recibeTelefono: ''
-            });
-            setComunas([]);
+            if (updatedUser) {
+                updateCurrentUser(updatedUser);
+                setAddresses(updatedUser.addresses);
+            }
+
+            handleCancel();
         }
     };
 
     const handleDelete = (addressId) => {
         if (window.confirm('¿Estás seguro de que quieres eliminar esta dirección?') && currentUser) {
-
             const updatedUser = deleteAddress(currentUser.rut, addressId);
-            updateCurrentUser(updatedUser);
-            setAddresses(updatedUser.addresses);
+            if (updatedUser) {
+                updateCurrentUser(updatedUser);
+                setAddresses(updatedUser.addresses);
+            }
         }
     };
 
@@ -81,60 +107,72 @@ const DireccionesPage = () => {
         <main className="main-content" style={{ paddingTop: '100px', minHeight: '80vh' }}>
             <Container>
                 <h2 className="section-title">Mis Direcciones</h2>
-                <Row>
+                <Row className="address-card-row">
                     {addresses.length === 0 && !showForm && (
-                        <Col>
+                        <Col className="text-center">
                             <p>No tienes direcciones guardadas. ¡Añade una!</p>
                         </Col>
                     )}
                     {addresses.map(addr => (
                         <Col md={6} key={addr.id} className="mb-3">
-                            <Card className="h-100">
-                                <Card.Body className="d-flex flex-column">
-                                    <Card.Title>{addr.alias}</Card.Title>
+                            <Card border="secondary">
+                                <Card.Header as="h5" style={{ color: '#39FF14' }}>{addr.alias}</Card.Header>
+                                <Card.Body style={{ flex: '0 1 auto' }}>
                                     <Card.Text>
-                                        {addr.recibeNombre} {addr.recibeApellido} ({addr.recibeTelefono})<br />
-                                        {addr.calle} {addr.numero} {addr.depto && `, ${addr.depto}`}<br />
+                                        <strong>Recibe:</strong> {addr.recibeNombre} {addr.recibeApellido} ({addr.recibeTelefono})<br />
+                                        <strong>Dirección:</strong> {addr.calle} {addr.numero} {addr.depto && `, ${addr.depto}`}<br />
                                         {addr.comuna}, {addr.region}
                                     </Card.Text>
-                                    <Button variant="danger" size="sm" onClick={() => handleDelete(addr.id)} className="mt-auto">
+                                </Card.Body>
+                                <Card.Footer className="text-end">
+                                    <Button variant="outline-warning" size="sm" onClick={() => handleEdit(addr)} className="me-2">
+                                        Editar
+                                    </Button>
+                                    <Button variant="outline-danger" size="sm" onClick={() => handleDelete(addr.id)}>
                                         Eliminar
                                     </Button>
-                                </Card.Body>
+                                </Card.Footer>
                             </Card>
                         </Col>
                     ))}
 
                     <Col md={12} className="mt-3">
                         {!showForm ? (
-                            <Button className="btn" onClick={() => setShowForm(true)}>
-                                Agregar Nueva Dirección
-                            </Button>
+                            <div className="text-center">
+                                <Button className="btn" onClick={() => {
+                                    setShowForm(true);
+                                    setEditingAddressId(null);
+                                    setFormData(initialFormState);
+                                }}>
+                                    Agregar Nueva Dirección
+                                </Button>
+                            </div>
                         ) : (
                             <Card>
                                 <Card.Body>
-                                    <Card.Title>Nueva Dirección</Card.Title>
+                                    <Card.Title>{editingAddressId ? 'Editar Dirección' : 'Nueva Dirección'}</Card.Title>
+                                    
                                     <Form onSubmit={handleSubmit} noValidate>
-                                        <Form.Group className="form-group" controlId="alias"><Form.Label>Alias (Ej: Casa, Oficina)</Form.Label><Form.Control type="text" name="alias" onChange={handleChange} isInvalid={!!errors.alias} /><Form.Control.Feedback type="invalid">{errors.alias}</Form.Control.Feedback></Form.Group>
+                                        <Form.Group className="form-group" controlId="alias"><Form.Label>Alias (Ej: Casa, Oficina)</Form.Label><Form.Control type="text" name="alias" value={formData.alias} onChange={handleChange} isInvalid={!!errors.alias} /><Form.Control.Feedback type="invalid">{errors.alias}</Form.Control.Feedback></Form.Group>
                                         <Row>
-                                            <Col md={6}><Form.Group className="form-group" controlId="region"><Form.Label>Región</Form.Label><Form.Select name="region" onChange={handleRegionChange} isInvalid={!!errors.region}><option value="">Selecciona una región</option>{regionesData.map(r => <option key={r.nombre} value={r.nombre}>{r.nombre}</option>)}</Form.Select><Form.Control.Feedback type="invalid">{errors.region}</Form.Control.Feedback></Form.Group></Col>
-                                            <Col md={6}><Form.Group className="form-group" controlId="comuna"><Form.Label>Comuna</Form.Label><Form.Select name="comuna" onChange={handleChange} isInvalid={!!errors.comuna} disabled={comunas.length === 0}><option value="">Selecciona una comuna</option>{comunas.map(c => <option key={c} value={c}>{c}</option>)}</Form.Select><Form.Control.Feedback type="invalid">{errors.comuna}</Form.Control.Feedback></Form.Group></Col>
+                                            <Col md={6}><Form.Group className="form-group" controlId="region"><Form.Label>Región</Form.Label><Form.Select name="region" value={formData.region} onChange={handleRegionChange} isInvalid={!!errors.region}><option value="">Selecciona una región</option>{regionesData.map(r => <option key={r.nombre} value={r.nombre}>{r.nombre}</option>)}</Form.Select><Form.Control.Feedback type="invalid">{errors.region}</Form.Control.Feedback></Form.Group></Col>
+                                            <Col md={6}><Form.Group className="form-group" controlId="comuna"><Form.Label>Comuna</Form.Label><Form.Select name="comuna" value={formData.comuna} onChange={handleChange} isInvalid={!!errors.comuna} disabled={comunas.length === 0}><option value="">Selecciona una comuna</option>{comunas.map(c => <option key={c} value={c}>{c}</option>)}</Form.Select><Form.Control.Feedback type="invalid">{errors.comuna}</Form.Control.Feedback></Form.Group></Col>
                                         </Row>
                                         <Row>
-                                            <Col md={8}><Form.Group className="form-group" controlId="calle"><Form.Label>Calle</Form.Label><Form.Control type="text" name="calle" onChange={handleChange} isInvalid={!!errors.calle} /><Form.Control.Feedback type="invalid">{errors.calle}</Form.Control.Feedback></Form.Group></Col>
-                                            <Col md={4}><Form.Group className="form-group" controlId="numero"><Form.Label>Número</Form.Label><Form.Control type="text" name="numero" onChange={handleChange} isInvalid={!!errors.numero} /><Form.Control.Feedback type="invalid">{errors.numero}</Form.Control.Feedback></Form.Group></Col>
+                                            <Col md={8}><Form.Group className="form-group" controlId="calle"><Form.Label>Calle</Form.Label><Form.Control type="text" name="calle" value={formData.calle} onChange={handleChange} isInvalid={!!errors.calle} /><Form.Control.Feedback type="invalid">{errors.calle}</Form.Control.Feedback></Form.Group></Col>
+                                            <Col md={4}><Form.Group className="form-group" controlId="numero"><Form.Label>Número</Form.Label><Form.Control type="text" name="numero" value={formData.numero} onChange={handleChange} isInvalid={!!errors.numero} /><Form.Control.Feedback type="invalid">{errors.numero}</Form.Control.Feedback></Form.Group></Col>
                                         </Row>
-                                        <Form.Group className="form-group" controlId="depto"><Form.Label>N° Depto (Opcional)</Form.Label><Form.Control type="text" name="depto" onChange={handleChange} /></Form.Group>
+                                        <Form.Group className="form-group" controlId="depto"><Form.Label>N° Depto (Opcional)</Form.Label><Form.Control type="text" name="depto" value={formData.depto} onChange={handleChange} /></Form.Group>
                                         <hr />
                                         <h5>Datos de Quien Recibe</h5>
                                         <Row>
-                                            <Col md={6}><Form.Group className="form-group" controlId="recibeNombre"><Form.Label>Nombre:</Form.Label><Form.Control type="text" name="recibeNombre" onChange={handleChange} isInvalid={!!errors.recibeNombre} /><Form.Control.Feedback type="invalid">{errors.recibeNombre}</Form.Control.Feedback></Form.Group></Col>
-                                            <Col md={6}><Form.Group className="form-group" controlId="recibeApellido"><Form.Label>Apellido:</Form.Label><Form.Control type="text" name="recibeApellido" onChange={handleChange} isInvalid={!!errors.recibeApellido} /><Form.Control.Feedback type="invalid">{errors.recibeApellido}</Form.Control.Feedback></Form.Group></Col>
+                                            <Col md={6}><Form.Group className="form-group" controlId="recibeNombre"><Form.Label>Nombre:</Form.Label><Form.Control type="text" name="recibeNombre" value={formData.recibeNombre} onChange={handleChange} isInvalid={!!errors.recibeNombre} /><Form.Control.Feedback type="invalid">{errors.recibeNombre}</Form.Control.Feedback></Form.Group></Col>
+                                            <Col md={6}><Form.Group className="form-group" controlId="recibeApellido"><Form.Label>Apellido:</Form.Label><Form.Control type="text" name="recibeApellido" value={formData.recibeApellido} onChange={handleChange} isInvalid={!!errors.recibeApellido} /><Form.Control.Feedback type="invalid">{errors.recibeApellido}</Form.Control.Feedback></Form.Group></Col>
                                         </Row>
-                                        <Form.Group className="form-group" controlId="recibeTelefono"><Form.Label>Teléfono:</Form.Label><Form.Control type="tel" name="recibeTelefono" onChange={handleChange} isInvalid={!!errors.recibeTelefono} /><Form.Control.Feedback type="invalid">{errors.recibeTelefono}</Form.Control.Feedback></Form.Group>
+                                        <Form.Group className="form-group" controlId="recibeTelefono"><Form.Label>Teléfono:</Form.Label><Form.Control type="tel" name="recibeTelefono" value={formData.recibeTelefono} onChange={handleChange} isInvalid={!!errors.recibeTelefono} /><Form.Control.Feedback type="invalid">{errors.recibeTelefono}</Form.Control.Feedback></Form.Group>
 
-                                        <Button type="submit" className="btn me-2">Guardar Dirección</Button>
-                                        <Button variant="secondary" onClick={() => setShowForm(false)}>Cancelar</Button>
+                                        <Button type="submit" className="btn me-2">{editingAddressId ? 'Actualizar Dirección' : 'Guardar Dirección'}</Button>
+                                        <Button variant="secondary" onClick={handleCancel}>Cancelar</Button>
                                     </Form>
                                 </Card.Body>
                             </Card>
