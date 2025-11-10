@@ -1,14 +1,4 @@
-import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
-import { describe, test, expect, vi, beforeEach } from 'vitest';
-import CartPage from '../../../src/pages/store/CartPage';
-import { useAuth, AuthProvider } from '../../../src/context/AuthContext';
-import { useCart, CartProvider, CartItem } from '../../../src/context/CartContext';
-import { User } from '../../../src/data/userData';
-
-const mockedNavigate = vi.fn();
-
+// Mocks al inicio (como lo habíamos corregido antes)
 vi.mock('react-router-dom', async (importOriginal) => {
     const actual = await importOriginal() as object;
     return {
@@ -17,7 +7,6 @@ vi.mock('react-router-dom', async (importOriginal) => {
         Link: (props: any) => <a href={props.to} {...props}>{props.children}</a>
     };
 });
-
 vi.mock('../../../src/context/AuthContext', async (importOriginal) => {
     const actual = await importOriginal() as object;
     return {
@@ -33,6 +22,15 @@ vi.mock('../../../src/context/CartContext', async (importOriginal) => {
     };
 });
 
+import React from 'react';
+import { render, screen, fireEvent } from '@testing-library/react';
+import { BrowserRouter } from 'react-router-dom';
+import CartPage from '../../../src/pages/store/CartPage';
+import { useAuth, AuthProvider } from '../../../src/context/AuthContext';
+import { useCart, CartProvider, CartItem } from '../../../src/context/CartContext';
+import { User } from '../../../src/data/userData';
+
+const mockedNavigate = vi.fn();
 const mockUseAuth = useAuth as vi.Mock;
 const mockUseCart = useCart as vi.Mock;
 
@@ -89,7 +87,10 @@ describe('CartPage', () => {
 
         expect(screen.getByText('Juego de PS5')).toBeInTheDocument();
         expect(screen.getByText('Control Xbox')).toBeInTheDocument();
-        expect(screen.getByText(/Total:.*169.970/i)).toBeInTheDocument();
+
+        expect(screen.getByText(/Total:/i)).toBeInTheDocument();
+        expect(screen.getByText(/\$169\.970/i)).toBeInTheDocument(); 
+
         expect(screen.getByText('Vaciar Carrito')).toBeInTheDocument();
         expect(screen.getByText('Finalizar Compra')).toBeInTheDocument();
     });

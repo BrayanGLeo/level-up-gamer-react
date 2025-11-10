@@ -27,8 +27,6 @@ export const validateTextField = (value: string, maxLength: number) => {
     return regex.test(value);
 };
 
-
-// Valida el formato Y el dígito verificador
 export const validateRut = (rutCompleto: string) => {
     if (!rutCompleto) return false;
 
@@ -40,10 +38,12 @@ export const validateRut = (rutCompleto: string) => {
 
     if (!/^\d+$/.test(cuerpo)) return false;
 
-    const primerDigito = cuerpo.charAt(0);
-    const todosIguales = cuerpo.split('').every((char: any) => char === primerDigito);
-    if (todosIguales) {
-        return false;
+    if (cuerpo.length > 1) {
+        const primerDigito = cuerpo.charAt(0);
+        const todosIguales = cuerpo.split('').every((char: any) => char === primerDigito);
+        if (todosIguales) {
+            return false;
+        }
     }
 
     let suma = 0;
