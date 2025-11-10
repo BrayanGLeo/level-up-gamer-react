@@ -1,7 +1,13 @@
 import React from 'react';
 import '../styles/Catalogo.css';
+import { Product } from '../data/productData';
 
-const ProductCard = ({ product, onAddToCartClick }) => {
+interface ProductCardProps {
+    product: Product;
+    onAddToCartClick: (product: Product) => void;
+}
+
+const ProductCard = ({ product, onAddToCartClick }: ProductCardProps) => {
     const { nombre, descripcion, precio, imagen } = product;
 
     return (

@@ -2,7 +2,15 @@ import React from 'react';
 import { Modal, Button } from 'react-bootstrap';
 import '../styles/AdminStyle.css';
 
-const AdminConfirmModal = ({ show, onHide, onConfirm, title, message }) => {
+interface AdminConfirmModalProps {
+    show: boolean;
+    onHide: () => void;
+    onConfirm: () => void;
+    title: string;
+    message: string;
+}
+
+const AdminConfirmModal = ({ show, onHide, onConfirm, title, message }: AdminConfirmModalProps) => {
     return (
         <Modal show={show} onHide={onHide} centered>
             <Modal.Header closeButton>

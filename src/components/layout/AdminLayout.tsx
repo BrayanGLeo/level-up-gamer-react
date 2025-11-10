@@ -41,16 +41,16 @@ const AdminLayout = () => {
     }
 
     if (!currentUser || (currentUser.role !== 'Administrador' && currentUser.role !== 'Vendedor')) {
-        return null; 
+        return null;
     }
 
     return (
         <div className={`admin-container ${isSidebarOpen ? 'sidebar-open' : ''}`}>
-            
+
             <AdminSidebar toggleSidebar={toggleSidebar} />
-            
+
             <main className="admin-main-content">
-                
+
                 <button className="admin-hamburger-btn" onClick={toggleSidebar}>
                     &#9776;
                 </button>

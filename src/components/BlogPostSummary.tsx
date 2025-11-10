@@ -1,8 +1,13 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import '../styles/App.css';
+import { BlogPost } from '../data/blogData';
 
-const BlogPostSummary = ({ post }) => {
+interface BlogPostSummaryProps {
+    post: BlogPost;
+}
+
+const BlogPostSummary = ({ post }: BlogPostSummaryProps) => {
     return (
         <div className="blog-post">
             <h3>

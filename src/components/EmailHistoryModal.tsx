@@ -1,8 +1,15 @@
 import React from 'react';
 import { Modal, Button, ListGroup } from 'react-bootstrap';
 import '../styles/Modal.css';
+import { User } from '../data/userData';
 
-const EmailHistoryModal = ({ show, onHide, user }) => {
+interface EmailHistoryModalProps {
+    show: boolean;
+    onHide: () => void;
+    user: User | null;
+}
+
+const EmailHistoryModal = ({ show, onHide, user }: EmailHistoryModalProps) => {
     if (!user) return null;
 
     const history = user.emailHistory || [];

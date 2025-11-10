@@ -30,7 +30,7 @@ export interface User {
     surname: string;
     email: string;
     password: string;
-    role: 'Administrador' | 'Cliente';
+    role: 'Administrador' | 'Cliente' | 'Vendedor';
     rut: string;
     registeredAt?: string;
     emailHistory: string[];
@@ -48,6 +48,7 @@ export interface RegisterData {
     rut: string;
     birthdate: string;
 }
+
 const USERS_KEY = 'users';
 
 const getInitialUsers = (): User[] => {
@@ -143,7 +144,9 @@ export const saveUser = (user: User): User => {
         const existingAddresses = users[index].addresses || [];
         const existingOrders = users[index].orders || [];
         const existingHistory = users[index].emailHistory || [users[index].email];
-        const existingPic = users[index].profilePic || null;
+        
+        const existingPic = users[index].profilePic || undefined;
+
         const isOriginalAdmin = users[index].isOriginalAdmin || false;
         const registeredAt = users[index].registeredAt || new Date().toLocaleDateString('es-CL');
 

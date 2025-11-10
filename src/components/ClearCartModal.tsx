@@ -2,7 +2,13 @@ import React from 'react';
 import { Modal, Button } from 'react-bootstrap';
 import '../styles/Modal.css';
 
-const ClearCartModal = ({ show, onHide, onConfirm }) => {
+interface ClearCartModalProps {
+    show: boolean;
+    onHide: () => void;
+    onConfirm: () => void;
+}
+
+const ClearCartModal = ({ show, onHide, onConfirm }: ClearCartModalProps) => {
     return (
         <Modal show={show} onHide={onHide} centered className="custom-modal">
             <Modal.Header closeButton>

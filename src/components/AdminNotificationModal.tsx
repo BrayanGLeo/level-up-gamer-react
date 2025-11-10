@@ -1,7 +1,14 @@
 import React from 'react';
 import { Modal, Button } from 'react-bootstrap';
 
-const AdminNotificationModal = ({ show, onHide, title, message }) => {
+interface AdminNotificationModalProps {
+    show: boolean;
+    onHide: () => void;
+    title: string;
+    message: string;
+}
+
+const AdminNotificationModal = ({ show, onHide, title, message }: AdminNotificationModalProps) => {
     return (
         <Modal show={show} onHide={onHide} centered>
             <Modal.Header closeButton>

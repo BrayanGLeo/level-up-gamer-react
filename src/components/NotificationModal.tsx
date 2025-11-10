@@ -2,7 +2,14 @@ import React from 'react';
 import { Modal, Button } from 'react-bootstrap';
 import '../styles/Modal.css';
 
-const NotificationModal = ({ show, onHide, title, message }) => {
+interface NotificationModalProps {
+    show: boolean;
+    onHide: () => void;
+    title: string;
+    message: string;
+}
+
+const NotificationModal = ({ show, onHide, title, message }: NotificationModalProps) => {
     return (
         <Modal show={show} onHide={onHide} centered className="custom-modal">
             <Modal.Header closeButton>

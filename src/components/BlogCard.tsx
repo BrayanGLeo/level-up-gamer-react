@@ -1,8 +1,13 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import '../styles/Blog.css';
+import { BlogPost } from '../data/blogData';
 
-const BlogCard = ({ post }) => {
+interface BlogCardProps {
+    post: BlogPost;
+}
+
+const BlogCard = ({ post }: BlogCardProps) => {
     const { id, title, date, image, content } = post;
 
     return (

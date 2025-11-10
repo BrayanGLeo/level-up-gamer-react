@@ -1,8 +1,16 @@
 import React from 'react';
 import { Modal, Button, Image } from 'react-bootstrap';
 import '../styles/Modal.css';
+import { CartItem } from '../context/CartContext';
 
-const RemoveFromCartModal = ({ show, onHide, onConfirm, product }) => {
+interface RemoveFromCartModalProps {
+    show: boolean;
+    onHide: () => void;
+    onConfirm: () => void;
+    product: CartItem | null;
+}
+
+const RemoveFromCartModal = ({ show, onHide, onConfirm, product }: RemoveFromCartModalProps) => {
     if (!product) return null;
 
     return (

@@ -2,11 +2,18 @@ import React from 'react';
 import { Modal, Button, Image, Row, Col } from 'react-bootstrap';
 import '../styles/Modal.css';
 import '../styles/Perfil.css';
+import { Order } from '../data/userData';
 
-const OrderDetailModal = ({ show, onHide, order }) => {
+interface OrderDetailModalProps {
+    show: boolean;
+    onHide: () => void;
+    order: Order | null;
+}
+
+const OrderDetailModal = ({ show, onHide, order }: OrderDetailModalProps) => {
     if (!order) return null;
 
-    const formatPrice = (price) => `$${price.toLocaleString('es-CL')}`;
+    const formatPrice = (price: number) => `$${price.toLocaleString('es-CL')}`;
 
     return (
         <Modal show={show} onHide={onHide} centered size="lg" className="custom-modal">
@@ -18,7 +25,7 @@ const OrderDetailModal = ({ show, onHide, order }) => {
                     <Col md={7} className="order-items-column">
                         <h4>Artículos Comprados</h4>
                         <div className="order-items">
-                            {order.items.map(item => (
+                            {order.items.map((item: any) => (
                                 <div className="order-item" key={item.codigo}>
                                     <Image src={item.imagen} alt={item.nombre} className="order-item-image" />
                                     <div className="order-item-info-modal">
