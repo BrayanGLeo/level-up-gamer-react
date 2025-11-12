@@ -1,4 +1,3 @@
-// Mocks al inicio (como lo habíamos corregido antes)
 vi.mock('react-router-dom', async (importOriginal) => {
     const actual = await importOriginal() as object;
     return {
@@ -36,7 +35,7 @@ const mockUseCart = useCart as vi.Mock;
 
 const renderCartPage = () => {
     render(
-        <BrowserRouter>
+        <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
             <AuthProvider>
                 <CartProvider>
                     <CartPage />

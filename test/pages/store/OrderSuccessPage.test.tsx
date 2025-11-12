@@ -35,7 +35,7 @@ describe('OrderSuccessPage', () => {
 
     test('renderiza mensaje de éxito con N° de orden y botón de descarga', () => {
         render(
-            <BrowserRouter>
+            <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
                 <OrderSuccessPage />
             </BrowserRouter>
         );

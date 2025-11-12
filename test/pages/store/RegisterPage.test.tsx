@@ -64,7 +64,7 @@ describe('RegisterPage', () => {
     };
 
     test('renderiza el formulario de registro', () => {
-        render(<BrowserRouter><RegisterPage /></BrowserRouter>);
+        render(<BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}><RegisterPage /></BrowserRouter>);
         expect(screen.getByText('Crear una Cuenta')).toBeInTheDocument();
         expect(screen.getByRole('button', { name: /Registrarse/i })).toBeInTheDocument();
     });
@@ -73,7 +73,7 @@ describe('RegisterPage', () => {
         mockValidateTextField.mockReturnValue(false);
         mockValidateRut.mockReturnValue(false);
 
-        render(<BrowserRouter><RegisterPage /></BrowserRouter>);
+        render(<BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}><RegisterPage /></BrowserRouter>);  
 
         fireEvent.click(screen.getByRole('button', { name: /Registrarse/i }));
 
@@ -85,7 +85,7 @@ describe('RegisterPage', () => {
 
     test('llama a register y muestra modal de éxito al enviar formulario válido', async () => {
         mockRegister.mockReturnValue({ success: true, message: '¡Bienvenido! Tu cuenta ha sido creada.' });
-        render(<BrowserRouter><RegisterPage /></BrowserRouter>);
+        render(<BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}><RegisterPage /></BrowserRouter>);
 
         fillForm();
         fireEvent.click(screen.getByRole('button', { name: /Registrarse/i }));
@@ -104,7 +104,7 @@ describe('RegisterPage', () => {
 
     test('muestra modal de error si el registro falla (ej. email duplicado)', async () => {
         mockRegister.mockReturnValue({ success: false, message: 'Este correo ya está en uso.' });
-        render(<BrowserRouter><RegisterPage /></BrowserRouter>);
+        render(<BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}><RegisterPage /></BrowserRouter>);
 
         fillForm();
         fireEvent.click(screen.getByRole('button', { name: /Registrarse/i }));
