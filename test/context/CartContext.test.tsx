@@ -14,14 +14,14 @@ const mockProduct2: Product = {
 };
 
 const TestComponent = () => {
-    const { 
-        cartItems, 
-        addToCart, 
-        updateQuantity, 
-        removeFromCart, 
-        clearCart, 
-        getCartTotal, 
-        getCartItemCount 
+    const {
+        cartItems,
+        addToCart,
+        updateQuantity,
+        removeFromCart,
+        clearCart,
+        getCartTotal,
+        getCartItemCount
     } = useCart() as CartContextType;
 
     return (
@@ -71,7 +71,7 @@ describe('CartContext', () => {
     test('addToCart debe agregar un producto nuevo', async () => {
         renderWithCartProvider();
         const addButton = screen.getByText('Add P1');
-        
+
         act(() => {
             addButton.click();
         });
@@ -79,7 +79,7 @@ describe('CartContext', () => {
         expect(await screen.findByText('Juego 1 (x1)')).toBeInTheDocument();
         expect(screen.getByTestId('item-count')).toHaveTextContent('1');
         expect(screen.getByTestId('total-price')).toHaveTextContent('10000');
-        
+
         const storedCart = JSON.parse(localStorage.getItem('carrito') || '[]');
         expect(storedCart).toHaveLength(1);
         expect(storedCart[0].codigo).toBe('P001');
@@ -88,11 +88,11 @@ describe('CartContext', () => {
     test('addToCart debe incrementar la cantidad si el producto ya existe', async () => {
         renderWithCartProvider();
         const addButton = screen.getByText('Add P1');
-        
+
         act(() => {
             addButton.click(); // Cantidad 1
         });
-        
+
         expect(await screen.findByText('Juego 1 (x1)')).toBeInTheDocument();
 
         act(() => {
@@ -100,7 +100,7 @@ describe('CartContext', () => {
         });
 
         expect(await screen.findByText('Juego 1 (x2)')).toBeInTheDocument();
-        
+
         expect(screen.getByTestId('item-count')).toHaveTextContent('2');
         expect(screen.getByTestId('total-price')).toHaveTextContent('20000');
     });
@@ -153,7 +153,7 @@ describe('CartContext', () => {
         });
 
         await waitFor(() => {
-             expect(screen.queryByText('Juego 2 (x1)')).not.toBeInTheDocument();
+            expect(screen.queryByText('Juego 2 (x1)')).not.toBeInTheDocument();
         });
 
         expect(screen.getByTestId('item-count')).toHaveTextContent('1');
@@ -172,9 +172,9 @@ describe('CartContext', () => {
         act(() => {
             clearButton.click();
         });
-        
+
         await waitFor(() => {
-             expect(screen.queryByText('Juego 1 (x1)')).not.toBeInTheDocument();
+            expect(screen.queryByText('Juego 1 (x1)')).not.toBeInTheDocument();
         });
 
         expect(screen.getByTestId('item-count')).toHaveTextContent('0');
@@ -186,10 +186,10 @@ describe('CartContext', () => {
         renderWithCartProvider();
         act(() => { screen.getByText('Add P1').click(); }); // 1 * 10000
         await screen.findByText('Juego 1 (x1)');
-        
+
         act(() => { screen.getByText('Add P1').click(); }); // 2 * 10000
         await screen.findByText('Juego 1 (x2)');
-        
+
         act(() => { screen.getByText('Add P2').click(); }); // 1 * 5000
         await screen.findByText('Juego 2 (x1)');
 

@@ -13,8 +13,9 @@ vi.mock('../../../src/context/AuthContext', async (importOriginal) => {
         useAuth: vi.fn(),
     };
 });
+
 vi.mock('../../../src/utils/validation', () => ({
-    validateEmail: vi.fn(),
+    validateRegisterEmail: vi.fn(),
     validatePassword: vi.fn(),
     validateTextField: vi.fn(),
     validateRut: vi.fn(),
@@ -30,8 +31,7 @@ import * as validationUtils from '../../../src/utils/validation';
 
 const mockedNavigate = vi.fn();
 const mockUseAuth = useAuth as vi.Mock;
-
-const mockValidateEmail = validationUtils.validateEmail as vi.Mock;
+const mockValidateEmail = validationUtils.validateRegisterEmail as vi.Mock;
 const mockValidatePassword = validationUtils.validatePassword as vi.Mock;
 const mockValidateTextField = validationUtils.validateTextField as vi.Mock;
 const mockValidateRut = validationUtils.validateRut as vi.Mock;
@@ -45,7 +45,6 @@ describe('RegisterPage', () => {
         mockedNavigate.mockClear();
         mockRegister = vi.fn();
         mockUseAuth.mockReturnValue({ register: mockRegister } as Partial<AuthContextType>);
-
         mockValidateEmail.mockReturnValue(true);
         mockValidatePassword.mockReturnValue(true);
         mockValidateTextField.mockReturnValue(true);

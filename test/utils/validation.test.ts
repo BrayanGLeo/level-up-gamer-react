@@ -1,20 +1,22 @@
 import { describe, it, expect } from 'vitest';
-import { validateEmail, validateRut, validatePhone, validateBirthdate } from '../../src/utils/validation';
+import { validateRegisterEmail, validateRut, validatePhone, validateBirthdate } from '../../src/utils/validation';
 
-describe('validateEmail', () => {
+describe('validateRegisterEmail', () => {
     it('debe devolver true para correos válidos', () => {
-        expect(validateEmail('test@gmail.com')).toBe(true);
-        expect(validateEmail('test@duoc.cl')).toBe(true);
-        expect(validateEmail('test@profesor.duoc.cl')).toBe(true);
-        expect(validateEmail('test@admin.cl')).toBe(true);
+        expect(validateRegisterEmail('test@gmail.com')).toBe(true);
+        expect(validateRegisterEmail('test@duoc.cl')).toBe(true);
+        expect(validateRegisterEmail('test@duocuc.cl')).toBe(true);
+        expect(validateRegisterEmail('test@gmail.cl')).toBe(true);
     });
 
     it('debe devolver false para correos inválidos', () => {
-        expect(validateEmail('test@hotmail.com')).toBe(false);
-        expect(validateEmail('test@gmail')).toBe(false);
-        expect(validateEmail('test@.cl')).toBe(false);
-        expect(validateEmail('testgmail.com')).toBe(false);
-        expect(validateEmail(null)).toBe(false);
+        expect(validateRegisterEmail('test@hotmail.com')).toBe(false);
+        expect(validateRegisterEmail('test@profesor.duoc.cl')).toBe(false);
+        expect(validateRegisterEmail('test@admin.cl')).toBe(false);
+        expect(validateRegisterEmail('test@gmail')).toBe(false);
+        expect(validateRegisterEmail('test@.cl')).toBe(false);
+        expect(validateRegisterEmail('testgmail.com')).toBe(false);
+        expect(validateRegisterEmail(null)).toBe(false);
     });
 });
 

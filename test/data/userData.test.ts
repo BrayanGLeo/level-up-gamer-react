@@ -14,19 +14,19 @@ import {
     addOrderToUser,
     updateOrderStatus,
     User,
-    RegisterData, 
-    Address, 
-    Order 
-} from '../../src/data/userData'; 
+    RegisterData,
+    Address,
+    Order
+} from '../../src/data/userData';
 
 const USERS_KEY = 'users';
 
-const mockRegisterData: RegisterData = { 
+const mockRegisterData: RegisterData = {
     name: 'Test',
     surname: 'User',
     email: 'test@gmail.com',
     password: 'password123',
-    rut: '11111111-1',
+    rut: '98765432-1',
     birthdate: '2000-01-01'
 };
 
@@ -66,12 +66,12 @@ describe('userData', () => {
         localStorage.clear();
     });
 
-
-    test('getUsers debe inicializar con el usuario admin si localStorage está vacío', () => {
+    test('getUsers debe inicializar con admin y vendedor si localStorage está vacío', () => {
         const users = getUsers();
-        expect(users).toHaveLength(1);
+        expect(users).toHaveLength(2);
         expect(users[0].email).toBe('admin@admin.cl');
         expect(users[0].isOriginalAdmin).toBe(true);
+        expect(users[1].email).toBe('vendedor@vendedor.cl');
     });
 
     test('findUser debe encontrar al admin por email y password', () => {
@@ -99,25 +99,25 @@ describe('userData', () => {
         const newUser = registerUser(mockRegisterData);
         expect(newUser.email).toBe('test@gmail.com');
         expect(newUser.role).toBe('Cliente');
-        
+
         const users = getUsers();
-        expect(users).toHaveLength(2); 
-        
+        expect(users).toHaveLength(3);
+
         const foundUser = findUserByEmail('test@gmail.com');
         expect(foundUser?.name).toBe('Test');
     });
 
     test('registerUser debe lanzar error por email duplicado', () => {
-        registerUser(mockRegisterData); 
-        
+        registerUser(mockRegisterData);
+
         const duplicateEmailData = { ...mockRegisterData, rut: '22222222-2' };
         expect(() => registerUser(duplicateEmailData))
             .toThrow('Este correo electrónico ya está registrado.');
     });
 
     test('registerUser debe lanzar error por RUT duplicado', () => {
-        registerUser(mockRegisterData); 
-        
+        registerUser(mockRegisterData);
+
         const duplicateRutData = { ...mockRegisterData, email: 'test2@gmail.com' };
         expect(() => registerUser(duplicateRutData))
             .toThrow('Este RUT ya está registrado.');
@@ -125,51 +125,50 @@ describe('userData', () => {
 
     test('saveUser debe actualizar los datos de un usuario', () => {
         const newUser = registerUser(mockRegisterData);
-        
+
         const updatedData = { ...newUser, name: 'Nombre Actualizado' };
         saveUser(updatedData);
 
         const users = getUsers();
-        expect(users).toHaveLength(2); 
+        expect(users).toHaveLength(3);
 
-        const foundUser = findUserByRut('11111111-1');
+        const foundUser = findUserByRut('98765432-1');
         expect(foundUser?.name).toBe('Nombre Actualizado');
     });
 
     test('updateUserEmail debe cambiar el email y registrarlo en el historial', () => {
         registerUser(mockRegisterData);
-        
-        const updatedUser = updateUserEmail('11111111-1', 'nuevo@gmail.com');
-        
+
+        const updatedUser = updateUserEmail('98765432-1', 'nuevo@gmail.com');
+
         expect(updatedUser.email).toBe('nuevo@gmail.com');
         expect(updatedUser.emailHistory).toContain('test@gmail.com');
-        expect(updatedUser.emailHistory).toContain('nuevo@gmail.com'); 
-        expect(updatedUser.emailHistory).toHaveLength(2); 
+        expect(updatedUser.emailHistory).toContain('nuevo@gmail.com');
+        expect(updatedUser.emailHistory).toHaveLength(2);
     });
 
     test('updateUserEmail debe lanzar error si el nuevo email ya está en uso', () => {
-        registerUser(mockRegisterData); 
-        
-        expect(() => updateUserEmail('11111111-1', 'admin@admin.cl'))
+        registerUser(mockRegisterData);
+        expect(() => updateUserEmail('98765432-1', 'admin@admin.cl'))
             .toThrow('El nuevo correo electrónico ya está en uso por otro usuario.');
     });
 
     test('deleteUserByRut debe eliminar un usuario', () => {
         registerUser(mockRegisterData);
         let users = getUsers();
-        expect(users).toHaveLength(2);
+        expect(users).toHaveLength(3);
 
-        deleteUserByRut('11111111-1');
-        
+        deleteUserByRut('98765432-1');
+
         users = getUsers();
-        expect(users).toHaveLength(1);
-        expect(findUserByRut('11111111-1')).toBeUndefined();
+        expect(users).toHaveLength(2);
+        expect(findUserByRut('98765432-1')).toBeUndefined();
     });
 
     test('addAddress debe agregar una dirección al usuario', () => {
         const user = registerUser(mockRegisterData);
         const updatedUser = addAddress(user.rut, mockAddress);
-        
+
         expect(updatedUser?.addresses).toHaveLength(1);
         expect(updatedUser?.addresses[0].alias).toBe('Casa');
         expect(updatedUser?.addresses[0].id).toBeTypeOf('number');
@@ -189,7 +188,7 @@ describe('userData', () => {
     test('deleteAddress debe eliminar una dirección', () => {
         let user: User | null = registerUser(mockRegisterData);
         user = addAddress(user.rut, mockAddress);
-        
+
         const addressId = user!.addresses[0].id;
         user = deleteAddress(user!.rut, addressId);
 
@@ -198,10 +197,10 @@ describe('userData', () => {
 
     test('addOrderToUser debe agregar un pedido y asignar estado "Pendiente"', () => {
         let user = registerUser(mockRegisterData);
-        
+
         const orderData = {
             ...mockOrderData,
-            number: 12345, 
+            number: 12345,
             date: new Date().toLocaleDateString('es-CL'),
         } as Order;
 
@@ -218,10 +217,10 @@ describe('userData', () => {
             number: 12345,
             date: new Date().toLocaleDateString('es-CL'),
         } as Order;
-        
+
         user = addOrderToUser(user.rut, orderData)!;
         user = updateOrderStatus(user.rut, 12345, 'Completado')!;
-        
+
         expect(user.orders[0].status).toBe('Completado');
     });
 

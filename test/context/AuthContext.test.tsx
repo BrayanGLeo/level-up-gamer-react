@@ -12,7 +12,7 @@ vi.mock('../../src/data/userData', async (importOriginal) => {
         role: 'Administrador', rut: '12345678-9', emailHistory: [], isOriginalAdmin: true,
         addresses: [], orders: []
     };
-    
+
     return {
         ...actual,
         findUser: vi.fn((email, password) => {
@@ -56,7 +56,7 @@ describe('AuthContext', () => {
 
     beforeEach(() => {
         localStorage.clear();
-        vi.clearAllMocks(); 
+        vi.clearAllMocks();
     });
 
     afterEach(() => {
@@ -71,7 +71,7 @@ describe('AuthContext', () => {
     test('debe cargar el usuario desde localStorage si existe', () => {
         const mockUser = { name: 'Usuario Guardado', email: 'guardado@gmail.com' };
         localStorage.setItem('currentUser', JSON.stringify(mockUser));
-        
+
         renderWithAuthProvider();
         expect(screen.getByTestId('user-name')).toHaveTextContent('Usuario Guardado');
     });
@@ -85,7 +85,7 @@ describe('AuthContext', () => {
         });
 
         expect(screen.getByTestId('user-name')).toHaveTextContent('Admin');
-        
+
         const storedUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
         expect(storedUser.name).toBe('Admin');
     });
