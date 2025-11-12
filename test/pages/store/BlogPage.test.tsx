@@ -29,7 +29,7 @@ describe('BlogPage', () => {
 
     test('renderiza la lista de posts del blog', () => {
         render(
-            <BrowserRouter>
+            <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
                 <BlogPage />
             </BrowserRouter>
         );
