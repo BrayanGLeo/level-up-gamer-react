@@ -20,15 +20,16 @@ describe('validateEmail', () => {
 
 describe('validateRut', () => {
     it('debe devolver true para RUTs válidos', () => {
-        expect(validateRut('12345678-9')).toBe(true);
-        expect(validateRut('19876543-K')).toBe(true);
-        expect(validateRut('1.234.567-8')).toBe(true);
+        expect(validateRut('1-9')).toBe(true);
+        expect(validateRut('12.345.678-5')).toBe(true);
+        expect(validateRut('20.123.456-5')).toBe(true);
+        expect(validateRut('19.876.543-0')).toBe(true); 
     });
 
     it('debe devolver false para RUTs inválidos', () => {
-        expect(validateRut('12345678-K')).toBe(false);
-        expect(validateRut('1-9')).toBe(true);
-        expect(validateRut('11111111-1')).toBe(false);
+        expect(validateRut('12.345.678-9')).toBe(false);
+        expect(validateRut('19.876.543-K')).toBe(false); 
+        expect(validateRut('11.111.111-1')).toBe(false); 
         expect(validateRut('12345')).toBe(false);
     });
 });

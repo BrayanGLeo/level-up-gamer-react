@@ -150,12 +150,7 @@ export const saveUser = (user: Partial<User>): User => {
         users[index] = {
             ...existingUser,
             ...user,
-            rut: existingUser.rut,
-            email: user.email || existingUser.email,
-            name: user.name || existingUser.name,
-            surname: user.surname || existingUser.surname,
-            password: user.password || existingUser.password,
-            role: user.role || existingUser.role,
+            rut: existingUser.rut, 
         };
     } else {
         if (!user.rut || !user.email || !user.name || !user.surname || !user.password || !user.role) {
@@ -163,18 +158,18 @@ export const saveUser = (user: Partial<User>): User => {
         }
         const isAdmin = user.email.endsWith('@admin.cl');
         users.push({
-            ...user,
-            rut: user.rut,
-            email: user.email,
             name: user.name,
             surname: user.surname,
+            email: user.email,
             password: user.password,
             role: user.role,
+            rut: user.rut,
             registeredAt: new Date().toLocaleDateString('es-CL'),
             isOriginalAdmin: isAdmin,
             emailHistory: [user.email],
             addresses: [],
-            orders: []
+            orders: [],
+            ...user 
         });
     }
 
@@ -217,8 +212,13 @@ export const updateUserEmail = (rut: string, newEmail: string): User => {
         if (!user.emailHistory) {
             user.emailHistory = [];
         }
+        
         if (user.email && !user.emailHistory.includes(user.email)) {
             user.emailHistory.push(user.email);
+        }
+        
+        if (newEmail && !user.emailHistory.includes(newEmail)) {
+            user.emailHistory.push(newEmail);
         }
 
         user.email = newEmail;

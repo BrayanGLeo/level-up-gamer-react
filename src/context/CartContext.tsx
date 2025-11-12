@@ -5,7 +5,7 @@ export interface CartItem extends Product {
     quantity: number;
 }
 
-interface CartContextType {
+export interface CartContextType {
     cartItems: CartItem[];
     addToCart: (product: Product) => void;
     updateQuantity: (codigo: string, amount: number) => void;
@@ -36,13 +36,18 @@ export const CartProvider = ({ children }: CartProviderProps) => {
     };
 
     const addToCart = (product: Product) => {
-        let newCart = [...cartItems];
-        const existingItem = newCart.find(item => item.codigo === product.codigo);
+        const existingItem = cartItems.find(item => item.codigo === product.codigo);
+
+        let newCart: CartItem[];
 
         if (existingItem) {
-            existingItem.quantity++;
+            newCart = cartItems.map(item =>
+                item.codigo === product.codigo
+                    ? { ...item, quantity: item.quantity + 1 } 
+                    : item
+            );
         } else {
-            newCart.push({ ...product, quantity: 1 });
+            newCart = [...cartItems, { ...product, quantity: 1 }];
         }
 
         setCartItems(newCart);
