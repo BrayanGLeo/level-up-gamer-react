@@ -96,14 +96,13 @@ const getInitialUsers = (): User[] => {
             email: 'vendedor@vendedor.cl',
             password: 'vendedor',
             role: 'Vendedor',
-            rut: '15.869.017-9',
+            rut: '11111111-1',
             registeredAt: new Date().toLocaleDateString('es-CL'),
             emailHistory: ['vendedor@vendedor.cl'],
             isOriginalAdmin: false,
             addresses: [],
             orders: []
         };
-
         const initialUsers = [adminUser, vendedorUser];
         localStorage.setItem(USERS_KEY, JSON.stringify(initialUsers));
         return initialUsers;

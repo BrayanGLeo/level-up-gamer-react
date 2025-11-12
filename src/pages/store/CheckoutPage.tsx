@@ -64,11 +64,7 @@ const CheckoutPage = () => {
         if (!validateRequiredField(formData.nombre, 50)) newErrors.nombre = 'El nombre es requerido.';
         if (!validateRequiredField(formData.apellidos, 100)) newErrors.apellidos = 'El apellido es requerido.';
         if (!validateRut(formData.rut)) newErrors.rut = 'El RUT no es válido.';
-
-        // --- INICIO DE LA CORRECCIÓN ---
         if (!validateBasicEmail(formData.email)) newErrors.email = 'El E-mail no es válido.';
-        // --- FIN DE LA CORRECCIÓN ---
-
         if (!validatePhone(formData.telefono)) newErrors.telefono = 'El teléfono no es válido (ej: 912345678).';
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
@@ -176,9 +172,10 @@ const CheckoutPage = () => {
                 message: `¡Gracias por tu compra, ${formData.nombre}! Tu pedido #${newOrder.number} ha sido realizado con éxito.`
             });
         } else {
-            const orders = JSON.parse(localStorage.getItem('orders') || '[]') as Order[];
-            orders.push(newOrder);
-            localStorage.setItem('orders', JSON.stringify(orders));
+            const GUEST_USER_RUT = '00000000-0';
+
+            addOrderToUser(GUEST_USER_RUT, newOrder);
+
             navigate('/compra-exitosa', { state: { order: newOrder } });
         }
     };
