@@ -11,7 +11,7 @@ export const validatePassword = (password: string | any[]) => {
 
 export const validateLoginPassword = (password: string | any[]) => {
     if (!password) return false;
-    return password.length >= 6;
+    return password.length >= 2;
 };
 
 export const validateRequiredField = (value: string, maxLength: number) => {
