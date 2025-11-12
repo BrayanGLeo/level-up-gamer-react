@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom'; // <-- 1. Importar Link
+import { Link } from 'react-router-dom';
 import '../styles/Catalogo.css';
 import { Product } from '../data/productData';
 
@@ -17,14 +17,16 @@ const ProductCard = ({ product, onAddToCartClick }: ProductCardProps) => {
             <div className="product-info">
                 <h3 className="product-title">{nombre}</h3>
                 <p className="product-description">{descripcion}</p>
-                <p className="product-price">${precio.toLocaleString('es-CL')} CLP</p>               
+                <p className="product-price">${precio.toLocaleString('es-CL')} CLP</p>
+                
                 <div className="product-card-buttons">
-                    <button onClick={() => onAddToCartClick(product)} className="btn btn-small">
-                        Agregar
-                    </button>
                     <Link to={`/producto/${codigo}`} className="btn btn-small btn-details">
                         Detalles
                     </Link>
+                    
+                    <button onClick={() => onAddToCartClick(product)} className="btn btn-small">
+                        Agregar
+                    </button>
                 </div>
 
             </div>
