@@ -200,17 +200,15 @@ const defaultProducts: Product[] = [
         categoria: 'consolas',
         imagen: 'https://www.asus.com/media/Odin/Websites/global/Series/52.png',
         features: [
-            "Gráficos NVIDIA® GeForce RTX™ serie 30 (ej. 3060).",
-            "Procesador AMD Ryzen™ (ej. Ryzen 7 4800H).",
+            "Gráficos NVIDIA® GeForce RTX™ serie 5000.",
+            "Procesador AMD Ryzen™ 7 septima generación.",
             "Sistema de refrigeración inteligente ROG.",
             "Iluminación Aura Sync personalizable.",
-            "Pantalla de alta tasa de refresco (ej. 144Hz FHD)."
         ],
         specifications: {
             "Ejemplo (Modelo G15)": {
-                "Procesador": "AMD Ryzen™ 7 4800H (8 núcleos/16 hilos)",
-                "Gráficos": "NVIDIA® GeForce RTX™ 3060 6GB GDDR6",
-                "Pantalla": "15.6\" FHD (1920 x 1080) 16:9, 144Hz, Nivel IPS",
+                "Procesador": "AMD Ryzen™ 7 7700X (8 núcleos/16 hilos)",
+                "Gráficos": "NVIDIA® GeForce RTX™ 5070 12GB GDDR6",
                 "Memoria": "16GB DDR4 SO-DIMM (Max 32GB)",
                 "Almacenamiento": "512GB M.2 NVMe™ PCIe® 3.0 SSD",
                 "Puertos": "1x USB 3.2 Gen 2 Tipo-C, 3x USB 3.2 Gen 1 Tipo-A, 1x HDMI 2.1",
