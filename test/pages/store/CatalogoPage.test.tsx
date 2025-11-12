@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { describe, test, expect, vi, beforeEach, SpyInstance } from 'vitest';
 import CatalogoPage from '../../../src/pages/store/CatalogoPage';
@@ -39,7 +39,7 @@ describe('CatalogoPage', () => {
         mockUseCart.mockReturnValue({ addToCart: vi.fn() });
 
         render(
-            <BrowserRouter>
+            <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
                 <CartProvider>
                     <CatalogoPage />
                 </CartProvider>
@@ -62,12 +62,18 @@ describe('CatalogoPage', () => {
         expect(screen.queryByText('Consola Xbox')).not.toBeInTheDocument();
     });
 
-    test('filtra productos por categoría', () => {
+    test('filtra productos por categoría', async () => {
         const filterButton = screen.getByText('Filtros');
-        fireEvent.click(filterButton);
+        
+        await act(async () => {
+            fireEvent.click(filterButton);
+        });
 
         const categoryButton = screen.getByText('Juegos');
-        fireEvent.click(categoryButton);
+        
+        await act(async () => {
+            fireEvent.click(categoryButton);
+        });
 
         expect(screen.getByText('Juego de PS5')).toBeInTheDocument();
         expect(screen.queryByText('Mouse Gamer')).not.toBeInTheDocument();
