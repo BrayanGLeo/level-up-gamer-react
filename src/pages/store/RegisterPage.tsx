@@ -57,9 +57,6 @@ const RegisterPage = () => {
 
             if (result.success) {
                 setModalInfo({ show: true, title: '¡Registro Exitoso!', message: result.message });
-                if (result.redirect === '/admin') {
-                    navigate(result.redirect);
-                }
             } else {
                 setModalInfo({ show: true, title: 'Error de Registro', message: result.message });
             }
@@ -69,8 +66,8 @@ const RegisterPage = () => {
     const handleModalClose = () => {
         setModalInfo({ show: false, title: '', message: '' });
 
-        if (registrationResult && registrationResult.success && registrationResult.redirect === '/') {
-            navigate('/');
+        if (registrationResult && registrationResult.success && registrationResult.redirect) {
+            navigate(registrationResult.redirect);
         }
 
         setRegistrationResult(null);

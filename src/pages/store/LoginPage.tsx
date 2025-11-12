@@ -37,9 +37,6 @@ const LoginPage = () => {
 
             if (result.success) {
                 setModalInfo({ show: true, title: '¡Bienvenido!', message: result.message });
-                if (result.redirect === '/admin') {
-                    navigate(result.redirect);
-                }
             } else {
                 setModalInfo({ show: true, title: 'Error de Inicio de Sesión', message: result.message });
             }
@@ -49,8 +46,8 @@ const LoginPage = () => {
     const handleModalClose = () => {
         setModalInfo({ show: false, title: '', message: '' });
 
-        if (loginResult && loginResult.success && loginResult.redirect === '/') {
-            navigate('/');
+        if (loginResult && loginResult.success && loginResult.redirect) {
+            navigate(loginResult.redirect);
         }
 
         setLoginResult(null);
