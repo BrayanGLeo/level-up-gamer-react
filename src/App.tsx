@@ -1,11 +1,12 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './context/AuthContext'; // Importamos useAuth
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import StoreLayout from './components/layout/StoreLayout';
 import AdminLayout from './components/layout/AdminLayout';
 import HomePage from './pages/store/HomePage';
 import CatalogoPage from './pages/store/CatalogoPage';
+import ProductDetailPage from './pages/store/ProductDetailPage';
 import BlogPage from './pages/store/BlogPage';
 import BlogDetailPage from './pages/store/BlogDetailPage';
 import ContactoPage from './pages/store/ContactoPage';
@@ -31,7 +32,7 @@ import AdminCategorias from './pages/admin/AdminCategorias';
 import AdminReportes from './pages/admin/AdminReportes';
 import AdminPerfil from './pages/admin/AdminPerfil';
 
-const AdminOnlyRoute = ({ children }) => {
+const AdminOnlyRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { currentUser } = useAuth();
   
   if (currentUser && currentUser.role === 'Administrador') {
@@ -49,6 +50,7 @@ function App() {
           <Route path="/" element={<StoreLayout />}>
             <Route index element={<HomePage />} />
             <Route path="catalogo" element={<CatalogoPage />} />
+            <Route path="producto/:codigo" element={<ProductDetailPage />} />
             <Route path="blog" element={<BlogPage />} />
             <Route path="blog/:id" element={<BlogDetailPage />} />
             <Route path="contacto" element={<ContactoPage />} />

@@ -1,0 +1,58 @@
+.product-detail-main {
+    padding-top: 120px;
+    padding-bottom: 50px;
+    min-height: 80vh;
+}
+
+.product-detail-image-col {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.product-detail-image {
+    max-height: 500px;
+    width: auto;
+    border-radius: 10px;
+    border: 2px solid #1E90FF;
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 10px;
+    margin-bottom: 20px;
+}
+
+.product-detail-info-col {
+    display: flex;
+    flex-direction: column;
+}
+
+.product-detail-title {
+    font-size: 2.8rem;
+    font-family: 'Orbitron', sans-serif;
+    color: #1E90FF;
+    margin-bottom: 20px;
+}
+
+.product-detail-description {
+    font-size: 1.1rem;
+    line-height: 1.7;
+    color: #D3D3D3;
+    margin-bottom: 25px;
+}
+
+.product-detail-meta p {
+    font-size: 0.95rem;
+    color: #aaa;
+    margin-bottom: 5px;
+}
+
+.product-detail-meta p strong {
+    color: #fff;
+}
+
+.product-detail-price {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #39FF14;
+    margin-top: 15px;
+    margin-bottom: 25px;
+}

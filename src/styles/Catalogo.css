@@ -74,3 +74,28 @@
     width: auto;
     align-self: center;
 }
+
+.product-card-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+.product-card-buttons .btn.btn-small {
+    padding: 10px 15px;
+    font-size: 0.9em;
+    width: auto;
+    align-self: center;
+    flex-grow: 1;
+}
+
+.product-card-buttons .btn-details {
+    background-color: #333 !important;
+    border: 1px solid #555 !important;
+    color: #fff !important;
+}
+
+.product-card-buttons .btn-details:hover {
+    background-color: #555 !important;
+    border-color: #777 !important;
+}

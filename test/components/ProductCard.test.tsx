@@ -1,5 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { BrowserRouter } from 'react-router-dom';
 import { describe, test, expect, vi } from 'vitest';
 import ProductCard from '../../src/components/ProductCard';
 import { Product } from '../../src/data/productData';
@@ -15,12 +16,16 @@ const mockProduct: Product = {
     categoria: 'accesorios'
 };
 
+const renderWithRouter = (ui: React.ReactElement) => {
+    return render(<BrowserRouter>{ui}</BrowserRouter>);
+};
+
 describe('ProductCard', () => {
 
     test('renderiza la información del producto correctamente', () => {
         const mockAddToCart = vi.fn();
         
-        render(<ProductCard product={mockProduct} onAddToCartClick={mockAddToCart} />);
+        renderWithRouter(<ProductCard product={mockProduct} onAddToCartClick={mockAddToCart} />);
 
         expect(screen.getByText('Control de PS5')).toBeInTheDocument();
         expect(screen.getByText('Control de nueva generación.')).toBeInTheDocument();
@@ -28,15 +33,25 @@ describe('ProductCard', () => {
         expect(screen.getByAltText('Control de PS5')).toHaveAttribute('src', 'test.jpg');
     });
 
-    test('llama a onAddToCartClick cuando se hace clic en el botón', () => {
+    test('llama a onAddToCartClick cuando se hace clic en el botón "Agregar"', () => {
         const mockAddToCart = vi.fn();
         
-        render(<ProductCard product={mockProduct} onAddToCartClick={mockAddToCart} />);
+        renderWithRouter(<ProductCard product={mockProduct} onAddToCartClick={mockAddToCart} />);
         
-        const addButton = screen.getByRole('button', { name: /Agregar al Carrito/i });
+        const addButton = screen.getByRole('button', { name: /Agregar/i });
         fireEvent.click(addButton);
 
         expect(mockAddToCart).toHaveBeenCalledTimes(1);
         expect(mockAddToCart).toHaveBeenCalledWith(mockProduct);
+    });
+
+    test('renderiza el botón de "Detalles" que enlaza a la página correcta', () => {
+        const mockAddToCart = vi.fn();
+        renderWithRouter(<ProductCard product={mockProduct} onAddToCartClick={mockAddToCart} />);
+
+        const detailsLink = screen.getByRole('link', { name: /Detalles/i });
+        
+        expect(detailsLink).toBeInTheDocument();
+        expect(detailsLink).toHaveAttribute('href', '/producto/P001');
     });
 });
