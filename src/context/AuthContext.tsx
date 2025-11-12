@@ -48,7 +48,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             } else {
                 return { success: true, redirect: '/', message: '¡Inicio de Sesión Exitoso!' };
             }
-
         } else {
             return { success: false, message: 'Correo o contraseña incorrectos.' };
         }
@@ -58,14 +57,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         try {
             const newUser = registerUser(userData);
             updateCurrentUser(newUser);
-
-            if (newUser.role === 'Administrador') {
-                return { success: true, redirect: '/admin', message: 'Cuenta de administrador registrada con éxito.' };
-            } else if (newUser.role === 'Vendedor') {
-                return { success: true, redirect: '/admin/ordenes', message: 'Cuenta de vendedor registrada con éxito.' };
-            } else {
-                return { success: true, redirect: '/', message: '¡Registro Exitoso! Bienvenido.' };
-            }
+            return { success: true, redirect: '/', message: '¡Registro Exitoso! Bienvenido.' };
 
         } catch (error: any) {
             return { success: false, message: error.message };

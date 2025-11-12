@@ -6,6 +6,7 @@ import { validateUserForm } from '../../utils/validation';
 import { regionesData } from '../../data/chileData';
 import '../../styles/AdminStyle.css';
 import AdminNotificationModal from '../../components/AdminNotificationModal';
+import { useAuth } from '../../context/AuthContext';
 
 interface IUserFormData {
     run: string;
@@ -31,6 +32,9 @@ const AdminUserForm = () => {
         comuna: '',
         role: 'Cliente'
     });
+
+    const { currentUser } = useAuth();
+    const isRootAdmin = currentUser?.isOriginalAdmin === true;
 
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [comunas, setComunas] = useState<string[]>([]);
@@ -92,6 +96,10 @@ const AdminUserForm = () => {
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+
+        if (!isRootAdmin && !isEditMode) {
+            formData.role = 'Cliente';
+        }
 
         const formErrors: Record<string, string> = validateUserForm(formData as any);
         const existingUserByEmail = findUserByEmail(formData.email);
@@ -264,12 +272,22 @@ const AdminUserForm = () => {
 
                         <Form.Group className="form-group" controlId="role">
                             <Form.Label>Tipo de Usuario:</Form.Label>
-                            <Form.Select name="role" value={formData.role} onChange={handleChange} isInvalid={!!errors.role}>
-                                <option value="">Seleccione un tipo</option>
-                                <option value="Administrador">Administrador</option>
-                                <option value="Vendedor">Vendedor</option>
+                            <Form.Select
+                                name="role"
+                                value={formData.role}
+                                onChange={handleChange}
+                                isInvalid={!!errors.role}
+                                disabled={!isRootAdmin}
+                            >
                                 <option value="Cliente">Cliente</option>
+                                <option value="Vendedor">Vendedor</option>
+                                <option value="Administrador">Administrador</option>
                             </Form.Select>
+                            {!isRootAdmin && (
+                                <Form.Text className="text-muted">
+                                    Solo el administrador principal puede cambiar los roles.
+                                </Form.Text>
+                            )}
                             <Form.Control.Feedback type="invalid">{errors.role}</Form.Control.Feedback>
                         </Form.Group>
                         <div className="text-end mt-3">

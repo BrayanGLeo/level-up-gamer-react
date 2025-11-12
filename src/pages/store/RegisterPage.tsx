@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Container, Form, Button, Row, Col } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth, LoginResult } from '../../context/AuthContext';
-import { validateEmail, validatePassword, validateTextField, validateRut, validateBirthdate } from '../../utils/validation';
+import { validateRegisterEmail, validatePassword, validateTextField, validateRut, validateBirthdate } from '../../utils/validation';
 import NotificationModal from '../../components/NotificationModal';
 import '../../styles/Forms.css';
 
@@ -36,7 +36,11 @@ const RegisterPage = () => {
         if (!validateTextField(formData.names, 30)) newErrors.names = 'El nombre solo debe contener letras y espacios (máx 30 caracteres).';
         if (!validateTextField(formData.surnames, 30)) newErrors.surnames = 'El apellido solo debe contener letras y espacios (máx 30 caracteres).';
         if (!validateRut(formData.rut)) newErrors.rut = 'El RUT no es válido (ej: 12345678-9).';
-        if (!validateEmail(formData.email)) newErrors.email = 'El correo no es válido (solo dominios permitidos).';
+        
+        if (!validateRegisterEmail(formData.email)) {
+            newErrors.email = 'Correo inválido. Dominios permitidos: gmail, duoc, outlook, live, hotmail.';
+        }
+        
         if (!validateBirthdate(formData.birthdate)) newErrors.birthdate = 'Fecha inválida. Debes ser mayor de 18 años';
         if (!validatePassword(formData.password)) newErrors.password = 'La contraseña debe tener al menos 6 caracteres.';
         if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = 'Las contraseñas no coinciden.';
@@ -65,7 +69,6 @@ const RegisterPage = () => {
 
     const handleModalClose = () => {
         setModalInfo({ show: false, title: '', message: '' });
-
         if (registrationResult && registrationResult.success && registrationResult.redirect) {
             navigate(registrationResult.redirect);
         }
@@ -103,7 +106,7 @@ const RegisterPage = () => {
                             </Form.Group>
                             <Form.Group className="form-group" controlId="email">
                                 <Form.Label>Correo Electrónico:</Form.Label>
-                                <Form.Control type="email" name="email" placeholder="ejemplo@duoc.cl" required onChange={handleChange} isInvalid={!!errors.email} />
+                                <Form.Control type="email" name="email" placeholder="ejemplo@gmail.com" required onChange={handleChange} isInvalid={!!errors.email} />
                                 <Form.Control.Feedback type="invalid">{errors.email}</Form.Control.Feedback>
                             </Form.Group>
                             <Form.Group className="form-group" controlId="birthdate">

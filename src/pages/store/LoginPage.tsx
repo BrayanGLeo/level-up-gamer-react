@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Container, Form, Button } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth, LoginResult } from '../../context/AuthContext';
-import { validateEmail, validateLoginPassword } from '../../utils/validation';
+import { validateBasicEmail, validateLoginPassword } from '../../utils/validation';
 import NotificationModal from '../../components/NotificationModal';
 import '../../styles/Forms.css';
 
@@ -21,9 +21,10 @@ const LoginPage = () => {
         const newErrors: Record<string, string> = {};
         const emailToValidate = email.trim().toLowerCase();
 
-        if (!validateEmail(emailToValidate)) {
-            newErrors.email = 'El formato del correo no es válido. (ej. @gmail.com, @duoc.cl)';
+        if (!validateBasicEmail(emailToValidate)) {
+            newErrors.email = 'El formato del correo no es válido. (ej. usuario@dominio.cl)';
         }
+        
         if (!validateLoginPassword(password)) {
             newErrors.password = 'La contraseña debe tener entre 4 y 10 caracteres.';
         }

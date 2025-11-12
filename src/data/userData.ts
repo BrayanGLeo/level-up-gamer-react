@@ -62,6 +62,7 @@ const getInitialUsers = (): User[] => {
         if (storedUsers) {
             return JSON.parse(storedUsers) as User[];
         }
+
         const adminUser: User = {
             name: 'Admin',
             surname: 'LevelUp',
@@ -88,8 +89,25 @@ const getInitialUsers = (): User[] => {
             ],
             orders: []
         };
-        localStorage.setItem(USERS_KEY, JSON.stringify([adminUser]));
-        return [adminUser];
+
+        const vendedorUser: User = {
+            name: 'Vendedor',
+            surname: 'LevelUp',
+            email: 'vendedor@vendedor.cl',
+            password: 'vendedor',
+            role: 'Vendedor',
+            rut: '15.869.017-9',
+            registeredAt: new Date().toLocaleDateString('es-CL'),
+            emailHistory: ['vendedor@vendedor.cl'],
+            isOriginalAdmin: false,
+            addresses: [],
+            orders: []
+        };
+
+        const initialUsers = [adminUser, vendedorUser];
+        localStorage.setItem(USERS_KEY, JSON.stringify(initialUsers));
+        return initialUsers;
+
     } catch (error) {
         console.error("Error initializing users", error);
         return [];
@@ -124,22 +142,12 @@ export const registerUser = (newUser: RegisterData): User => {
     }
 
     let users = getInitialUsers();
-    let userRole: User['role'];
-    const emailDomain = newUser.email.split('@')[1];
-
-    if (emailDomain === 'admin.cl') {
-        userRole = 'Administrador';
-    } else if (emailDomain === 'vendedor.cl' || emailDomain === 'vendedor.com') {
-        userRole = 'Vendedor';
-    } else {
-        userRole = 'Cliente';
-    }
 
     const userToSave: User = {
         ...newUser,
-        role: userRole,
+        role: 'Cliente',
         registeredAt: new Date().toLocaleDateString('es-CL'),
-        isOriginalAdmin: userRole === 'Administrador',
+        isOriginalAdmin: false,
         emailHistory: [newUser.email],
         addresses: [],
         orders: []
@@ -159,13 +167,15 @@ export const saveUser = (user: Partial<User>): User => {
         users[index] = {
             ...existingUser,
             ...user,
-            rut: existingUser.rut, 
+            rut: existingUser.rut,
         };
     } else {
         if (!user.rut || !user.email || !user.name || !user.surname || !user.password || !user.role) {
             throw new Error("Faltan datos obligatorios para crear un nuevo usuario.");
         }
-        const isAdmin = user.email.endsWith('@admin.cl');
+
+        const isActuallyAdmin = user.email === 'admin@admin.cl' && user.rut === '12345678-9';
+
         users.push({
             name: user.name,
             surname: user.surname,
@@ -174,11 +184,11 @@ export const saveUser = (user: Partial<User>): User => {
             role: user.role,
             rut: user.rut,
             registeredAt: new Date().toLocaleDateString('es-CL'),
-            isOriginalAdmin: isAdmin,
+            isOriginalAdmin: isActuallyAdmin,
             emailHistory: [user.email],
             addresses: [],
             orders: [],
-            ...user 
+            ...user
         });
     }
 
@@ -212,20 +222,22 @@ export const updateUserEmail = (rut: string, newEmail: string): User => {
             throw new Error('No tienes permisos para asignar un dominio de administrador.');
         }
 
-        if (newEmailIsAdmin) {
+        if (newEmailIsAdmin && user.isOriginalAdmin) {
             user.role = 'Administrador';
         } else if (user.role === 'Administrador' && !user.isOriginalAdmin) {
-            user.role = 'Cliente';
+            if (newEmailIsAdmin) {
+                throw new Error('Solo el admin principal puede asignar dominios de administrador.');
+            }
         }
 
         if (!user.emailHistory) {
             user.emailHistory = [];
         }
-        
+
         if (user.email && !user.emailHistory.includes(user.email)) {
             user.emailHistory.push(user.email);
         }
-        
+
         if (newEmail && !user.emailHistory.includes(newEmail)) {
             user.emailHistory.push(newEmail);
         }

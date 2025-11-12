@@ -1,6 +1,12 @@
-export const validateEmail = (email: string | null) => {
+export const validateBasicEmail = (email: string | null) => {
     if (!email) return false;
-    const emailRegex = /^[^\s@]+@((duoc\.cl)|(profesor\.duoc\.cl)|(gmail\.com)|(admin\.cl)|(vendedor\.cl)|(vendedor\.com))$/;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(String(email).toLowerCase());
+};
+
+export const validateRegisterEmail = (email: string | null) => {
+    if (!email) return false;
+    const emailRegex = /^[^\s@]+@((gmail\.cl)|(gmail\.com)|(duoc\.cl)|(duocuc\.cl))$/;
     return emailRegex.test(String(email).toLowerCase());
 };
 
@@ -11,7 +17,7 @@ export const validatePassword = (password: string | any[]) => {
 
 export const validateLoginPassword = (password: string | any[]) => {
     if (!password) return false;
-    return password.length >= 2;
+    return password.length >= 4 && password.length <= 10;
 };
 
 export const validateRequiredField = (value: string, maxLength: number) => {
@@ -139,8 +145,8 @@ export const validateUserForm = (user: { run: any; nombre: any; apellidos: any; 
         errors.apellidos = 'Los apellidos no puede estar vacio y solo debe contener letras y espacios (máx 30).';
     }
 
-    if (!validateEmail(user.email)) {
-        errors.email = 'El dominio del correo no es válido.';
+    if (!validateBasicEmail(user.email)) {
+        errors.email = 'El formato del correo no es válido (ej: usuario@dominio.cl)';
     }
 
     if (!validateBirthdate(user.fechaNacimiento)) {
