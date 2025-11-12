@@ -38,7 +38,7 @@ const RegisterPage = () => {
         if (!validateRut(formData.rut)) newErrors.rut = 'El RUT no es válido (ej: 12345678-9).';
         
         if (!validateRegisterEmail(formData.email)) {
-            newErrors.email = 'Correo inválido. Dominios permitidos: gmail, duoc, outlook, live, hotmail.';
+            newErrors.email = 'Correo inválido. Dominios permitidos: gmail, duoc.';
         }
         
         if (!validateBirthdate(formData.birthdate)) newErrors.birthdate = 'Fecha inválida. Debes ser mayor de 18 años';
