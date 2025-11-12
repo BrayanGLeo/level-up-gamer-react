@@ -172,10 +172,9 @@ const CheckoutPage = () => {
                 message: `¡Gracias por tu compra, ${formData.nombre}! Tu pedido #${newOrder.number} ha sido realizado con éxito.`
             });
         } else {
-            const GUEST_USER_RUT = '00000000-0';
-
-            addOrderToUser(GUEST_USER_RUT, newOrder);
-
+            const orders = JSON.parse(localStorage.getItem('orders') || '[]') as Order[];
+            orders.push(newOrder);
+            localStorage.setItem('orders', JSON.stringify(orders));
             navigate('/compra-exitosa', { state: { order: newOrder } });
         }
     };
