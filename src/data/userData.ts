@@ -124,13 +124,22 @@ export const registerUser = (newUser: RegisterData): User => {
     }
 
     let users = getInitialUsers();
-    const isAdmin = newUser.email.endsWith('@admin.cl');
+    let userRole: User['role'];
+    const emailDomain = newUser.email.split('@')[1];
+
+    if (emailDomain === 'admin.cl') {
+        userRole = 'Administrador';
+    } else if (emailDomain === 'vendedor.cl' || emailDomain === 'vendedor.com') {
+        userRole = 'Vendedor';
+    } else {
+        userRole = 'Cliente';
+    }
 
     const userToSave: User = {
         ...newUser,
-        role: isAdmin ? 'Administrador' : 'Cliente',
+        role: userRole,
         registeredAt: new Date().toLocaleDateString('es-CL'),
-        isOriginalAdmin: isAdmin,
+        isOriginalAdmin: userRole === 'Administrador',
         emailHistory: [newUser.email],
         addresses: [],
         orders: []

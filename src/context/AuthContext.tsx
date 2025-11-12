@@ -1,5 +1,5 @@
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
-import { findUser, registerUser, User, RegisterData, Order, Address } from '../data/userData';
+import { findUser, registerUser, User, RegisterData } from '../data/userData';
 
 export interface AuthContextType {
     currentUser: User | null;
@@ -43,9 +43,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             
             if (user.role === 'Administrador') {
                 return { success: true, redirect: '/admin', message: 'Inicio de sesión de administrador exitoso.' };
+            } else if (user.role === 'Vendedor') {
+                return { success: true, redirect: '/admin/ordenes', message: 'Inicio de sesión de vendedor exitoso.' };
             } else {
                 return { success: true, redirect: '/', message: '¡Inicio de Sesión Exitoso!' };
             }
+
         } else {
             return { success: false, message: 'Correo o contraseña incorrectos.' };
         }
@@ -58,9 +61,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
             if (newUser.role === 'Administrador') {
                 return { success: true, redirect: '/admin', message: 'Cuenta de administrador registrada con éxito.' };
+            } else if (newUser.role === 'Vendedor') {
+                return { success: true, redirect: '/admin/ordenes', message: 'Cuenta de vendedor registrada con éxito.' };
             } else {
                 return { success: true, redirect: '/', message: '¡Registro Exitoso! Bienvenido.' };
             }
+
         } catch (error: any) {
             return { success: false, message: error.message };
         }
