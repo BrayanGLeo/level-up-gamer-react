@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Container, Form, Button } from 'react-bootstrap';
 import { useAuth } from '../../context/AuthContext';
-import { validateEmail, validatePassword } from '../../utils/validation';
+import { validateBasicEmail, validatePassword } from '../../utils/validation';
 import NotificationModal from '../../components/NotificationModal';
 import { saveUser, updateUserEmail, findUserByEmail } from '../../data/userData';
 import '../../styles/Forms.css';
@@ -34,8 +34,8 @@ const PrivacidadPage = () => {
             return;
         }
 
-        if (!validateEmail(newEmail)) {
-            setEmailError('El correo no es válido (solo dominios permitidos).');
+        if (!validateBasicEmail(newEmail)) {
+            setEmailError('El correo no tiene un formato válido.');
             return;
         }
 

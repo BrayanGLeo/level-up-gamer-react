@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Form, Button, Row, Col, Card } from 'react-bootstrap';
 import { useAuth } from '../../context/AuthContext';
 import { saveUser, updateUserEmail, User } from '../../data/userData';
-import { validateTextField, validateEmail, validateBirthdate, validateRequiredField, validatePassword } from '../../utils/validation';
+import { validateTextField, validateBasicEmail, validateBirthdate, validateRequiredField, validatePassword } from '../../utils/validation';
 import { regionesData } from '../../data/chileData';
 import AdminNotificationModal from '../../components/AdminNotificationModal';
 import '../../styles/AdminStyle.css';
@@ -92,7 +92,7 @@ const AdminPerfil = () => {
         
         if (!validateTextField(formData.nombre, 30)) formErrors.nombre = 'Nombre inválido.';
         if (!validateTextField(formData.apellidos, 30)) formErrors.apellidos = 'Apellidos inválidos.';
-        if (!validateEmail(formData.email)) formErrors.email = 'El dominio del correo no es válido.';
+        if (!validateBasicEmail(formData.email)) formErrors.email = 'El formato del correo no es válido.';
         if (!validateBirthdate(formData.fechaNacimiento)) formErrors.fechaNacimiento = 'Debes ser mayor de 18.';
         if (!validateRequiredField(formData.direccion, 300)) formErrors.direccion = 'La dirección es requerida.';
         if (!formData.region) formErrors.region = 'Debe seleccionar una región.';

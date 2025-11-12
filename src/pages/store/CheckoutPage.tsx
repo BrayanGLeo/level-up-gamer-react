@@ -4,9 +4,9 @@ import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import { regionesData } from '../../data/chileData';
-import { addOrderToUser, addAddress, Address, Order } from '../../data/userData'; 
+import { addOrderToUser, addAddress, Address, Order } from '../../data/userData';
 import { getProductByCode, saveProduct } from '../../data/productData';
-import { validateRut, validateEmail, validatePhone, validateRequiredField } from '../../utils/validation';
+import { validateRut, validateBasicEmail, validatePhone, validateRequiredField } from '../../utils/validation';
 import NotificationModal from '../../components/NotificationModal';
 import '../../styles/Forms.css';
 import '../../styles/Checkout.css';
@@ -34,13 +34,13 @@ const CheckoutPage = () => {
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [deliveryMethod, setDeliveryMethod] = useState<string | null>(null);
     const [comunas, setComunas] = useState<string[]>([]);
-    
+
     const { currentUser, updateCurrentUser } = useAuth();
     const { cartItems, getCartTotal, clearCart } = useCart();
     const navigate = useNavigate();
 
     const [savedAddresses, setSavedAddresses] = useState<Address[]>([]);
-    const [selectedAddressId, setSelectedAddressId] = useState<number | string | null>(null); // 'new' es un string
+    const [selectedAddressId, setSelectedAddressId] = useState<number | string | null>(null);
     const [modalInfo, setModalInfo] = useState({ show: false, title: '', message: '' });
     const [showSaveToast, setShowSaveToast] = useState(false);
 
@@ -64,7 +64,11 @@ const CheckoutPage = () => {
         if (!validateRequiredField(formData.nombre, 50)) newErrors.nombre = 'El nombre es requerido.';
         if (!validateRequiredField(formData.apellidos, 100)) newErrors.apellidos = 'El apellido es requerido.';
         if (!validateRut(formData.rut)) newErrors.rut = 'El RUT no es válido.';
-        if (!validateEmail(formData.email)) newErrors.email = 'El E-mail no es válido.';
+
+        // --- INICIO DE LA CORRECCIÓN ---
+        if (!validateBasicEmail(formData.email)) newErrors.email = 'El E-mail no es válido.';
+        // --- FIN DE LA CORRECCIÓN ---
+
         if (!validatePhone(formData.telefono)) newErrors.telefono = 'El teléfono no es válido (ej: 912345678).';
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
@@ -118,7 +122,7 @@ const CheckoutPage = () => {
         }
     };
     const prevStep = () => setStep(prev => prev - 1);
-    
+
     const getPickupDate = () => {
         const date = new Date(Date.now() + 10 * 24 * 60 * 60 * 1000);
         return date.toLocaleDateString('es-CL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
@@ -126,19 +130,17 @@ const CheckoutPage = () => {
 
     const handleSimulatedPayment = (e: React.MouseEvent<HTMLButtonElement>) => {
         e.preventDefault();
-        
+
         try {
             cartItems.forEach(item => {
                 const product = getProductByCode(item.codigo);
-                
+
                 if (product) {
                     const newStock = product.stock - item.quantity;
-                    
-                    const updatedProduct = { 
-                        ...product, 
+                    const updatedProduct = {
+                        ...product,
                         stock: Math.max(0, newStock)
                     };
-                    
                     saveProduct(updatedProduct);
                 } else {
                     console.warn(`El producto con código ${item.codigo} no se encontró y no se pudo actualizar el stock.`);
@@ -160,7 +162,7 @@ const CheckoutPage = () => {
                 recibeNombre: formData.recibeNombre, recibeApellido: formData.recibeApellido, recibeTelefono: formData.recibeTelefono
             } : { type: 'Retiro en Tienda' }
         };
-        
+
         clearCart();
 
         if (currentUser) {
@@ -201,7 +203,7 @@ const CheckoutPage = () => {
             };
 
             const updatedUser = addAddress(currentUser.rut, newAddress);
-            if(updatedUser) {
+            if (updatedUser) {
                 updateCurrentUser(updatedUser);
                 setSavedAddresses(updatedUser.addresses);
                 const newId = updatedUser.addresses[updatedUser.addresses.length - 1].id;
