@@ -9,7 +9,9 @@ export interface Product {
     imagen: string;
 }
 
-let products: Product[] = [
+const PRODUCTS_KEY = 'products';
+
+const defaultProducts: Product[] = [
     {
         codigo: 'JM001',
         nombre: 'Catan',
@@ -112,25 +114,47 @@ let products: Product[] = [
     }
 ];
 
+const getInitialProducts = (): Product[] => {
+    try {
+        const storedProducts = localStorage.getItem(PRODUCTS_KEY);
+        if (storedProducts) {
+            return JSON.parse(storedProducts) as Product[];
+        }
+        localStorage.setItem(PRODUCTS_KEY, JSON.stringify(defaultProducts));
+        return defaultProducts;
+    } catch (error) {
+        console.error("Error al inicializar los productos desde localStorage", error);
+        return [];
+    }
+};
+
 export const getProducts = (): Product[] => {
-    return products;
+    return getInitialProducts();
 };
 
 export const getProductByCode = (codigo: string): Product | undefined => {
+    const products = getInitialProducts();
     return products.find(p => p.codigo === codigo);
 };
 
 export const saveProduct = (product: Product): Product => {
+    let products = getInitialProducts();
     const index = products.findIndex(p => p.codigo === product.codigo);
+    
     if (index > -1) {
         products[index] = product;
     } else {
         products.push(product);
     }
+    
+    localStorage.setItem(PRODUCTS_KEY, JSON.stringify(products));
     return product;
 };
 
 export const deleteProductByCode = (codigo: string): boolean => {
+    let products = getInitialProducts();
     products = products.filter(p => p.codigo !== codigo);
+    
+    localStorage.setItem(PRODUCTS_KEY, JSON.stringify(products));
     return true;
 };
