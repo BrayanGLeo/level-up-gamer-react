@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Table, Button, Badge, Form } from 'react-bootstrap';
-import { getUsers, updateOrderStatus, Order } from '../../data/userData';
+import { getUsers, updateOrderStatus, Order, getGuestOrders } from '../../data/userData';
 import OrderDetailModal from '../../components/OrderDetailModal';
 import '../../styles/AdminStyle.css';
 
@@ -31,14 +31,23 @@ const AdminOrdenes = () => {
             (user.orders || []).map((order: Order) => ({
                 ...order,
                 status: order.status || 'Pendiente',
-                clientName: `${user.name} ${user.surname}`,
+                clientName: `${user.name} ${user.surname} (Registrado)`,
                 userRUT: user.rut
             }))
         );
 
-        ordersFromAllUsers.sort((a, b) => b.number - a.number);
+        const guestOrders = getGuestOrders();
+        const ordersFromGuests: AdminOrder[] = guestOrders.map(order => ({
+            ...order,
+            status: order.status || 'Pendiente',
+            clientName: `${order.customer.name} ${order.customer.surname} (Invitado)`,
+            userRUT: 'invitado'
+        }));
 
-        setAllOrders(ordersFromAllUsers);
+        const allCombinedOrders = [...ordersFromAllUsers, ...ordersFromGuests];
+        allCombinedOrders.sort((a, b) => b.number - a.number);
+
+        setAllOrders(allCombinedOrders);
     }, []);
 
     const handleShowModal = (order: AdminOrder) => {

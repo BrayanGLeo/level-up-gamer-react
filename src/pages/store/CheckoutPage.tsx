@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import { regionesData } from '../../data/chileData';
-import { addOrderToUser, addAddress, Address, Order } from '../../data/userData';
+import { addOrderToUser, addAddress, Address, Order, addGuestOrder } from '../../data/userData';
 import { getProductByCode, saveProduct } from '../../data/productData';
 import { validateRut, validateBasicEmail, validatePhone, validateRequiredField } from '../../utils/validation';
 import NotificationModal from '../../components/NotificationModal';
@@ -172,10 +172,8 @@ const CheckoutPage = () => {
                 message: `¡Gracias por tu compra, ${formData.nombre}! Tu pedido #${newOrder.number} ha sido realizado con éxito.`
             });
         } else {
-            const orders = JSON.parse(localStorage.getItem('orders') || '[]') as Order[];
-            orders.push(newOrder);
-            localStorage.setItem('orders', JSON.stringify(orders));
-            navigate('/compra-exitosa', { state: { order: newOrder } });
+            const savedOrder = addGuestOrder(newOrder);
+            navigate('/compra-exitosa', { state: { order: savedOrder } });
         }
     };
 

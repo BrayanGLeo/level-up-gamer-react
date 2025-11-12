@@ -55,6 +55,7 @@ export interface RegisterData {
 }
 
 const USERS_KEY = 'users';
+const GUEST_ORDERS_KEY = 'orders';
 
 const getInitialUsers = (): User[] => {
     try {
@@ -111,6 +112,39 @@ const getInitialUsers = (): User[] => {
         console.error("Error initializing users", error);
         return [];
     }
+};
+
+export const getGuestOrders = (): Order[] => {
+    try {
+        const storedOrders = localStorage.getItem(GUEST_ORDERS_KEY);
+        if (storedOrders) {
+            return JSON.parse(storedOrders) as Order[];
+        }
+        return [];
+    } catch (error) {
+        console.error("Error fetching guest orders", error);
+        return [];
+    }
+};
+
+export const addGuestOrder = (newOrder: Order): Order => {
+    const orders = getGuestOrders();
+    newOrder.status = 'Pendiente';
+    orders.push(newOrder);
+    localStorage.setItem(GUEST_ORDERS_KEY, JSON.stringify(orders));
+    return newOrder;
+};
+
+const updateGuestOrderStatus = (orderNumber: number, newStatus: string): boolean => {
+    let orders = getGuestOrders();
+    const orderIndex = orders.findIndex(o => o.number === orderNumber);
+
+    if (orderIndex > -1) {
+        orders[orderIndex].status = newStatus;
+        localStorage.setItem(GUEST_ORDERS_KEY, JSON.stringify(orders));
+        return true;
+    }
+    return false;
 };
 
 export const findUser = (email: string, password: string): User | undefined => {
@@ -350,6 +384,11 @@ export const addOrderToUser = (rut: string, newOrder: Order): User | null => {
 };
 
 export const updateOrderStatus = (rut: string, orderNumber: number, newStatus: string): User | null => {
+    if (rut === 'invitado') {
+        updateGuestOrderStatus(orderNumber, newStatus);
+        return null;
+    }
+
     let users = getInitialUsers();
     const userIndex = users.findIndex(u => u.rut === rut);
 
