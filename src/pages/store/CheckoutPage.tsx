@@ -5,6 +5,7 @@ import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import { regionesData } from '../../data/chileData';
 import { addOrderToUser, addAddress, Address, Order } from '../../data/userData'; 
+import { getProductByCode, saveProduct } from '../../data/productData';
 import { validateRut, validateEmail, validatePhone, validateRequiredField } from '../../utils/validation';
 import NotificationModal from '../../components/NotificationModal';
 import '../../styles/Forms.css';
@@ -126,6 +127,27 @@ const CheckoutPage = () => {
     const handleSimulatedPayment = (e: React.MouseEvent<HTMLButtonElement>) => {
         e.preventDefault();
         
+        try {
+            cartItems.forEach(item => {
+                const product = getProductByCode(item.codigo);
+                
+                if (product) {
+                    const newStock = product.stock - item.quantity;
+                    
+                    const updatedProduct = { 
+                        ...product, 
+                        stock: Math.max(0, newStock)
+                    };
+                    
+                    saveProduct(updatedProduct);
+                } else {
+                    console.warn(`El producto con código ${item.codigo} no se encontró y no se pudo actualizar el stock.`);
+                }
+            });
+        } catch (error) {
+            console.error("Error al actualizar el stock:", error);
+        }
+
         const newOrder: Order = {
             number: Date.now(),
             date: new Date().toLocaleDateString('es-CL'),
