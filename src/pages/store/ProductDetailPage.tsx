@@ -122,10 +122,14 @@ const ProductDetailPage = () => {
                                     </div>
                                 </Tab>
                                 
-                                <Tab eventKey="especificaciones" title="Especificaciones" disabled={!product.specifications}>
+                                <Tab 
+                                    eventKey="especificaciones" 
+                                    title="Especificaciones"
+                                >
                                     <div className="product-tab-content">
                                         <h4>Especificaciones Técnicas</h4>
-                                        {product.specifications ? 
+                                        
+                                        {product.specifications && Object.keys(product.specifications).length > 0 ? 
                                             renderSpecifications(product.specifications) :
                                             <p>No hay especificaciones técnicas detalladas para este producto.</p>
                                         }
