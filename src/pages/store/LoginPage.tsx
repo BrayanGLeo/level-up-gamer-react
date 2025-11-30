@@ -1,5 +1,3 @@
-// Archivo: src/pages/store/LoginPage.tsx
-
 import React, { useState } from 'react';
 import { Container, Form, Button } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
@@ -17,6 +15,7 @@ const LoginPage = () => {
     const [modalInfo, setModalInfo] = useState({ show: false, title: '', message: '' });
 
     const [loginResult, setLoginResult] = useState<LoginResult | null>(null);
+
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         const newErrors: Record<string, string> = {};
@@ -33,16 +32,13 @@ const LoginPage = () => {
         setErrors(newErrors);
 
         if (Object.keys(newErrors).length === 0) {
-            // Llamada asíncrona a la API (el backend)
             const result = await login(emailToValidate, password);
 
             setLoginResult(result);
 
             if (result.success) {
-                // Muestra modal de bienvenida antes de navegar
                 setModalInfo({ show: true, title: '¡Bienvenido!', message: result.message });
             } else {
-                // Muestra modal de error
                 setModalInfo({ show: true, title: 'Error de Inicio de Sesión', message: result.message });
             }
         }
@@ -51,7 +47,6 @@ const LoginPage = () => {
     const handleModalClose = () => {
         setModalInfo({ show: false, title: '', message: '' });
 
-        // Solo navega si el login fue exitoso
         if (loginResult && loginResult.success && loginResult.redirect) {
             navigate(loginResult.redirect);
         }
