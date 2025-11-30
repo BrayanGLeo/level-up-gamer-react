@@ -287,11 +287,26 @@ describe('userData', () => {
                 if (key === 'users') throw new Error('Test Error');
                 return null;
             });
+            const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
             
             const users = getUsers();
             expect(users).toEqual([]);
+            expect(consoleErrorSpy).toHaveBeenCalled();
     
             getItemSpy.mockRestore();
+            consoleErrorSpy.mockRestore();
+        });
+
+        test('getInitialUsers debe devolver un array vacío si el JSON en localStorage es inválido', () => {
+            const getItemSpy = vi.spyOn(localStorage, 'getItem').mockReturnValue('invalid json');
+            const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+            const users = getUsers();
+            expect(users).toEqual([]);
+            expect(consoleErrorSpy).toHaveBeenCalled();
+
+            getItemSpy.mockRestore();
+            consoleErrorSpy.mockRestore();
         });
     
         test('getGuestOrders debe devolver un array vacío si localStorage.getItem lanza un error', () => {
@@ -326,7 +341,7 @@ describe('userData', () => {
             expect(found).toBeDefined();
         });
 
-        test('saveUser debe actualizar currentUser si se modifica', () => {
+        test('saveUser debe actualizar currentUser si se modifica un usuario existente', () => {
             const registered = registerUser(mockRegisterData);
             localStorage.setItem('currentUser', JSON.stringify(registered));
 
@@ -335,6 +350,32 @@ describe('userData', () => {
 
             const updatedCurrentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
             expect(updatedCurrentUser.name).toBe('Current User Updated');
+        });
+
+        test('saveUser debe actualizar currentUser si el usuario creado es el mismo que el actual', () => {
+            const newUser: Partial<User> = {
+                name: 'Nuevo',
+                surname: 'Usuario',
+                email: 'nuevo@example.com',
+                password: 'password',
+                role: 'Cliente',
+                rut: '11223344-5'
+            };
+            localStorage.setItem('currentUser', JSON.stringify(newUser));
+
+            const savedUser = saveUser(newUser);
+            expect(savedUser.name).toBe('Nuevo');
+    
+            const updatedCurrentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+            expect(updatedCurrentUser.name).toBe('Nuevo');
+        });
+
+        test('updateUserEmail debe permitir al admin original cambiar su email a otro de admin', () => {
+            const adminUser = findUserByEmail('admin@admin.cl');
+            const updatedUser = updateUserEmail(adminUser!.rut, 'newadmin@admin.cl');
+
+            expect(updatedUser.email).toBe('newadmin@admin.cl');
+            expect(updatedUser.role).toBe('Administrador');
         });
 
         test('updateUserEmail debe fallar si usuario no-admin intenta usar email de admin', () => {
@@ -348,14 +389,38 @@ describe('userData', () => {
                 .toThrow('No se encontró al usuario para actualizar el correo.');
         });
 
-        test('addAddress debe devolver null si el usuario no existe', () => {
-            const result = addAddress('000', mockAddress);
-            expect(result).toBeNull();
+        test('addAddress debe funcionar si el usuario no tiene la propiedad "addresses"', () => {
+            let user = registerUser(mockRegisterData);
+            delete (user as any).addresses; // Simulamos que no tiene la propiedad
+            localStorage.setItem(USERS_KEY, JSON.stringify([user]));
+
+            const updatedUser = addAddress(user.rut, mockAddress);
+            expect(updatedUser?.addresses).toHaveLength(1);
+            expect(updatedUser?.addresses[0].alias).toBe('Casa');
+        });
+
+        test('addAddress debe actualizar currentUser si se modifica', () => {
+            const registered = registerUser(mockRegisterData);
+            localStorage.setItem('currentUser', JSON.stringify(registered));
+
+            addAddress(registered.rut, mockAddress);
+
+            const updatedCurrentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+            expect(updatedCurrentUser.addresses).toHaveLength(1);
         });
 
         test('updateAddress debe devolver null si el usuario no existe', () => {
             const result = updateAddress('000', { ...mockAddress, id: 1 });
             expect(result).toBeNull();
+        });
+
+        test('updateAddress debe funcionar si el usuario no tiene la propiedad "addresses"', () => {
+            let user = registerUser(mockRegisterData);
+            delete (user as any).addresses; // Simulamos que no tiene la propiedad
+            localStorage.setItem(USERS_KEY, JSON.stringify([user]));
+
+            const result = updateAddress(user.rut, { ...mockAddress, id: 1 });
+            expect(result).toBeNull(); // No debería encontrar la dirección para actualizar
         });
 
         test('updateAddress debe no hacer nada si la dirección no existe', () => {
@@ -367,6 +432,18 @@ describe('userData', () => {
         test('deleteAddress debe devolver null si el usuario no existe', () => {
             const result = deleteAddress('000', 1);
             expect(result).toBeNull();
+        });
+
+        test('addOrderToUser debe funcionar si el usuario no tiene la propiedad "orders"', () => {
+            let user = registerUser(mockRegisterData);
+            delete (user as any).orders; // Simulamos que no tiene la propiedad
+            localStorage.setItem(USERS_KEY, JSON.stringify([user]));
+
+            const order = { ...mockOrderData, number: 1, date: '' } as Order;
+            const updatedUser = addOrderToUser(user.rut, order);
+
+            expect(updatedUser?.orders).toHaveLength(1);
+            expect(updatedUser?.orders[0].number).toBe(1);
         });
 
         test('addOrderToUser debe devolver null si el usuario no existe', () => {
@@ -383,6 +460,15 @@ describe('userData', () => {
         test('updateOrderStatus debe no hacer nada si la orden no existe', () => {
             const user = registerUser(mockRegisterData);
             const result = updateOrderStatus(user.rut, 999, 'Completado');
+            expect(result).toBeNull();
+        });
+
+        test('updateOrderStatus debe no hacer nada si el usuario no tiene la propiedad "orders"', () => {
+            let user = registerUser(mockRegisterData);
+            delete (user as any).orders;
+            localStorage.setItem(USERS_KEY, JSON.stringify([user]));
+            
+            const result = updateOrderStatus(user.rut, 123, 'Completado');
             expect(result).toBeNull();
         });
     });

@@ -122,5 +122,32 @@ describe('OrderSuccessPage', () => {
             
             expect(saveSpy).toHaveBeenCalledWith('boleta_777.pdf');
         });
+
+        test('download receipt for home delivery without "depto" works', () => {
+            const order: Order = {
+                ...baseOrder,
+                number: 888,
+                shipping: {
+                    type: 'Despacho a Domicilio',
+                    recibeNombre: 'Jane',
+                    recibeApellido: 'Doe',
+                    calle: 'Av. Siempre Viva',
+                    numero: '742',
+                    comuna: 'Springfield',
+                    region: 'Capital',
+                }
+            };
+
+            render(
+                <MemoryRouter initialEntries={[{ state: { order } }]}>
+                    <OrderSuccessPage />
+                </MemoryRouter>
+            );
+
+            const downloadButton = screen.getByRole('button', { name: /Descargar Boleta/i });
+            fireEvent.click(downloadButton);
+            
+            expect(saveSpy).toHaveBeenCalledWith('boleta_888.pdf');
+        });
     });
 });

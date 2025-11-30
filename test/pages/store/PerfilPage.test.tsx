@@ -105,4 +105,68 @@ describe('PerfilPage', () => {
             (globalThis as any).FileReader = originalFileReader;
         }
     });
+
+    test('no hace nada si FileReader no produce un resultado', async () => {
+        const user: Partial<User> = { name: 'Test', surname: 'User', email: 'test@user.com' };
+        const mockUpdate = vi.fn();
+        mockUseAuth.mockReturnValue({ currentUser: user, updateCurrentUser: mockUpdate });
+
+        const originalFileReader = (globalThis as any).FileReader;
+        class MockFileReader {
+            onload: ((ev: any) => void) | null = null;
+            readAsDataURL(_file: any) {
+                if (this.onload) {
+                    this.onload({ target: { result: null } }); 
+                }
+            }
+        }
+        (globalThis as any).FileReader = MockFileReader;
+
+        try {
+            render(<PerfilPage />);
+            const file = new File(['dummy'], 'avatar.png', { type: 'image/png' });
+
+            const input = document.getElementById('file-input') as HTMLInputElement;
+            fireEvent.change(input, { target: { files: [file] } });
+
+            await new Promise(r => setTimeout(r, 100));
+
+            expect(mockUpdate).not.toHaveBeenCalled();
+
+        } finally {
+            (globalThis as any).FileReader = originalFileReader;
+        }
+    });
+
+    test('no hace nada cuando no se selecciona archivo', async () => {
+        const user: Partial<User> = { name: 'Test', surname: 'User', email: 'test@user.com' };
+        const mockUpdate = vi.fn();
+        mockUseAuth.mockReturnValue({ currentUser: user, updateCurrentUser: mockUpdate });
+
+        render(<PerfilPage />);
+        
+        const input = document.getElementById('file-input') as HTMLInputElement;
+        // Simular cambio sin seleccionar archivo (files es vacío)
+        fireEvent.change(input, { target: { files: [] } });
+
+        await new Promise(r => setTimeout(r, 100));
+
+        expect(mockUpdate).not.toHaveBeenCalled();
+    });
+
+    test('triggerFileInput makes click on file input', () => {
+        const user: Partial<User> = { name: 'Test', surname: 'User', email: 'test@user.com' };
+        mockUseAuth.mockReturnValue({ currentUser: user, updateCurrentUser: vi.fn() });
+
+        render(<PerfilPage />);
+
+        const fileInput = document.getElementById('file-input') as HTMLInputElement;
+        const clickSpy = vi.spyOn(fileInput, 'click');
+
+        const uploadButton = screen.getByText('Cambiar Foto');
+        fireEvent.click(uploadButton);
+
+        expect(clickSpy).toHaveBeenCalled();
+        clickSpy.mockRestore();
+    });
 });

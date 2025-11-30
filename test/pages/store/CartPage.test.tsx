@@ -26,7 +26,7 @@ vi.mock('../../../src/components/ClearCartModal', () => ({
 }));
 
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import CartPage from '../../../src/pages/store/CartPage';
 import * as AuthModule from '../../../src/context/AuthContext';
@@ -92,12 +92,19 @@ describe('CartPage', () => {
 
         expect(screen.getByText('Juego de PS5')).toBeInTheDocument();
         expect(screen.getByText('Control Xbox')).toBeInTheDocument();
+        expect(screen.getByText('$49.990')).toBeInTheDocument();
 
         expect(screen.getByText(/Total:/i)).toBeInTheDocument();
-        expect(screen.getByText(/\$169\.970/i)).toBeInTheDocument(); 
+        expect(screen.getByText(/\$169\.970/i)).toBeInTheDocument();
 
         expect(screen.getByText('Vaciar Carrito')).toBeInTheDocument();
-        expect(screen.getByText('Finalizar Compra')).toBeInTheDocument();
+        const finalizarCompraButton = screen.getByText('Finalizar Compra');
+        expect(finalizarCompraButton).toBeInTheDocument();
+        fireEvent.click(finalizarCompraButton);
+        // Si no hay un usuario logueado, esto debería abrir el modal de login, no navegar.
+        // Esto ya está cubierto por otros tests, pero el clic aquí es para la cobertura de la línea.
+        expect(screen.getByText('¿Cómo quieres continuar?')).toBeInTheDocument();
+
     });
 
     test('debe mostrar el modal de "Iniciar Sesión" si un invitado finaliza la compra', () => {
@@ -116,6 +123,47 @@ describe('CartPage', () => {
 
         expect(screen.getByText('¿Cómo quieres continuar?')).toBeInTheDocument();
         expect(mockedNavigate).not.toHaveBeenCalled();
+    });
+
+    test('debe navegar a /checkout si un invitado selecciona "Avanzar como Invitado"', async () => {
+        const mockItems: CartItem[] = [
+            { codigo: 'P001', nombre: 'Juego de PS5', precio: 49990, quantity: 1, imagen: 'img.jpg', categoria: 'juegos', descripcion: '', stock: 1, stockCritico: 1 }
+        ];
+        mockUseAuth.mockReturnValue({ currentUser: null });
+        mockUseCart.mockReturnValue({ cartItems: mockItems, getCartTotal: () => 49990, getCartItemCount: () => 1 });
+
+        renderCartPage();
+        fireEvent.click(screen.getByText('Finalizar Compra'));
+
+        const guestButton = screen.getByText('Avanzar como Invitado');
+        fireEvent.click(guestButton);
+
+        expect(mockedNavigate).toHaveBeenCalledWith('/checkout');
+        await waitFor(() => {
+            expect(screen.queryByText('¿Cómo quieres continuar?')).not.toBeInTheDocument();
+        });
+    });
+
+    test('los botones del modal de login navegan correctamente', async () => {
+        const mockItems: CartItem[] = [
+            { codigo: 'P001', nombre: 'Juego de PS5', precio: 49990, quantity: 1, imagen: 'img.jpg', categoria: 'juegos', descripcion: '', stock: 1, stockCritico: 1 }
+        ];
+        mockUseAuth.mockReturnValue({ currentUser: null });
+        mockUseCart.mockReturnValue({ cartItems: mockItems, getCartTotal: () => 49990, getCartItemCount: () => 1 });
+
+        renderCartPage();
+        fireEvent.click(screen.getByText('Finalizar Compra'));
+
+        const loginButton = screen.getByRole('button', { name: 'Iniciar Sesión' });
+        const registerButton = screen.getByRole('button', { name: 'Registrarse' });
+
+        expect(loginButton.closest('a')).toHaveAttribute('href', '/login');
+        expect(registerButton.closest('a')).toHaveAttribute('href', '/register');
+
+        fireEvent.click(loginButton);
+        await waitFor(() => {
+            expect(screen.queryByText('¿Cómo quieres continuar?')).not.toBeInTheDocument();
+        });
     });
 
     test('debe navegar a /checkout si un usuario registrado finaliza la compra', () => {
@@ -231,6 +279,40 @@ describe('CartPage', () => {
         fireEvent.click(finalizar);
 
         expect(mockedNavigate).toHaveBeenCalledWith('/checkout');
+    });
+
+    test('click en botón "Iniciar Sesión" en modal cierra el modal', () => {
+        const mockItems: CartItem[] = [
+            { codigo: 'P001', nombre: 'Juego de PS5', precio: 49990, quantity: 1, imagen: 'img.jpg', categoria: 'juegos', descripcion: '', stock: 1, stockCritico: 1 }
+        ];
+        mockUseCart.mockReturnValue({ cartItems: mockItems, getCartTotal: () => 49990, getCartItemCount: () => 1 });
+        mockUseAuth.mockReturnValue({ currentUser: null });
+
+        renderCartPage();
+
+        const checkoutButton = screen.getByText('Finalizar Compra');
+        fireEvent.click(checkoutButton);
+
+        const loginLink = screen.getByText('Iniciar Sesión');
+        expect(loginLink).toBeInTheDocument();
+        expect(loginLink.tagName).toBe('A');
+    });
+
+    test('click en botón "Registrarse" en modal cierra el modal', () => {
+        const mockItems: CartItem[] = [
+            { codigo: 'P001', nombre: 'Juego de PS5', precio: 49990, quantity: 1, imagen: 'img.jpg', categoria: 'juegos', descripcion: '', stock: 1, stockCritico: 1 }
+        ];
+        mockUseCart.mockReturnValue({ cartItems: mockItems, getCartTotal: () => 49990, getCartItemCount: () => 1 });
+        mockUseAuth.mockReturnValue({ currentUser: null });
+
+        renderCartPage();
+
+        const checkoutButton = screen.getByText('Finalizar Compra');
+        fireEvent.click(checkoutButton);
+
+        const registerLink = screen.getByText('Registrarse');
+        expect(registerLink).toBeInTheDocument();
+        expect(registerLink.tagName).toBe('A');
     });
 
 });

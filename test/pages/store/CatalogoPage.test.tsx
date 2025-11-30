@@ -37,7 +37,9 @@ describe('CatalogoPage', () => {
     beforeEach(() => {
         mockGetProducts = vi.spyOn(productData, 'getProducts').mockReturnValue(mockProducts);
         mockUseCart.mockReturnValue({ addToCart: vi.fn() });
+    });
 
+    test('renderiza todos los productos inicialmente', () => {
         render(
             <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
                 <CartProvider>
@@ -45,15 +47,19 @@ describe('CatalogoPage', () => {
                 </CartProvider>
             </BrowserRouter>
         );
-    });
-
-    test('renderiza todos los productos inicialmente', () => {
         expect(screen.getByText('Juego de PS5')).toBeInTheDocument();
         expect(screen.getByText('Mouse Gamer')).toBeInTheDocument();
         expect(screen.getByText('Consola Xbox')).toBeInTheDocument();
     });
 
     test('filtra productos por la barra de búsqueda', () => {
+        render(
+            <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+                <CartProvider>
+                    <CatalogoPage />
+                </CartProvider>
+            </BrowserRouter>
+        );
         const searchInput = screen.getByPlaceholderText(/Buscar por nombre.../i);
         fireEvent.change(searchInput, { target: { value: 'Mouse' } });
 
@@ -63,6 +69,13 @@ describe('CatalogoPage', () => {
     });
 
     test('filtra productos por categoría', async () => {
+        render(
+            <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+                <CartProvider>
+                    <CatalogoPage />
+                </CartProvider>
+            </BrowserRouter>
+        );
         const filterButton = screen.getByText('Filtros');
         
         await act(async () => {
@@ -81,9 +94,58 @@ describe('CatalogoPage', () => {
     });
 
     test('muestra mensaje si no hay resultados', () => {
+        render(
+            <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+                <CartProvider>
+                    <CatalogoPage />
+                </CartProvider>
+            </BrowserRouter>
+        );
         const searchInput = screen.getByPlaceholderText(/Buscar por nombre.../i);
         fireEvent.change(searchInput, { target: { value: 'Producto Inexistente' } });
 
         expect(screen.getByText(/No se encontraron productos/i)).toBeInTheDocument();
+    });
+
+    test('al hacer clic en "Agregar", se llama a addToCart y se muestra el modal', () => {
+        const addToCartMock = vi.fn();
+        mockUseCart.mockReturnValue({ addToCart: addToCartMock });
+
+        render(
+            <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+                <CartProvider>
+                    <CatalogoPage />
+                </CartProvider>
+            </BrowserRouter>
+        );
+
+        const addButton = screen.getAllByText('Agregar')[0];
+        fireEvent.click(addButton);
+
+        expect(addToCartMock).toHaveBeenCalledWith(mockProducts[0]);
+        
+        expect(screen.getByText('¡Añadido al carrito!')).toBeInTheDocument();
+    });
+
+    test('capitaliza todas las categorías correctamente en el dropdown', async () => {
+        render(
+            <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+                <CartProvider>
+                    <CatalogoPage />
+                </CartProvider>
+            </BrowserRouter>
+        );
+
+        const filterButton = screen.getByText('Filtros');
+        
+        await act(async () => {
+            fireEvent.click(filterButton);
+        });
+
+        // Verify all categories are capitalized properly
+        expect(screen.getByText('Todos')).toBeInTheDocument();
+        expect(screen.getByText('Juegos')).toBeInTheDocument();
+        expect(screen.getByText('Accesorios')).toBeInTheDocument();
+        expect(screen.getByText('Consolas')).toBeInTheDocument();
     });
 });

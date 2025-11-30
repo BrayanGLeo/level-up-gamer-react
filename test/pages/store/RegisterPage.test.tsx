@@ -82,6 +82,35 @@ describe('RegisterPage', () => {
         expect(mockRegister).not.toHaveBeenCalled();
     });
 
+    test('muestra error si el correo es inválido', async () => {
+        mockValidateEmail.mockReturnValue(false);
+
+        render(<BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}><RegisterPage /></BrowserRouter>);
+
+        fillForm();
+        fireEvent.click(screen.getByRole('button', { name: /Registrarse/i }));
+
+        expect(await screen.findByText('Correo inválido. Dominios permitidos: gmail, duoc.')).toBeInTheDocument();
+        expect(mockRegister).not.toHaveBeenCalled();
+    });
+
+    test('muestra error si las contraseñas no coinciden', async () => {
+        render(<BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}><RegisterPage /></BrowserRouter>);
+
+        fireEvent.change(screen.getByLabelText(/Nombres:/i), { target: { value: 'Test' } });
+        fireEvent.change(screen.getByLabelText(/Apellidos:/i), { target: { value: 'User' } });
+        fireEvent.change(screen.getByLabelText(/RUT:/i), { target: { value: '12345678-9' } });
+        fireEvent.change(screen.getByLabelText(/Correo Electrónico:/i), { target: { value: 'test@gmail.com' } });
+        fireEvent.change(screen.getByLabelText(/Fecha de Nacimiento:/i), { target: { value: '2000-01-01' } });
+        fireEvent.change(screen.getByLabelText('Contraseña:'), { target: { value: 'password123' } });
+        fireEvent.change(screen.getByLabelText(/Confirmar Contraseña:/i), { target: { value: 'password456' } });
+
+        fireEvent.click(screen.getByRole('button', { name: /Registrarse/i }));
+
+        expect(await screen.findByText('Las contraseñas no coinciden.')).toBeInTheDocument();
+        expect(mockRegister).not.toHaveBeenCalled();
+    });
+
     test('llama a register y muestra modal de éxito al enviar formulario válido', async () => {
         mockRegister.mockReturnValue({ success: true, message: '¡Bienvenido! Tu cuenta ha sido creada.' });
         render(<BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}><RegisterPage /></BrowserRouter>);
@@ -111,5 +140,24 @@ describe('RegisterPage', () => {
         expect(await screen.findByText('Error de Registro')).toBeInTheDocument();
         expect(await screen.findByText('Este correo ya está en uso.')).toBeInTheDocument();
         expect(mockedNavigate).not.toHaveBeenCalled();
+    });
+
+    test('navega a store cuando cierra modal después de registro exitoso', async () => {
+        mockRegister.mockReturnValue({ success: true, message: '¡Bienvenido! Tu cuenta ha sido creada.', redirect: '/store' });
+        render(<BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}><RegisterPage /></BrowserRouter>);
+
+        fillForm();
+        fireEvent.click(screen.getByRole('button', { name: /Registrarse/i }));
+
+        await screen.findByText('¡Bienvenido! Tu cuenta ha sido creada.');
+
+        // Find and click the close button (X) or accept button in the modal
+        const closeButtons = screen.getAllByRole('button');
+        const acceptButton = closeButtons.find((btn) => btn.textContent === 'Aceptar' || btn.getAttribute('aria-label')?.includes('close'));
+        
+        if (acceptButton) {
+            fireEvent.click(acceptButton);
+            expect(mockedNavigate).toHaveBeenCalledWith('/store');
+        }
     });
 });

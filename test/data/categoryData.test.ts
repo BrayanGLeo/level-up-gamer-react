@@ -16,6 +16,7 @@ describe('categoryData', () => {
 
     afterEach(() => {
         localStorage.clear();
+        vi.restoreAllMocks();
     });
 
     test('getCategories debe retornar las categorías iniciales si localStorage está vacío', () => {
@@ -82,5 +83,34 @@ describe('categoryData', () => {
 
         const deletedCategory = getCategoryById(1);
         expect(deletedCategory).toBeUndefined();
+    });
+
+    test('saveCategory debe agregar una nueva categoría si el ID no existe', () => {
+        const nonExistentId = 999;
+        const newCategoryInput = { id: nonExistentId, nombre: 'Categoría Inexistente' };
+        const savedCategory = saveCategory(newCategoryInput);
+
+        // Se espera que cree una nueva categoría con un ID generado
+        expect(savedCategory.id).not.toBe(nonExistentId);
+        expect(savedCategory.nombre).toBe('Categoría Inexistente');
+
+        const categories = getCategories();
+        // Verificar que la nueva categoría ha sido añadida
+        expect(categories.some(c => c.nombre === 'Categoría Inexistente')).toBe(true);
+        // También verificar que el ID original no se usó y se generó uno nuevo
+        expect(categories.every(c => c.id !== nonExistentId)).toBe(true);
+    });
+
+    test('getCategories debe retornar un array vacío y loguear un error si localStorage falla', () => {
+        const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+        
+        const error = new Error("LocalStorage not available");
+        vi.spyOn(localStorage, 'getItem').mockImplementation(() => {
+            throw error;
+        });
+
+        const categories = getCategories();
+        expect(categories).toEqual([]);
+        expect(consoleErrorSpy).toHaveBeenCalledWith("Error initializing categories", error);
     });
 });

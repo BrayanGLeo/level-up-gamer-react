@@ -117,6 +117,24 @@ describe('ProductDetailPage', () => {
         expect(screen.getByText('No hay especificaciones técnicas detalladas para este producto.')).toBeInTheDocument();
     });
 
+    test('muestra mensaje alternativo cuando specifications es undefined', () => {
+        const productWithoutSpecs: Product = {
+            codigo: 'NOSPEC-UNDEF', nombre: 'No Specs Undefined', descripcion: 'd', precio: 10, stock: 1, categoria: 'c', imagen: '',
+        };
+        (pd.getProductByCode as vi.Mock).mockReturnValue(productWithoutSpecs);
+
+        render(
+            <MemoryRouter initialEntries={["/producto/NOSPEC-UNDEF"]}>
+                <Routes><Route path="/producto/:codigo" element={<ProductDetailPage />} /></Routes>
+            </MemoryRouter>
+        );
+
+        const specsTab = screen.getByRole('tab', { name: /Especificaciones/i });
+        fireEvent.click(specsTab);
+
+        expect(screen.getByText('No hay especificaciones técnicas detalladas para este producto.')).toBeInTheDocument();
+    });
+
     test('muestra especificaciones cuando se hace clic en la pestaña correspondiente', () => {
         const productWithSpecs: Product = {
             codigo: 'SP', nombre: 'SpecProd', descripcion: 'd', precio: 10, stock: 1, categoria: 'c', imagen: '',

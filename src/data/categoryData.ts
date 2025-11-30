@@ -10,7 +10,7 @@ type CategoryInput = {
 
 const CATEGORIES_KEY = 'categories';
 
-const getInitialCategories = (): Category[] => {
+export const getCategories = (): Category[] => {
     try {
         const storedCategories = localStorage.getItem(CATEGORIES_KEY);
         if (storedCategories) {
@@ -30,17 +30,13 @@ const getInitialCategories = (): Category[] => {
     }
 };
 
-export const getCategories = (): Category[] => {
-    return getInitialCategories();
-};
-
 export const getCategoryById = (id: number): Category | undefined => {
-    const categories = getInitialCategories();
+    const categories = getCategories();
     return categories.find(c => c.id === id);
 };
 
 export const saveCategory = (category: CategoryInput): Category => {
-    let categories = getInitialCategories();
+    let categories = getCategories();
 
     if (category.id) {
         const index = categories.findIndex(c => c.id === category.id);
@@ -60,7 +56,7 @@ export const saveCategory = (category: CategoryInput): Category => {
 };
 
 export const deleteCategory = (id: number): boolean => {
-    let categories = getInitialCategories();
+    let categories = getCategories();
     categories = categories.filter(c => c.id !== id);
     localStorage.setItem(CATEGORIES_KEY, JSON.stringify(categories));
     return true;

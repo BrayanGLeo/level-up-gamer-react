@@ -89,6 +89,18 @@ describe('Header', () => {
         expect(screen.getByText(/Panel Admin/i)).toBeInTheDocument();
     });
 
+    test('renderiza el enlace "Panel Vendedor" si el usuario es Vendedor', () => {
+        const vendorUser: Partial<User> = { name: 'Vendedor', role: 'Vendedor' };
+        mockUseAuth.mockReturnValue({ currentUser: vendorUser });
+        mockUseCart.mockReturnValue({ getCartItemCount: () => 0 });
+
+        renderHeader();
+
+        fireEvent.click(screen.getByText(/Hola, Vendedor/i));
+
+        expect(screen.getByText(/Panel Vendedor/i)).toBeInTheDocument();
+    });
+
     test('el flujo de logout funciona correctamente y navega a home', () => {
         const mockLogout = vi.fn(() => ({ success: true, message: 'Sesión cerrada con éxito.' }));
         mockUseAuth.mockReturnValue({
