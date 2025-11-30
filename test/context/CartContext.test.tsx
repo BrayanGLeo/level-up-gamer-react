@@ -90,13 +90,13 @@ describe('CartContext', () => {
         const addButton = screen.getByText('Add P1');
 
         act(() => {
-            addButton.click(); // Cantidad 1
+            addButton.click();
         });
 
         expect(await screen.findByText('Juego 1 (x1)')).toBeInTheDocument();
 
         act(() => {
-            addButton.click(); // Cantidad 2
+            addButton.click();
         });
 
         expect(await screen.findByText('Juego 1 (x2)')).toBeInTheDocument();
@@ -108,14 +108,14 @@ describe('CartContext', () => {
     test('updateQuantity debe modificar la cantidad (incrementar)', async () => {
         renderWithCartProvider();
         act(() => { screen.getByText('Add P1').click(); });
-        expect(await screen.findByText('Juego 1 (x1)')).toBeInTheDocument(); // Espera inicial
+        expect(await screen.findByText('Juego 1 (x1)')).toBeInTheDocument();
 
         const incButton = screen.getByText('Inc P1');
         act(() => {
-            incButton.click(); // Cantidad 2
+            incButton.click();
         });
 
-        expect(await screen.findByText('Juego 1 (x2)')).toBeInTheDocument(); // Espera el cambio
+        expect(await screen.findByText('Juego 1 (x2)')).toBeInTheDocument();
         expect(screen.getByTestId('item-count')).toHaveTextContent('2');
         expect(screen.getByTestId('total-price')).toHaveTextContent('20000');
     });
@@ -123,11 +123,11 @@ describe('CartContext', () => {
     test('updateQuantity debe remover el item si la cantidad llega a 0 (decrementar)', async () => {
         renderWithCartProvider();
         act(() => { screen.getByText('Add P1').click(); });
-        expect(await screen.findByText('Juego 1 (x1)')).toBeInTheDocument(); // Espera inicial
+        expect(await screen.findByText('Juego 1 (x1)')).toBeInTheDocument();
 
         const decButton = screen.getByText('Dec P1');
         act(() => {
-            decButton.click(); // Cantidad 0
+            decButton.click();
         });
 
         await waitFor(() => {
@@ -184,19 +184,28 @@ describe('CartContext', () => {
 
     test('debe calcular el total y la cantidad de items correctamente', async () => {
         renderWithCartProvider();
-        act(() => { screen.getByText('Add P1').click(); }); // 1 * 10000
+        act(() => { screen.getByText('Add P1').click(); });
         await screen.findByText('Juego 1 (x1)');
 
-        act(() => { screen.getByText('Add P1').click(); }); // 2 * 10000
+        act(() => { screen.getByText('Add P1').click(); });
         await screen.findByText('Juego 1 (x2)');
 
-        act(() => { screen.getByText('Add P2').click(); }); // 1 * 5000
+        act(() => { screen.getByText('Add P2').click(); });
         await screen.findByText('Juego 2 (x1)');
 
-        // Total Items = 2 + 1 = 3
-        // Total Precio = 20000 + 5000 = 25000
         expect(screen.getByTestId('item-count')).toHaveTextContent('3');
         expect(screen.getByTestId('total-price')).toHaveTextContent('25000');
+    });
+
+    test('debe cargar el carrito desde localStorage al iniciar', async () => {
+        const mockCart = [{ ...mockProduct1, quantity: 2 }];
+        localStorage.setItem('carrito', JSON.stringify(mockCart));
+    
+        renderWithCartProvider();
+
+        expect(await screen.findByText('Juego 1 (x2)')).toBeInTheDocument();
+        expect(screen.getByTestId('item-count')).toHaveTextContent('2');
+        expect(screen.getByTestId('total-price')).toHaveTextContent('20000');
     });
 
 });

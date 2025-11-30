@@ -7,24 +7,17 @@ import { Order } from '../../../src/data/userData';
 
 const saveSpy = vi.fn();
 
-// Mocking jspdf with a class that more accurately represents its behavior
 vi.mock('jspdf', () => {
-    // This mock class simulates the jsPDF functionality.
-    // The 'lastAutoTable' property is removed because it's added by 'jspdf-autotable', not by jsPDF itself.
     class JsPDFMock {
         setFontSize = vi.fn();
         text = vi.fn();
-        save = saveSpy; // Using a spy to track the save method calls
+        save = saveSpy;
     }
     return { default: JsPDFMock };
 });
 
-// Mocking jspdf-autotable to simulate its side-effect on the jsPDF instance
 vi.mock('jspdf-autotable', () => ({
-    // autoTable is the default export, we mock its implementation
     default: vi.fn().mockImplementation((doc: any) => {
-        // The real autoTable function adds the 'lastAutoTable' property to the doc object.
-        // We replicate that behavior here for the tests to pass.
         doc.lastAutoTable = { finalY: 140 };
     })
 }));

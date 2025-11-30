@@ -1,6 +1,8 @@
 import { describe, test, expect, beforeEach, afterEach } from 'vitest';
 import {
     getUsers,
+    getGuestOrders,
+    addGuestOrder,
     findUser,
     findUserByEmail,
     findUserByRut,
@@ -224,4 +226,164 @@ describe('userData', () => {
         expect(user.orders[0].status).toBe('Completado');
     });
 
+    describe('Guest Order Functions', () => {
+        const mockGuestOrder: Order = {
+            number: 999,
+            date: '2025-01-01',
+            items: [{ id: 'G1', name: 'Guest Item', quantity: 1, precio: 50, image: '' }],
+            total: 50,
+            customer: { name: 'Guest', surname: 'User', email: 'guest@example.com', phone: '123' },
+            shipping: { type: 'Retiro en Tienda' },
+            status: 'Pendiente'
+        };
+
+        test('getGuestOrders debe devolver un array vacío si no hay pedidos', () => {
+            const orders = getGuestOrders();
+            expect(orders).toEqual([]);
+        });
+
+        test('addGuestOrder debe agregar un nuevo pedido de invitado', () => {
+            addGuestOrder(mockGuestOrder);
+            const orders = getGuestOrders();
+            expect(orders).toHaveLength(1);
+            expect(orders[0].number).toBe(999);
+            expect(orders[0].status).toBe('Pendiente');
+        });
+
+        test('getGuestOrders debe devolver los pedidos guardados', () => {
+            localStorage.setItem('orders', JSON.stringify([mockGuestOrder]));
+            const orders = getGuestOrders();
+            expect(orders).toHaveLength(1);
+            expect(orders[0].number).toBe(999);
+        });
+
+        test('updateOrderStatus (guest) debe actualizar el estado de un pedido de invitado', () => {
+            addGuestOrder(mockGuestOrder);
+            const updatedUser = updateOrderStatus('invitado', 999, 'Enviado');
+            expect(updatedUser).toBeNull();
+            const orders = getGuestOrders();
+            expect(orders[0].status).toBe('Enviado');
+        });
+
+        test('updateOrderStatus (guest) debe no hacer nada si el pedido no existe', () => {
+            addGuestOrder(mockGuestOrder);
+            updateOrderStatus('invitado', 111, 'Enviado');
+            const orders = getGuestOrders();
+            expect(orders[0].status).toBe('Pendiente');
+        });
+    });
+
+    describe('Error Handling and Edge Cases', () => {
+        beforeEach(() => {
+            vi.restoreAllMocks();
+        });
+
+        afterEach(() => {
+            vi.restoreAllMocks();
+        });
+
+        test('getInitialUsers debe devolver un array vacío si localStorage.getItem lanza un error', () => {
+            const getItemSpy = vi.spyOn(localStorage, 'getItem').mockImplementation((key) => {
+                if (key === 'users') throw new Error('Test Error');
+                return null;
+            });
+            
+            const users = getUsers();
+            expect(users).toEqual([]);
+    
+            getItemSpy.mockRestore();
+        });
+    
+        test('getGuestOrders debe devolver un array vacío si localStorage.getItem lanza un error', () => {
+            vi.spyOn(Storage.prototype, 'getItem').mockImplementation((key) => {
+                if (key === 'orders') throw new Error('Test Error');
+                return null;
+            });
+            const orders = getGuestOrders();
+            expect(orders).toEqual([]);
+        });
+
+        test('saveUser debe lanzar error si faltan datos para crear nuevo usuario', () => {
+            const partialUser: Partial<User> = { name: 'Incompleto' };
+            expect(() => saveUser(partialUser)).toThrow("Faltan datos obligatorios para crear un nuevo usuario.");
+        });
+        
+        test('saveUser debe crear un nuevo usuario si no existe', () => {
+            const newUser: Partial<User> = {
+                name: 'Nuevo',
+                surname: 'Usuario',
+                email: 'nuevo@example.com',
+                password: 'password',
+                role: 'Cliente',
+                rut: '11223344-5'
+            };
+            const savedUser = saveUser(newUser);
+            expect(savedUser.name).toBe('Nuevo');
+    
+            const users = getUsers();
+            expect(users).toHaveLength(3);
+            const found = findUserByRut('11223344-5');
+            expect(found).toBeDefined();
+        });
+
+        test('saveUser debe actualizar currentUser si se modifica', () => {
+            const registered = registerUser(mockRegisterData);
+            localStorage.setItem('currentUser', JSON.stringify(registered));
+
+            const updatedData = { ...registered, name: 'Current User Updated' };
+            saveUser(updatedData);
+
+            const updatedCurrentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+            expect(updatedCurrentUser.name).toBe('Current User Updated');
+        });
+
+        test('updateUserEmail debe fallar si usuario no-admin intenta usar email de admin', () => {
+            registerUser(mockRegisterData);
+            expect(() => updateUserEmail(mockRegisterData.rut, 'test@admin.cl'))
+                .toThrow('No tienes permisos para asignar un dominio de administrador.');
+        });
+        
+        test('updateUserEmail debe fallar si se busca un usuario que no existe', () => {
+            expect(() => updateUserEmail('000', 'email@test.com'))
+                .toThrow('No se encontró al usuario para actualizar el correo.');
+        });
+
+        test('addAddress debe devolver null si el usuario no existe', () => {
+            const result = addAddress('000', mockAddress);
+            expect(result).toBeNull();
+        });
+
+        test('updateAddress debe devolver null si el usuario no existe', () => {
+            const result = updateAddress('000', { ...mockAddress, id: 1 });
+            expect(result).toBeNull();
+        });
+
+        test('updateAddress debe no hacer nada si la dirección no existe', () => {
+            const user = registerUser(mockRegisterData);
+            const result = updateAddress(user.rut, { ...mockAddress, id: 999 });
+            expect(result).toBeNull();
+        });
+
+        test('deleteAddress debe devolver null si el usuario no existe', () => {
+            const result = deleteAddress('000', 1);
+            expect(result).toBeNull();
+        });
+
+        test('addOrderToUser debe devolver null si el usuario no existe', () => {
+            const order = { ...mockOrderData, number: 1, date: '' } as Order;
+            const result = addOrderToUser('000', order);
+            expect(result).toBeNull();
+        });
+
+        test('updateOrderStatus debe devolver null si el usuario no existe', () => {
+            const result = updateOrderStatus('000', 123, 'Completado');
+            expect(result).toBeNull();
+        });
+
+        test('updateOrderStatus debe no hacer nada si la orden no existe', () => {
+            const user = registerUser(mockRegisterData);
+            const result = updateOrderStatus(user.rut, 999, 'Completado');
+            expect(result).toBeNull();
+        });
+    });
 });

@@ -1,11 +1,21 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { describe, test, expect, vi, beforeEach } from 'vitest';
 import Header from '../../../src/components/layout/Header';
 import { AuthProvider, useAuth } from '../../../src/context/AuthContext';
 import { CartProvider, useCart } from '../../../src/context/CartContext';
 import { User } from '../../../src/data/userData';
+
+const mockNavigate = vi.fn();
+
+vi.mock('react-router-dom', async (importOriginal) => {
+    const actual = await importOriginal() as object;
+    return {
+        ...actual,
+        useNavigate: () => mockNavigate,
+    };
+});
 
 vi.mock('../../../src/context/AuthContext', async (importOriginal) => {
     const actual = await importOriginal() as object;
@@ -27,7 +37,7 @@ const mockUseCart = useCart as vi.Mock;
 
 const renderHeader = () => {
     return render(
-        <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <BrowserRouter>
             <AuthProvider>
                 <CartProvider>
                     <Header />
@@ -42,6 +52,7 @@ describe('Header', () => {
     beforeEach(() => {
         mockUseAuth.mockClear();
         mockUseCart.mockClear();
+        mockNavigate.mockClear();
     });
 
     test('renderiza "Iniciar Sesión" para un invitado', () => {
@@ -73,8 +84,32 @@ describe('Header', () => {
 
         renderHeader();
 
-        expect(screen.getByText(/Hola, Admin/i)).toBeInTheDocument();
-        const dropdown = screen.getByText(/Hola, Admin/i);
-        expect(dropdown).toBeInTheDocument();
+        fireEvent.click(screen.getByText(/Hola, Admin/i));
+
+        expect(screen.getByText(/Panel Admin/i)).toBeInTheDocument();
+    });
+
+    test('el flujo de logout funciona correctamente y navega a home', () => {
+        const mockLogout = vi.fn(() => ({ success: true, message: 'Sesión cerrada con éxito.' }));
+        mockUseAuth.mockReturnValue({
+            currentUser: { name: 'Test User', role: 'Cliente' },
+            logout: mockLogout,
+        });
+        mockUseCart.mockReturnValue({ getCartItemCount: () => 0 });
+
+        renderHeader();
+
+        fireEvent.click(screen.getByText('Hola, Test User'));
+        fireEvent.click(screen.getByText('Cerrar Sesión'));
+
+        expect(mockLogout).toHaveBeenCalledOnce();
+        expect(screen.getByText('¡Sesión Cerrada!')).toBeInTheDocument();
+        expect(screen.getByText('Sesión cerrada con éxito.')).toBeInTheDocument();
+
+        const acceptButton = screen.getByRole('button', { name: /Aceptar/i });
+        fireEvent.click(acceptButton);
+
+        expect(mockNavigate).toHaveBeenCalledWith('/');
+        expect(screen.queryByText('¡Sesión Cerrada!')).not.toBeInTheDocument();
     });
 });
