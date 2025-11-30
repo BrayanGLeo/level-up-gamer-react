@@ -95,7 +95,7 @@ describe('Validation Utilities', () => {
         it('should return true for valid RUTs with correct DV', () => {
             expect(validateRut('19.876.543-0')).toBe(true);
             expect(validateRut('1-9')).toBe(true);
-            expect(validateRut('12.345.678-5')).toBe(true); // DV normal (not 0 or K)
+            expect(validateRut('12.345.678-5')).toBe(true);
         });
 
         it('should return false for invalid RUTs or incorrect DV', () => {
@@ -104,10 +104,13 @@ describe('Validation Utilities', () => {
             expect(validateRut('12345')).toBe(false);
         });
 
+        it('should return false for RUTs with repeated digits (simple check)', () => {
+            expect(validateRut('11.111.111-1')).toBe(false);
+            expect(validateRut('22.222.222-2')).toBe(false);
+        });
+
         it('should return true for RUTs with DV 11 (expecting 0)', () => {
-            // Testing the dvEsperado === 11 branch
-            // Calculate a valid RUT where DV should be 0 (when 11-remainder = 11)
-            const body = '11305441'; // Body where sum mod 11 = 0
+            const body = '11305441';
             let suma = 0;
             let multiplo = 2;
             for (let i = body.length - 1; i >= 0; i--) {
@@ -120,9 +123,7 @@ describe('Validation Utilities', () => {
         });
 
         it('should return true for RUTs with DV 10 (expecting K)', () => {
-            // Testing the dvEsperado === 10 branch
-            // Calculate a valid RUT where DV should be K (when 11-remainder = 10)
-            const body = '10234568'; // Body where sum mod 11 = 1
+            const body = '10234568';
             let suma = 0;
             let multiplo = 2;
             for (let i = body.length - 1; i >= 0; i--) {
@@ -143,7 +144,7 @@ describe('Validation Utilities', () => {
                 multiplo = (multiplo === 7) ? 2 : multiplo + 1;
             }
             const dv = (11 - (suma % 11)).toString().replace('11', '0').replace('10', 'K');
-            
+
             const rut = `${body}-${dv}`;
             expect(validateRut(rut)).toBe(true);
         });
@@ -173,7 +174,7 @@ describe('Validation Utilities', () => {
             expect(validatePhone('912345678')).toBe(true);
             expect(validatePhone('+56912345678')).toBe(true);
         });
-    
+
         it('should return false for invalid phone numbers', () => {
             expect(validatePhone('12345678')).toBe(false);
             expect(validatePhone('812345678')).toBe(false);
