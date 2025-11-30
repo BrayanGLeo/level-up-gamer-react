@@ -371,7 +371,11 @@ const getInitialProducts = (): Product[] => {
         return defaultProducts;
     } catch (error) {
         console.error("Error al inicializar los productos desde localStorage", error);
-        return [];
+        try {
+            localStorage.setItem(PRODUCTS_KEY, JSON.stringify(defaultProducts));
+        } catch (e) {
+        }
+        return defaultProducts;
     }
 };
 

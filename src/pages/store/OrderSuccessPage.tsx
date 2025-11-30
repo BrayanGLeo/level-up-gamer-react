@@ -72,6 +72,20 @@ const OrderSuccessPage = () => {
         doc.save(`boleta_${orderToDownload.number}.pdf`);
     };
 
+    if (!order) {
+        return (
+            <Container style={{ paddingTop: '100px', minHeight: '70vh' }}>
+                <Alert variant="danger">
+                    <Alert.Heading>Error</Alert.Heading>
+                    <p>No se encontró información del pedido.</p>
+                </Alert>
+                <LinkContainer to="/catalogo">
+                    <Button variant="primary">Volver a la tienda</Button>
+                </LinkContainer>
+            </Container>
+        );
+    }
+
     return (
         <Container style={{ paddingTop: '100px', minHeight: '70vh' }}>
             <Alert variant="success">

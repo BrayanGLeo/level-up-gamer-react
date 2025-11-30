@@ -1,6 +1,6 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
-import { describe, test, expect, vi } from 'vitest';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { describe, test, expect, vi, beforeEach } from 'vitest';
 import PerfilPage from '../../../src/pages/store/PerfilPage';
 import { useAuth, AuthContextType } from '../../../src/context/AuthContext';
 import { User } from '../../../src/data/userData';
@@ -50,5 +50,59 @@ describe('PerfilPage', () => {
         expect(screen.getByText('Admin Test')).toBeInTheDocument();
         expect(screen.getByText('admin@admin.cl')).toBeInTheDocument();
         expect(screen.getByText('Fecha no registrada')).toBeInTheDocument();
+    });
+
+    test('muestra estado inicial cuando no hay usuario', () => {
+        mockUseAuth.mockReturnValue({ currentUser: null, updateCurrentUser: vi.fn() } as Partial<AuthContextType>);
+
+        render(<PerfilPage />);
+
+        expect(screen.getByText('Mi Perfil')).toBeInTheDocument();
+        expect(screen.getByText('Cargando...')).toBeInTheDocument();
+        const img = screen.getByAltText('Foto de perfil') as HTMLImageElement;
+        expect(img.src).toContain('via.placeholder.com');
+    });
+
+    test('al subir una imagen actualiza el src y llama a updateCurrentUser', async () => {
+        const user: Partial<User> = {
+            name: 'Test',
+            surname: 'User',
+            email: 'test@user.com',
+            registeredAt: '01-01-2020',
+            profilePic: 'https://via.placeholder.com/150'
+        };
+
+        const mockUpdate = vi.fn();
+
+        mockUseAuth.mockReturnValue({ currentUser: user, updateCurrentUser: mockUpdate } as Partial<AuthContextType>);
+
+        const originalFileReader = (globalThis as any).FileReader;
+        class MockFileReader {
+            onload: ((ev: any) => void) | null = null;
+            readAsDataURL(_file: any) {
+                if (this.onload) {
+                    this.onload({ target: { result: 'data:image/png;base64,fake' } });
+                }
+            }
+        }
+        (globalThis as any).FileReader = MockFileReader;
+
+        try {
+            render(<PerfilPage />);
+            const file = new File(['dummy'], 'avatar.png', { type: 'image/png' });
+
+            const input = document.getElementById('file-input') as HTMLInputElement;
+            fireEvent.change(input, { target: { files: [file] } });
+
+            await waitFor(() => expect(mockUpdate).toHaveBeenCalled());
+
+            const img = screen.getByAltText('Foto de perfil') as HTMLImageElement;
+            expect(img.src).toContain('data:image/png;base64,fake');
+
+            expect(mockUpdate).toHaveBeenCalledWith(expect.objectContaining({ profilePic: 'data:image/png;base64,fake' }));
+
+        } finally {
+            (globalThis as any).FileReader = originalFileReader;
+        }
     });
 });

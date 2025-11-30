@@ -1,47 +1,174 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
-import { test, expect } from 'vitest';
-import { AuthProvider } from '../../../src/context/AuthContext';
+import { MemoryRouter, BrowserRouter } from 'react-router-dom';
+import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
 import LoginPage from '../../../src/pages/store/LoginPage';
+import { AuthProvider, useAuth } from '../../../src/context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
-const MockLoginPage = () => {
-    return (
-        <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-            <AuthProvider>
-                <LoginPage />
-            </AuthProvider>
-        </BrowserRouter>
-    );
-};
-
-test('renders login form correctly', () => {
-    render(<MockLoginPage />);
-
-    expect(screen.getByLabelText(/Correo Electrónico:/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/Contraseña:/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Acceder/i })).toBeInTheDocument();
+vi.mock('../../../src/context/AuthContext', async (importOriginal) => {
+    const actual = await importOriginal() as object;
+    return {
+        ...actual,
+        useAuth: vi.fn()
+    };
 });
 
-test('allows user to type into form fields', () => {
-    render(<MockLoginPage />);
-
-    const emailInput = screen.getByLabelText(/Correo Electrónico:/i) as HTMLInputElement;
-    const passwordInput = screen.getByLabelText(/Contraseña:/i) as HTMLInputElement;
-
-    fireEvent.change(emailInput, { target: { value: 'test@gmail.com' } });
-    fireEvent.change(passwordInput, { target: { value: 'password123' } });
-
-    expect(emailInput.value).toBe('test@gmail.com');
-    expect(passwordInput.value).toBe('password123');
+vi.mock('react-router-dom', async (importOriginal) => {
+    const actual = await importOriginal() as object;
+    return {
+        ...actual,
+        useNavigate: vi.fn(() => vi.fn())
+    };
 });
 
-test('shows error message for invalid email domain (based on our validation)', () => {
-    render(<MockLoginPage />);
+vi.mock('../../../src/components/NotificationModal', () => ({
+    default: ({ show, onHide, title, message }: any) => (
+        show ? (
+            <div>
+                <h1>{title}</h1>
+                <p>{message}</p>
+                <button data-testid="notif-close" onClick={() => onHide && onHide()}>Close</button>
+            </div>
+        ) : null
+    )
+}));
 
-    const emailInput = screen.getByLabelText(/Correo Electrónico:/i);
-    fireEvent.change(emailInput, { target: { value: 'test@hotmail.com' } });
+const mockedUseAuth = useAuth as unknown as vi.Mock;
+const mockedUseNavigate = useNavigate as unknown as vi.Mock;
+let mockedNavigate: vi.Mock;
 
-    const submitButton = screen.getByRole('button', { name: /Acceder/i });
-    fireEvent.click(submitButton);
+describe('LoginPage', () => {
+
+    beforeEach(() => {
+        mockedNavigate = vi.fn();
+        mockedUseNavigate.mockReturnValue(mockedNavigate);
+        mockedUseAuth.mockReturnValue({
+            login: vi.fn(),
+            currentUser: null
+        });
+    });
+
+    afterEach(() => {
+        vi.clearAllMocks();
+    });
+
+    describe('Form Rendering and Interaction', () => {
+        const MockLoginPage = () => (
+            <BrowserRouter>
+                <AuthProvider>
+                    <LoginPage />
+                </AuthProvider>
+            </BrowserRouter>
+        );
+
+        test('renders login form correctly', () => {
+            render(<MockLoginPage />);
+            expect(screen.getByLabelText(/Correo Electrónico:/i)).toBeInTheDocument();
+            expect(screen.getByLabelText(/Contraseña:/i)).toBeInTheDocument();
+            expect(screen.getByRole('button', { name: /Acceder/i })).toBeInTheDocument();
+        });
+
+        test('allows user to type into form fields', () => {
+            render(<MockLoginPage />);
+            const emailInput = screen.getByLabelText(/Correo Electrónico:/i) as HTMLInputElement;
+            const passwordInput = screen.getByLabelText(/Contraseña:/i) as HTMLInputElement;
+
+            fireEvent.change(emailInput, { target: { value: 'test@gmail.com' } });
+            fireEvent.change(passwordInput, { target: { value: 'password123' } });
+
+            expect(emailInput.value).toBe('test@gmail.com');
+            expect(passwordInput.value).toBe('password123');
+        });
+    });
+
+    describe('Input Validation', () => {
+        test('shows validation errors for invalid email or password formats', () => {
+            render(
+                <MemoryRouter>
+                    <LoginPage />
+                </MemoryRouter>
+            );
+
+            const emailInput = screen.getByLabelText(/Correo Electrónico:/i);
+            const passwordInput = screen.getByLabelText(/Contraseña:/i);
+            const submitButton = screen.getByRole('button', { name: /Acceder/i });
+
+            fireEvent.change(emailInput, { target: { value: 'bademail' } });
+            fireEvent.change(passwordInput, { target: { value: '1' } });
+            fireEvent.click(submitButton);
+
+            expect(screen.getByText(/El formato del correo no es válido/i)).toBeInTheDocument();
+            expect(screen.getByText(/La contraseña debe tener entre 4 y 10 caracteres/i)).toBeInTheDocument();
+        });
+
+        test('shows error message for invalid email domain (based on validation)', () => {
+            render(
+                <MemoryRouter>
+                    <LoginPage />
+                </MemoryRouter>
+            );
+        
+            const emailInput = screen.getByLabelText(/Correo Electrónico:/i);
+            fireEvent.change(emailInput, { target: { value: 'test@hotmail.com' } });
+        
+            const submitButton = screen.getByRole('button', { name: /Acceder/i });
+            fireEvent.click(submitButton);
+        });
+    });
+
+    describe('Authentication Logic', () => {
+        test('successful login shows modal and navigates after closing', () => {
+            const mockLogin = vi.fn(() => ({ success: true, redirect: '/admin', message: 'Bienvenido' }));
+            mockedUseAuth.mockReturnValue({ login: mockLogin });
+
+            render(
+                <MemoryRouter>
+                    <LoginPage />
+                </MemoryRouter>
+            );
+
+            const emailInput = screen.getByLabelText(/Correo Electrónico:/i);
+            const passwordInput = screen.getByLabelText(/Contraseña:/i);
+            const submitButton = screen.getByRole('button', { name: /Acceder/i });
+
+            fireEvent.change(emailInput, { target: { value: 'user@example.cl' } });
+            fireEvent.change(passwordInput, { target: { value: 'secret' } });
+            fireEvent.click(submitButton);
+
+            expect(screen.getByTestId('notif-close')).toBeInTheDocument();
+            
+            const closeButton = screen.getByTestId('notif-close');
+            fireEvent.click(closeButton);
+
+            expect(mockedNavigate).toHaveBeenCalledWith('/admin');
+        });
+
+        test('failed login shows modal with error message and does not navigate', () => {
+            const mockLogin = vi.fn(() => ({ success: false, message: 'Credenciales inválidas' }));
+            mockedUseAuth.mockReturnValue({ login: mockLogin });
+
+            render(
+                <MemoryRouter>
+                    <LoginPage />
+                </MemoryRouter>
+            );
+
+            const emailInput = screen.getByLabelText(/Correo Electrónico:/i);
+            const passwordInput = screen.getByLabelText(/Contraseña:/i);
+            const submitButton = screen.getByRole('button', { name: /Acceder/i });
+
+            fireEvent.change(emailInput, { target: { value: 'user@example.cl' } });
+            fireEvent.change(passwordInput, { target: { value: 'secret' } });
+            fireEvent.click(submitButton);
+
+            expect(screen.getByRole('heading', { name: /Error de Inicio de Sesión/i })).toBeInTheDocument();
+            expect(screen.getByText(/Credenciales inválidas/i)).toBeInTheDocument();
+            
+            const closeButton = screen.getByTestId('notif-close');
+            fireEvent.click(closeButton);
+
+            expect(mockedNavigate).not.toHaveBeenCalled();
+        });
+    });
 });

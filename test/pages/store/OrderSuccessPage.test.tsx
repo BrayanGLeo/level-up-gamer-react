@@ -1,46 +1,133 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
-import { describe, test, expect, vi } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
+import { describe, test, expect, vi, beforeEach } from 'vitest';
 import OrderSuccessPage from '../../../src/pages/store/OrderSuccessPage';
 import { Order } from '../../../src/data/userData';
 
-vi.mock('jspdf', () => ({
-    default: vi.fn(() => ({
-        setFontSize: vi.fn(),
-        text: vi.fn(),
-        save: vi.fn(),
-    }))
-}));
-vi.mock('jspdf-autotable', () => ({
-    default: vi.fn()
-}));
+const saveSpy = vi.fn();
 
-const mockOrder: Partial<Order> = {
-    number: 123456,
-};
-
-vi.mock('react-router-dom', async (importOriginal) => {
-    const actual = await importOriginal() as object;
-    return {
-        ...actual,
-        useLocation: () => ({
-            state: { order: mockOrder }
-        }),
-        Link: (props: any) => <a href={props.to} {...props}>{props.children}</a>
-    };
+// Mocking jspdf with a class that more accurately represents its behavior
+vi.mock('jspdf', () => {
+    // This mock class simulates the jsPDF functionality.
+    // The 'lastAutoTable' property is removed because it's added by 'jspdf-autotable', not by jsPDF itself.
+    class JsPDFMock {
+        setFontSize = vi.fn();
+        text = vi.fn();
+        save = saveSpy; // Using a spy to track the save method calls
+    }
+    return { default: JsPDFMock };
 });
+
+// Mocking jspdf-autotable to simulate its side-effect on the jsPDF instance
+vi.mock('jspdf-autotable', () => ({
+    // autoTable is the default export, we mock its implementation
+    default: vi.fn().mockImplementation((doc: any) => {
+        // The real autoTable function adds the 'lastAutoTable' property to the doc object.
+        // We replicate that behavior here for the tests to pass.
+        doc.lastAutoTable = { finalY: 140 };
+    })
+}));
+
+const baseOrder: Omit<Order, 'number' | 'shipping'> = {
+    date: '01-01-2025',
+    items: [{ id: 'P1', codigo: 'X1', nombre: 'Producto Test', quantity: 2, precio: 100, image: '' }],
+    total: 200,
+    customer: {
+        id: 'C1',
+        name: 'John',
+        surname: 'Doe',
+        email: 'john.doe@example.com',
+        phone: '912345678',
+        addresses: []
+    }
+};
 
 describe('OrderSuccessPage', () => {
 
-    test('renderiza mensaje de éxito con N° de orden y botón de descarga', () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+        saveSpy.mockClear();
+    });
+
+    test('renders success message with order number', () => {
+        const order: Order = {
+            ...baseOrder,
+            number: 123456,
+            shipping: { type: 'Retiro en Tienda' }
+        };
+
         render(
-            <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+            <MemoryRouter initialEntries={[{ state: { order } }]}>
                 <OrderSuccessPage />
-            </BrowserRouter>
+            </MemoryRouter>
         );
 
-        expect(screen.getByText(/Tu número de pedido es #123456/i)).toBeInTheDocument();
+        expect(screen.getByText('¡Pago Correcto!')).toBeInTheDocument();
+        expect(screen.getByText(/Tu pedido ha sido realizado con éxito./)).toBeInTheDocument();
+        expect(screen.getByText(/Tu número de pedido es #123456./)).toBeInTheDocument();
         expect(screen.getByRole('button', { name: /Descargar Boleta/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /Seguir comprando/i })).toBeInTheDocument();
+    });
+
+    test('renders error message when no order state is passed', () => {
+        render(
+            <MemoryRouter initialEntries={[{ state: null }]}>
+                <OrderSuccessPage />
+            </MemoryRouter>
+        );
+        expect(screen.getByText('Error')).toBeInTheDocument();
+        expect(screen.getByText(/No se encontró información del pedido./i)).toBeInTheDocument();
+        expect(screen.queryByRole('button', { name: /Descargar Boleta/i })).not.toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /Volver a la tienda/i })).toBeInTheDocument();
+    });
+
+    describe('PDF Download Logic', () => {
+        test('download receipt for in-store pickup calls save with correct filename', () => {
+            const order: Order = {
+                ...baseOrder,
+                number: 555,
+                shipping: { type: 'Retiro en Tienda' }
+            };
+
+            render(
+                <MemoryRouter initialEntries={[{ state: { order } }]}>
+                    <OrderSuccessPage />
+                </MemoryRouter>
+            );
+
+            const downloadButton = screen.getByRole('button', { name: /Descargar Boleta/i });
+            fireEvent.click(downloadButton);
+
+            expect(saveSpy).toHaveBeenCalledWith('boleta_555.pdf');
+        });
+
+        test('download receipt for home delivery includes address and calls save', () => {
+            const order: Order = {
+                ...baseOrder,
+                number: 777,
+                shipping: {
+                    type: 'Despacho a Domicilio',
+                    recibeNombre: 'Jane',
+                    recibeApellido: 'Doe',
+                    calle: 'Av. Siempre Viva',
+                    numero: '742',
+                    comuna: 'Springfield',
+                    region: 'Capital',
+                    depto: 'Apt. 1'
+                }
+            };
+
+            render(
+                <MemoryRouter initialEntries={[{ state: { order } }]}>
+                    <OrderSuccessPage />
+                </MemoryRouter>
+            );
+
+            const downloadButton = screen.getByRole('button', { name: /Descargar Boleta/i });
+            fireEvent.click(downloadButton);
+            
+            expect(saveSpy).toHaveBeenCalledWith('boleta_777.pdf');
+        });
     });
 });
