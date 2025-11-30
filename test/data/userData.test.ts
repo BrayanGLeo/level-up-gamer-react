@@ -391,7 +391,7 @@ describe('userData', () => {
 
         test('addAddress debe funcionar si el usuario no tiene la propiedad "addresses"', () => {
             let user = registerUser(mockRegisterData);
-            delete (user as any).addresses; // Simulamos que no tiene la propiedad
+            delete (user as any).addresses;
             localStorage.setItem(USERS_KEY, JSON.stringify([user]));
 
             const updatedUser = addAddress(user.rut, mockAddress);
@@ -416,11 +416,11 @@ describe('userData', () => {
 
         test('updateAddress debe funcionar si el usuario no tiene la propiedad "addresses"', () => {
             let user = registerUser(mockRegisterData);
-            delete (user as any).addresses; // Simulamos que no tiene la propiedad
+            delete (user as any).addresses;
             localStorage.setItem(USERS_KEY, JSON.stringify([user]));
 
             const result = updateAddress(user.rut, { ...mockAddress, id: 1 });
-            expect(result).toBeNull(); // No debería encontrar la dirección para actualizar
+            expect(result).toBeNull();
         });
 
         test('updateAddress debe no hacer nada si la dirección no existe', () => {
@@ -436,7 +436,7 @@ describe('userData', () => {
 
         test('addOrderToUser debe funcionar si el usuario no tiene la propiedad "orders"', () => {
             let user = registerUser(mockRegisterData);
-            delete (user as any).orders; // Simulamos que no tiene la propiedad
+            delete (user as any).orders;
             localStorage.setItem(USERS_KEY, JSON.stringify([user]));
 
             const order = { ...mockOrderData, number: 1, date: '' } as Order;

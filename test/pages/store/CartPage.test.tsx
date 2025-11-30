@@ -101,8 +101,6 @@ describe('CartPage', () => {
         const finalizarCompraButton = screen.getByText('Finalizar Compra');
         expect(finalizarCompraButton).toBeInTheDocument();
         fireEvent.click(finalizarCompraButton);
-        // Si no hay un usuario logueado, esto debería abrir el modal de login, no navegar.
-        // Esto ya está cubierto por otros tests, pero el clic aquí es para la cobertura de la línea.
         expect(screen.getByText('¿Cómo quieres continuar?')).toBeInTheDocument();
 
     });

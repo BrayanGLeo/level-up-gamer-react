@@ -146,7 +146,6 @@ describe('PerfilPage', () => {
         render(<PerfilPage />);
         
         const input = document.getElementById('file-input') as HTMLInputElement;
-        // Simular cambio sin seleccionar archivo (files es vacío)
         fireEvent.change(input, { target: { files: [] } });
 
         await new Promise(r => setTimeout(r, 100));

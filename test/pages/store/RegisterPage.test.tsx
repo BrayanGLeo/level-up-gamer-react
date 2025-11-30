@@ -151,7 +151,6 @@ describe('RegisterPage', () => {
 
         await screen.findByText('¡Bienvenido! Tu cuenta ha sido creada.');
 
-        // Find and click the close button (X) or accept button in the modal
         const closeButtons = screen.getAllByRole('button');
         const acceptButton = closeButtons.find((btn) => btn.textContent === 'Aceptar' || btn.getAttribute('aria-label')?.includes('close'));
         

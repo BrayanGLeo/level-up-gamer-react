@@ -55,7 +55,6 @@ describe('productData', () => {
         let stored = JSON.parse(localStorage.getItem(PRODUCTS_KEY) || '[]');
         expect(stored.find((p: any) => p.codigo === 'TT999')).toBeDefined();
 
-        // Update
         newProduct.nombre = 'Test Product Updated';
         saveProduct(newProduct);
         stored = JSON.parse(localStorage.getItem(PRODUCTS_KEY) || '[]');

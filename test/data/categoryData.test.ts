@@ -90,14 +90,11 @@ describe('categoryData', () => {
         const newCategoryInput = { id: nonExistentId, nombre: 'Categoría Inexistente' };
         const savedCategory = saveCategory(newCategoryInput);
 
-        // Se espera que cree una nueva categoría con un ID generado
         expect(savedCategory.id).not.toBe(nonExistentId);
         expect(savedCategory.nombre).toBe('Categoría Inexistente');
 
         const categories = getCategories();
-        // Verificar que la nueva categoría ha sido añadida
         expect(categories.some(c => c.nombre === 'Categoría Inexistente')).toBe(true);
-        // También verificar que el ID original no se usó y se generó uno nuevo
         expect(categories.every(c => c.id !== nonExistentId)).toBe(true);
     });
 

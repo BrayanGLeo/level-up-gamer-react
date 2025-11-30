@@ -114,7 +114,7 @@ describe('CartContext', () => {
     test('updateQuantity debe modificar la cantidad (incrementar)', async () => {
         renderWithCartProvider();
         act(() => { screen.getByText('Add P1').click(); });
-        act(() => { screen.getByText('Add P2').click(); }); // Add a second item
+        act(() => { screen.getByText('Add P2').click(); });
         expect(await screen.findByText('Juego 1 (x1)')).toBeInTheDocument();
         expect(await screen.findByText('Juego 2 (x1)')).toBeInTheDocument();
 
@@ -124,9 +124,9 @@ describe('CartContext', () => {
         });
 
         expect(await screen.findByText('Juego 1 (x2)')).toBeInTheDocument();
-        expect(screen.getByText('Juego 2 (x1)')).toBeInTheDocument(); // Make sure P2 is still there
-        expect(screen.getByTestId('item-count')).toHaveTextContent('3'); // 2 (P1) + 1 (P2)
-        expect(screen.getByTestId('total-price')).toHaveTextContent('25000'); // 2*10000 + 5000
+        expect(screen.getByText('Juego 2 (x1)')).toBeInTheDocument();
+        expect(screen.getByTestId('item-count')).toHaveTextContent('3');
+        expect(screen.getByTestId('total-price')).toHaveTextContent('25000');
     });
 
     test('updateQuantity debe remover el item si la cantidad llega a 0 (decrementar)', async () => {

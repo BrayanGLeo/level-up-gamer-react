@@ -142,7 +142,6 @@ describe('CatalogoPage', () => {
             fireEvent.click(filterButton);
         });
 
-        // Verify all categories are capitalized properly
         expect(screen.getByText('Todos')).toBeInTheDocument();
         expect(screen.getByText('Juegos')).toBeInTheDocument();
         expect(screen.getByText('Accesorios')).toBeInTheDocument();

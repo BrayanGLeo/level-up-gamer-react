@@ -149,5 +149,37 @@ describe('OrderSuccessPage', () => {
             
             expect(saveSpy).toHaveBeenCalledWith('boleta_888.pdf');
         });
+
+        test('PDF generation includes multiple items with correct total', () => {
+            const order: Order = {
+                date: '02-02-2025',
+                items: [
+                    { id: 'P1', codigo: 'X1', nombre: 'Item 1', quantity: 1, precio: 1000, image: '' },
+                    { id: 'P2', codigo: 'X2', nombre: 'Item 2', quantity: 3, precio: 2000, image: '' }
+                ],
+                total: 7000,
+                number: 999,
+                customer: {
+                    id: 'C1',
+                    name: 'Alice',
+                    surname: 'Smith',
+                    email: 'alice@example.com',
+                    phone: '987654321',
+                    addresses: []
+                },
+                shipping: { type: 'Retiro en Tienda' }
+            };
+
+            render(
+                <MemoryRouter initialEntries={[{ state: { order } }]}>
+                    <OrderSuccessPage />
+                </MemoryRouter>
+            );
+
+            const downloadButton = screen.getByRole('button', { name: /Descargar Boleta/i });
+            fireEvent.click(downloadButton);
+            
+            expect(saveSpy).toHaveBeenCalledWith('boleta_999.pdf');
+        });
     });
 });

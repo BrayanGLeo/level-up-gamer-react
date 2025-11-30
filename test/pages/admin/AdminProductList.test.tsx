@@ -113,4 +113,18 @@ describe('AdminProductList', () => {
         expect(pd.deleteProductByCode).not.toHaveBeenCalled();
     });
 
+    test('product with high stock shows success badge', () => {
+        const productWithHighStock: Product = {
+            codigo: 'HS', nombre: 'HighStock', precio: 100, stock: 15,
+            categoria: 'gaming', imagen: '', descripcion: '', stockCritico: 5
+        };
+
+        const products = [productWithHighStock];
+        mockGetProducts.mockReturnValue(products);
+
+        render(<MemoryRouter><AdminProductList /></MemoryRouter>);
+
+        expect(screen.getByText('15')).toBeInTheDocument();
+    });
+
 });
