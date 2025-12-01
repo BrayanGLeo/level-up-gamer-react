@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
-import { describe, test, expect, vi, beforeEach, SpyInstance } from 'vitest';
+
 import BlogPage from '../../../src/pages/store/BlogPage';
 import * as blogData from '../../../src/data/blogData';
 import { BlogPost } from '../../../src/data/blogData';

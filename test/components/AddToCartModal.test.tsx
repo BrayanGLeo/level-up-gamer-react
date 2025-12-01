@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, test, expect, vi } from 'vitest';
+
 import { BrowserRouter as MemoryRouter } from 'react-router-dom';
 import AddToCartModal from '../../src/components/AddToCartModal';
 import { Product } from '../../src/data/productData';

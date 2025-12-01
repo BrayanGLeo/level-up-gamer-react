@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, act, findByText, waitFor } from '@testing-library/react';
-import { describe, test, expect, beforeEach, afterEach } from 'vitest';
+
 import { CartProvider, useCart, CartContextType } from '../../src/context/CartContext';
 import { Product } from '../../src/data/productData';
 

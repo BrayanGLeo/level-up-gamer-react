@@ -239,11 +239,11 @@ describe('api.ts', () => {
 
     describe('getPerfilApi', () => {
         test('debe llamar a fetchApi con el método GET para obtener el perfil', async () => {
-            const mockUser: any = { id: 1, name: 'Test User' };
+            const mockApiUser: any = { id: 1, nombre: 'Test', apellido: 'User' };
             mockFetch.mockResolvedValueOnce({
                 ok: true,
                 status: 200,
-                json: () => Promise.resolve(mockUser),
+                json: () => Promise.resolve(mockApiUser),
                 headers: new Headers({'Content-Length': '100'}),
             });
 
@@ -254,7 +254,12 @@ describe('api.ts', () => {
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
             });
-            expect(result).toEqual(mockUser);
+            expect(result).toEqual({
+                ...mockApiUser,
+                name: 'Test',
+                surname: 'User',
+                registeredAt: expect.any(String),
+            });
         });
 
         test('debe propagar errores de fetchApi al obtener el perfil', async () => {
@@ -302,12 +307,37 @@ describe('api.ts', () => {
 
     describe('getProductsApi', () => {
         test('debe llamar a fetchApi con el método GET para obtener productos', async () => {
-            const mockProducts: Product[] = [{ codigo: 'P1', nombre: 'Product 1', precio: 100, imagen: '', categoria: '', descripcion: '', stock: 1, stockCritico: 1 }];
+            // Esto simula la respuesta cruda de la API
+            const mockApiProducts = [{
+                codigo: 'P1',
+                nombre: 'Product 1',
+                precio: 100,
+                imagenUrl: '',
+                // categoria no está presente, para que el mapeador use 'Sin Categoría'
+                descripcion: '',
+                stock: 1,
+                stockCritico: 1
+            }];
+
+            // Esto es lo que esperamos después de que el mapeador procese la respuesta
+            const expectedProducts: Product[] = [{
+                codigo: 'P1',
+                nombre: 'Product 1',
+                precio: 100,
+                imagen: '',
+                categoria: 'Sin Categoría',
+                descripcion: '',
+                stock: 1,
+                stockCritico: 1,
+                features: [],
+                specifications: {}
+            }];
+
             mockFetch.mockResolvedValueOnce({
                 ok: true,
                 status: 200,
-                json: () => Promise.resolve(mockProducts),
-                headers: new Headers({'Content-Length': '100'}),
+                json: () => Promise.resolve(mockApiProducts),
+                headers: new Headers({ 'Content-Length': '100' }),
             });
 
             const result = await getProductsApi();
@@ -317,7 +347,7 @@ describe('api.ts', () => {
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
             });
-            expect(result).toEqual(mockProducts);
+            expect(result).toEqual(expectedProducts);
         });
 
         test('debe propagar errores de fetchApi al obtener productos', async () => {

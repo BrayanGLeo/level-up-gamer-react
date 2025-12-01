@@ -52,12 +52,18 @@ const renderCartPage = () => {
 };
 
 describe('CartPage', () => {
+    let consoleErrorSpy: any;
 
-        beforeEach(() => {
-            mockedNavigate.mockClear();
-            mockUseAuth = vi.spyOn(AuthModule, 'useAuth');
-            mockUseCart = vi.spyOn(CartModule, 'useCart');
-        });
+    beforeEach(() => {
+        consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+        mockedNavigate.mockClear();
+        mockUseAuth = vi.spyOn(AuthModule, 'useAuth');
+        mockUseCart = vi.spyOn(CartModule, 'useCart');
+    });
+
+    afterEach(() => {
+        consoleErrorSpy.mockRestore();
+    });
 
     test('debe mostrar el mensaje de carrito vacío si no hay productos', () => {
         mockUseAuth.mockReturnValue({ currentUser: null });

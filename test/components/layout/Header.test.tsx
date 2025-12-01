@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
-import { describe, test, expect, vi, beforeEach } from 'vitest';
+
 import Header from '../../../src/components/layout/Header';
 import { AuthProvider, useAuth } from '../../../src/context/AuthContext';
 import { CartProvider, useCart } from '../../../src/context/CartContext';

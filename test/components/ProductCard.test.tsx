@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
-import { describe, test, expect, vi } from 'vitest';
+
 import ProductCard from '../../src/components/ProductCard';
 import { Product } from '../../src/data/productData';
 

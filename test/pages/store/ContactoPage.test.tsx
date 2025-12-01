@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import { describe, test, expect } from 'vitest';
+
 import ContactoPage from '../../../src/pages/store/ContactoPage';
 
 describe('ContactoPage', () => {

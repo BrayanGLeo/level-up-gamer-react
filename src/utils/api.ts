@@ -17,6 +17,7 @@ export const fetchApi = async <T>(url: string, options: RequestInit = {}): Promi
 
     if (response.status === 401 || response.status === 403) {
         localStorage.removeItem('currentUser');
+        window.location.href = '/login';
         throw new Error('Sesión expirada o acceso denegado.');
     }
 

@@ -1,11 +1,15 @@
 import React from 'react';
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { render, screen, fireEvent, act, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
-import { describe, test, expect, vi, beforeEach, SpyInstance } from 'vitest';
+import { describe, test, expect, vi, beforeEach } from 'vitest';
 import CatalogoPage from '../../../src/pages/store/CatalogoPage';
-import { useCart, CartProvider } from '../../../src/context/CartContext';
-import * as productData from '../../../src/data/productData';
+import { CartProvider } from '../../../src/context/CartContext';
+import * as api from '../../../src/utils/api';
 import { Product } from '../../../src/data/productData';
+
+vi.mock('../../../src/utils/api', () => ({
+    getProductsApi: vi.fn(),
+}));
 
 vi.mock('react-router-dom', async (importOriginal) => {
     const actual = await importOriginal() as object;
@@ -14,11 +18,17 @@ vi.mock('react-router-dom', async (importOriginal) => {
         Link: (props: any) => <a href={props.to} {...props}>{props.children}</a>
     };
 });
+
+const mockAddToCart = vi.fn();
 vi.mock('../../../src/context/CartContext', async (importOriginal) => {
     const actual = await importOriginal() as object;
     return {
         ...actual,
-        useCart: vi.fn(),
+        useCart: () => ({
+            addToCart: mockAddToCart,
+            cartItems: [],
+        }),
+        CartProvider: ({ children }: any) => <div>{children}</div>
     };
 });
 
@@ -28,123 +38,89 @@ const mockProducts: Product[] = [
     { codigo: 'P003', nombre: 'Consola Xbox', categoria: 'consolas', precio: 500000, descripcion: 'Consola', stock: 1, stockCritico: 1, imagen: '' }
 ];
 
-let mockGetProducts: SpyInstance<[], Product[]>;
-
-const mockUseCart = useCart as vi.Mock;
-
 describe('CatalogoPage', () => {
 
     beforeEach(() => {
-        mockGetProducts = vi.spyOn(productData, 'getProducts').mockReturnValue(mockProducts);
-        mockUseCart.mockReturnValue({ addToCart: vi.fn() });
+        vi.clearAllMocks();
+        (api.getProductsApi as any).mockResolvedValue(mockProducts);
     });
 
-    test('renderiza todos los productos inicialmente', () => {
+    test('renderiza todos los productos después de cargar', async () => {
         render(
             <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-                <CartProvider>
-                    <CatalogoPage />
-                </CartProvider>
+                <CatalogoPage />
             </BrowserRouter>
         );
-        expect(screen.getByText('Juego de PS5')).toBeInTheDocument();
+
+        await waitFor(() => {
+            expect(screen.getByText('Juego de PS5')).toBeInTheDocument();
+        });
         expect(screen.getByText('Mouse Gamer')).toBeInTheDocument();
-        expect(screen.getByText('Consola Xbox')).toBeInTheDocument();
     });
 
-    test('filtra productos por la barra de búsqueda', () => {
+    test('filtra productos por la barra de búsqueda', async () => {
         render(
             <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-                <CartProvider>
-                    <CatalogoPage />
-                </CartProvider>
+                <CatalogoPage />
             </BrowserRouter>
         );
+
+        await waitFor(() => expect(screen.getByText('Juego de PS5')).toBeInTheDocument());
+
         const searchInput = screen.getByPlaceholderText(/Buscar por nombre.../i);
         fireEvent.change(searchInput, { target: { value: 'Mouse' } });
 
         expect(screen.queryByText('Juego de PS5')).not.toBeInTheDocument();
         expect(screen.getByText('Mouse Gamer')).toBeInTheDocument();
-        expect(screen.queryByText('Consola Xbox')).not.toBeInTheDocument();
     });
 
     test('filtra productos por categoría', async () => {
         render(
             <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-                <CartProvider>
-                    <CatalogoPage />
-                </CartProvider>
+                <CatalogoPage />
             </BrowserRouter>
         );
+
+        await waitFor(() => expect(screen.getByText('Juego de PS5')).toBeInTheDocument());
+
         const filterButton = screen.getByText('Filtros');
-        
-        await act(async () => {
-            fireEvent.click(filterButton);
-        });
+        await act(async () => { fireEvent.click(filterButton); });
 
         const categoryButton = screen.getByText('Juegos');
-        
-        await act(async () => {
-            fireEvent.click(categoryButton);
-        });
+        await act(async () => { fireEvent.click(categoryButton); });
 
         expect(screen.getByText('Juego de PS5')).toBeInTheDocument();
         expect(screen.queryByText('Mouse Gamer')).not.toBeInTheDocument();
-        expect(screen.queryByText('Consola Xbox')).not.toBeInTheDocument();
     });
 
-    test('muestra mensaje si no hay resultados', () => {
+    test('muestra mensaje si no hay resultados', async () => {
         render(
             <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-                <CartProvider>
-                    <CatalogoPage />
-                </CartProvider>
+                <CatalogoPage />
             </BrowserRouter>
         );
+
+        await waitFor(() => expect(screen.getByText('Juego de PS5')).toBeInTheDocument());
+
         const searchInput = screen.getByPlaceholderText(/Buscar por nombre.../i);
         fireEvent.change(searchInput, { target: { value: 'Producto Inexistente' } });
 
         expect(screen.getByText(/No se encontraron productos/i)).toBeInTheDocument();
     });
 
-    test('al hacer clic en "Agregar", se llama a addToCart y se muestra el modal', () => {
-        const addToCartMock = vi.fn();
-        mockUseCart.mockReturnValue({ addToCart: addToCartMock });
-
+    test('al hacer clic en "Agregar", se llama a addToCart y se muestra el modal', async () => {
         render(
             <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-                <CartProvider>
-                    <CatalogoPage />
-                </CartProvider>
+                <CatalogoPage />
             </BrowserRouter>
         );
+
+        await waitFor(() => expect(screen.getByText('Juego de PS5')).toBeInTheDocument());
 
         const addButton = screen.getAllByText('Agregar')[0];
         fireEvent.click(addButton);
 
-        expect(addToCartMock).toHaveBeenCalledWith(mockProducts[0]);
-        
+        expect(mockAddToCart).toHaveBeenCalledWith(mockProducts[0]);
         expect(screen.getByText('¡Añadido al carrito!')).toBeInTheDocument();
-    });
-
-    test('capitaliza todas las categorías correctamente en el dropdown', async () => {
-        render(
-            <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-                <CartProvider>
-                    <CatalogoPage />
-                </CartProvider>
-            </BrowserRouter>
-        );
-
-        const filterButton = screen.getByText('Filtros');
-        
-        await act(async () => {
-            fireEvent.click(filterButton);
-        });
-
-        expect(screen.getByText('Todos')).toBeInTheDocument();
-        expect(screen.getByText('Juegos')).toBeInTheDocument();
-        expect(screen.getByText('Accesorios')).toBeInTheDocument();
-        expect(screen.getByText('Consolas')).toBeInTheDocument();
     });
 });

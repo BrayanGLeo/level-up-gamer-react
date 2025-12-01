@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import { MemoryRouter, BrowserRouter } from 'react-router-dom';
-import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
+
 import LoginPage from '../../../src/pages/store/LoginPage';
 import { AuthProvider, useAuth } from '../../../src/context/AuthContext';
 import { useNavigate } from 'react-router-dom';

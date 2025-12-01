@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { describe, test, expect, vi, beforeEach } from 'vitest';
+
 import PerfilPage from '../../../src/pages/store/PerfilPage';
 import { useAuth, AuthContextType } from '../../../src/context/AuthContext';
 import { User } from '../../../src/data/userData';

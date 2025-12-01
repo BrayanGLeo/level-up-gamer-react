@@ -1,6 +1,6 @@
 import React, { ReactNode } from 'react';
 import { render, act, renderHook } from '@testing-library/react';
-import { describe, test, expect, beforeEach, afterEach, vi, Mock, SpyInstance } from 'vitest'; 
+
 import { AuthProvider, useAuth, LoginResult } from '../../src/context/AuthContext'; 
 import * as userData from '../../src/data/userData';
 import * as api from '../../src/utils/api'; 
@@ -42,8 +42,10 @@ const registerApiMock = vi.mocked(api.registerApi);
 
 
 describe('AuthContext', () => {
+    let consoleErrorSpy: any;
 
     beforeEach(() => {
+        consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
         localStorage.clear();
         vi.clearAllMocks();
         vi.restoreAllMocks();
@@ -53,6 +55,7 @@ describe('AuthContext', () => {
     });
 
     afterEach(() => {
+        consoleErrorSpy.mockRestore();
         vi.restoreAllMocks();
     });
 

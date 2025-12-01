@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { describe, test, expect, vi, beforeEach } from 'vitest';
+
 import OrderSuccessPage from '../../../src/pages/store/OrderSuccessPage';
 import { Order } from '../../../src/data/userData';
 
