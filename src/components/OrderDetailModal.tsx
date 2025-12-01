@@ -30,7 +30,7 @@ const OrderDetailModal = ({ show, onHide, order }: OrderDetailModalProps) => {
                                     <Image src={item.imagen} alt={item.nombre} className="order-item-image" />
                                     <div className="order-item-info-modal">
                                         <strong>{item.nombre}</strong>
-                                        
+
                                         <span style={{ color: '#D3D3D3' }}>
                                             (x{item.quantity} - {formatPrice(item.precio)} c/u)
                                         </span>
@@ -41,7 +41,7 @@ const OrderDetailModal = ({ show, onHide, order }: OrderDetailModalProps) => {
                         </div>
                         <h4 className="text-end mt-3">Total: {formatPrice(order.total)}</h4>
                     </Col>
-                    
+
                     <Col md={5} className="order-shipping-column">
                         <h4>Información de Entrega</h4>
                         {order.shipping.type === 'Retiro en Tienda' ? (
@@ -55,23 +55,30 @@ const OrderDetailModal = ({ show, onHide, order }: OrderDetailModalProps) => {
                             <div>
                                 <strong>Tipo de Entrega:</strong>
                                 <p>Despacho a Domicilio</p>
-                                <strong>Recibe:</strong>
-                                <p>{order.shipping.recibeNombre} {order.shipping.recibeApellido} ({order.shipping.recibeTelefono})</p>
-                                <strong>Dirección:</strong>
-                                <p>
-                                    {order.shipping.calle} {order.shipping.numero}
-                                    {order.shipping.depto && `, ${order.shipping.depto}`}
-                                    <br/>
-                                    {order.shipping.comuna}, {order.shipping.region}
-                                </p>
+
+                                {(order.shipping as any).direccionCompleta ? (
+                                    <p>{(order.shipping as any).direccionCompleta}</p>
+                                ) : (
+                                    <>
+                                        <strong>Recibe:</strong>
+                                        <p>{order.shipping.recibeNombre} {order.shipping.recibeApellido} ({order.shipping.recibeTelefono})</p>
+                                        <strong>Dirección:</strong>
+                                        <p>
+                                            {order.shipping.calle} {order.shipping.numero}
+                                            {order.shipping.depto && `, ${order.shipping.depto}`}
+                                            <br />
+                                            {order.shipping.comuna}, {order.shipping.region}
+                                        </p>
+                                    </>
+                                )}
                             </div>
                         )}
                         <hr />
                         <h4>Datos del Comprador</h4>
                         <p>
                             {order.customer.name} {order.customer.surname}
-                            <br/>
-                            {order.customer.email}
+                            <br />
+                            {order.customer.email || '-'}
                         </p>
                     </Col>
                 </Row>
