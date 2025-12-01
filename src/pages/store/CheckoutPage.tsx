@@ -175,14 +175,31 @@ const CheckoutPage = () => {
         setIsProcessing(true);
         setPaymentError('');
 
+        let direccionEnvioTexto = '';
+        if (deliveryMethod === 'despacho') {
+            direccionEnvioTexto = `${formData.calle} #${formData.numero}`;
+            if (formData.depto) {
+                direccionEnvioTexto += `, Depto ${formData.depto}`;
+            }
+            direccionEnvioTexto += `, ${formData.comuna}, ${formData.region}`;
+
+            direccionEnvioTexto += ` (Recibe: ${formData.recibeNombre} ${formData.recibeApellido})`;
+        } else {
+            direccionEnvioTexto = 'Retiro en Tienda (Calle Falsa 123, Springfield)';
+        }
+
         const boletaRequest = {
             usuarioEmail: currentUser?.email || null,
             total: getCartTotal(),
             tipoEntrega: deliveryMethod === 'despacho' ? 'Despacho a Domicilio' : 'Retiro en Tienda',
             estado: 'Pendiente',
+
             nombreCliente: formData.nombre,
             apellidoCliente: formData.apellidos,
             telefonoCliente: formData.telefono,
+
+            direccionEnvio: direccionEnvioTexto,
+
             items: cartItems.map(item => ({
                 codigoProducto: item.codigo,
                 cantidad: item.quantity,
