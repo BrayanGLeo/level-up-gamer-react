@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Button, Card, Badge } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
-import { getUsers, deleteUserByRut, User } from '../../data/userData';
+import { getAdminUsers, deleteUserByRut } from '../../services/adminService';
+import { User } from '../../data/userData';
 import { useAuth } from '../../context/AuthContext';
 import EmailHistoryModal from '../../components/EmailHistoryModal';
 import AdminConfirmModal from '../../components/AdminConfirmModal';
-import AdminNotificationModal from '../../components/AdminNotificationModal';
 import '../../styles/AdminStyle.css';
 
 const AdminUserList = () => {
@@ -18,28 +18,37 @@ const AdminUserList = () => {
 
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [userToDelete, setUserToDelete] = useState<string | null>(null);
-    const [showNotifyModal, setShowNotifyModal] = useState(false);
-    const [notifyInfo, setNotifyInfo] = useState({ title: '', message: '' });
+
+    const fetchUsers = async () => {
+        try {
+            const data = await getAdminUsers();
+            setUsers(data);
+        } catch (error) {
+            console.error("Error fetching users", error);
+        }
+    };
 
     useEffect(() => {
-        setUsers(getUsers());
+        fetchUsers();
     }, [currentUser]);
 
     const handleDelete = (rut: string) => {
         if (rut === '12345678-9') {
-            setNotifyInfo({ title: 'Error', message: 'No puedes eliminar al administrador principal.' });
-            setShowNotifyModal(true);
+            alert('No puedes eliminar al administrador principal.');
             return;
         }
-
         setUserToDelete(rut);
         setShowConfirmModal(true);
     };
 
-    const handleConfirmDelete = () => {
+    const handleConfirmDelete = async () => {
         if (userToDelete) {
-            deleteUserByRut(userToDelete);
-            setUsers(getUsers());
+            try {
+                await deleteUserByRut(userToDelete);
+                fetchUsers();
+            } catch (error) {
+                console.error("Error deleting user", error);
+            }
         }
         setShowConfirmModal(false);
         setUserToDelete(null);
@@ -48,11 +57,6 @@ const AdminUserList = () => {
     const handleCloseConfirm = () => {
         setShowConfirmModal(false);
         setUserToDelete(null);
-    };
-
-    const handleCloseNotify = () => {
-        setShowNotifyModal(false);
-        setNotifyInfo({ title: '', message: '' });
     };
 
     const handleShowHistory = (user: User) => {
@@ -66,12 +70,8 @@ const AdminUserList = () => {
     };
 
     const getRoleBadge = (role: User['role']) => {
-        if (role === 'Administrador') {
-            return <Badge bg="primary">{role}</Badge>;
-        }
-        if (role === 'Vendedor') {
-            return <Badge bg="info">{role}</Badge>;
-        }
+        if (role === 'Administrador') return <Badge bg="primary">{role}</Badge>;
+        if (role === 'Vendedor') return <Badge bg="info">{role}</Badge>;
         return <Badge bg="secondary">{role}</Badge>;
     };
 
@@ -80,9 +80,7 @@ const AdminUserList = () => {
             <div className="admin-page-header">
                 <h1>Usuarios</h1>
                 <Link to="/admin/usuarios/nuevo">
-                    <Button className="btn-admin">
-                        Nuevo Usuario
-                    </Button>
+                    <Button className="btn-admin">Nuevo Usuario</Button>
                 </Link>
             </div>
 
@@ -108,29 +106,13 @@ const AdminUserList = () => {
                                         <td>{user.email}</td>
                                         <td>{getRoleBadge(user.role)}</td>
                                         <td>
-                                            <Button
-                                                variant="warning"
-                                                size="sm"
-                                                onClick={() => navigate(`/admin/usuarios/editar/${user.rut}`)}
-                                            >
+                                            <Button variant="warning" size="sm" onClick={() => navigate(`/admin/usuarios/editar/${user.rut}`)}>
                                                 Editar
                                             </Button>
-
-                                            <Button
-                                                variant="info"
-                                                size="sm"
-                                                className="ms-2"
-                                                onClick={() => handleShowHistory(user)}
-                                            >
+                                            <Button variant="info" size="sm" className="ms-2" onClick={() => handleShowHistory(user)}>
                                                 Historial
                                             </Button>
-
-                                            <Button
-                                                variant="danger"
-                                                size="sm"
-                                                className="ms-2"
-                                                onClick={() => handleDelete(user.rut)}
-                                            >
+                                            <Button variant="danger" size="sm" className="ms-2" onClick={() => handleDelete(user.rut)}>
                                                 Eliminar
                                             </Button>
                                         </td>
@@ -141,27 +123,8 @@ const AdminUserList = () => {
                     </div>
                 </Card.Body>
             </Card>
-
-            <EmailHistoryModal
-                show={showHistoryModal}
-                onHide={handleCloseHistory}
-                user={selectedUser}
-            />
-
-            <AdminConfirmModal
-                show={showConfirmModal}
-                onHide={handleCloseConfirm}
-                onConfirm={handleConfirmDelete}
-                title="Confirmar Eliminación"
-                message="¿Estás seguro de que quieres eliminar este usuario?"
-            />
-            
-            <AdminNotificationModal
-                show={showNotifyModal}
-                onHide={handleCloseNotify}
-                title={notifyInfo.title}
-                message={notifyInfo.message}
-            />
+            <EmailHistoryModal show={showHistoryModal} onHide={handleCloseHistory} user={selectedUser} />
+            <AdminConfirmModal show={showConfirmModal} onHide={handleCloseConfirm} onConfirm={handleConfirmDelete} title="Confirmar Eliminación" message="¿Estás seguro de que quieres eliminar este usuario?" />
         </>
     );
 };
