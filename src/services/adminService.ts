@@ -1,24 +1,24 @@
 import { fetchApi } from '../utils/api';
-import { Product, Specifications } from '../data/productData'; 
-import { User } from '../data/userData'; 
-import { Category } from '../data/categoryData'; 
+import { Product, Specifications } from '../data/productData';
+import { User } from '../data/userData';
+import { Category } from '../data/categoryData';
 
 const serializeProduct = (product: Product, selectedCategory: Category): any => {
     const productToSend: any = {
         ...product,
-        categoria: { 
-            id: selectedCategory.id, 
-            nombre: selectedCategory.nombre 
+        categoria: {
+            id: selectedCategory.id,
+            nombre: selectedCategory.nombre
         },
     };
-    
+
     if (product.features) {
         productToSend.features = JSON.stringify(product.features.filter(f => f.trim() !== ''));
     }
     if (product.specifications) {
         productToSend.specifications = JSON.stringify(product.specifications);
     }
-    
+
     return productToSend;
 };
 
@@ -49,8 +49,6 @@ export const updateProduct = async (product: Product, category: Category): Promi
 export const deleteProduct = async (codigo: string): Promise<void> => {
     return fetchApi<void>(`/productos/${codigo}`, { method: 'DELETE' });
 };
-
-// --- CATEGORIES (Admin CRUD) ---
 
 export const getCategories = async (): Promise<Category[]> => {
     return fetchApi<Category[]>('/admin/categorias', { method: 'GET' });
