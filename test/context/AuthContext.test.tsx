@@ -1,34 +1,46 @@
 import React, { ReactNode } from 'react';
-import { render, screen, act, renderHook } from '@testing-library/react';
-import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
-import { AuthProvider, useAuth } from '../../src/context/AuthContext';
+import { render, act, renderHook } from '@testing-library/react';
+import { describe, test, expect, beforeEach, afterEach, vi, Mock, SpyInstance } from 'vitest'; 
+import { AuthProvider, useAuth, LoginResult } from '../../src/context/AuthContext'; 
 import * as userData from '../../src/data/userData';
+import * as api from '../../src/utils/api'; 
 import { User } from '../../src/data/userData';
 
 const adminUser: User = { name: 'Admin', surname: 'L-Up', email: 'admin@admin.cl', password: 'admin', role: 'Administrador', rut: '1', emailHistory: [], isOriginalAdmin: true, addresses: [], orders: [] };
-const vendedorUser: User = { name: 'Vendedor', surname: 'L-Up', email: 'vendedor@vendedor.cl', password: 'vend', role: 'Vendedor', rut: '2', emailHistory: [], isOriginalAdmin: false, addresses: [], orders: [] };
+const vendedorUser: User = { name: 'Vendedor', surname: 'L-Up', email: 'vendedor@vendedor.cl', password: 'vendedor', role: 'Vendedor', rut: '2', emailHistory: [], isOriginalAdmin: false, addresses: [], orders: [] };
 const clienteUser: User = { name: 'Cliente', surname: 'Test', email: 'cliente@cliente.cl', password: 'cl', role: 'Cliente', rut: '3', emailHistory: [], isOriginalAdmin: false, addresses: [], orders: [] };
 
 vi.mock('../../src/data/userData', async (importOriginal) => {
     const actual = await importOriginal() as object;
     return {
-        ...actual,
-        findUser: vi.fn((email: string) => {
-            if (email === adminUser.email) return adminUser;
-            if (email === vendedorUser.email) return vendedorUser;
-            if (email === clienteUser.email) return clienteUser;
-            return undefined;
-        }),
+        findUser: vi.fn(() => undefined),
         registerUser: vi.fn((data: userData.RegisterData) => {
             if (data.email === 'fail@test.com') {
                 throw new Error('Registro fallido');
             }
             return { ...data, role: 'Cliente', rut: '4' } as User;
         }),
+        addGuestOrder: vi.fn(),
+        getGuestOrders: vi.fn(() => []),
     };
 });
 
+vi.mock('../../src/utils/api', () => ({
+    loginApi: vi.fn(),
+    getPerfilApi: vi.fn(),
+    registerApi: vi.fn(),
+    logoutApi: vi.fn(),
+}));
+
 const AuthProviderWrapper = ({ children }: { children: ReactNode }) => <AuthProvider>{children}</AuthProvider>;
+
+const loginApiMock = vi.mocked(api.loginApi);
+const getPerfilApiMock = vi.mocked(api.getPerfilApi);
+const registerApiMock = vi.mocked(api.registerApi);
+
+let localStorageGetItemSpy: vi.SpyInstance;
+let localStorageSetItemSpy: vi.SpyInstance;
+let localStorageRemoveItemSpy: vi.SpyInstance;
 
 
 describe('AuthContext', () => {
@@ -36,10 +48,18 @@ describe('AuthContext', () => {
     beforeEach(() => {
         localStorage.clear();
         vi.clearAllMocks();
+        vi.restoreAllMocks();
+        
+        localStorageGetItemSpy = vi.spyOn(window.localStorage.__proto__ as Storage, 'getItem');
+        localStorageSetItemSpy = vi.spyOn(window.localStorage.__proto__ as Storage, 'setItem');
+        localStorageRemoveItemSpy = vi.spyOn(window.localStorage.__proto__ as Storage, 'removeItem');
+        
+        loginApiMock.mockClear();
+        getPerfilApiMock.mockClear();
     });
 
     afterEach(() => {
-        localStorage.clear();
+        vi.restoreAllMocks();
     });
 
     test('debe iniciar con currentUser como null', () => {
@@ -47,31 +67,40 @@ describe('AuthContext', () => {
         expect(result.current.currentUser).toBeNull();
     });
 
-    test('debe cargar el usuario desde localStorage si existe', () => {
-        localStorage.setItem('currentUser', JSON.stringify(clienteUser));
-        const { result } = renderHook(() => useAuth(), { wrapper: AuthProviderWrapper });
-        expect(result.current.currentUser?.name).toBe('Cliente');
-    });
+    test('debe cargar el usuario desde localStorage si existe', async () => {
+        localStorageGetItemSpy.mockReturnValue(JSON.stringify(clienteUser));
+        getPerfilApiMock.mockResolvedValue(clienteUser); 
 
+        const { result } = renderHook(() => useAuth(), { wrapper: AuthProviderWrapper });
+        
+        await act(async () => {
+            await new Promise(resolve => setTimeout(resolve, 0)); 
+        });
+
+        expect(result.current.currentUser?.name).toBe(clienteUser.name);
+    });
+    
     test('updateCurrentUser debe actualizar el estado y localStorage', () => {
         const { result } = renderHook(() => useAuth(), { wrapper: AuthProviderWrapper });
         
         act(() => {
-            result.current.updateCurrentUser(clienteUser);
+            result.current.updateCurrentUser(clienteUser as any);
         });
 
         expect(result.current.currentUser?.name).toBe('Cliente');
-        const stored = JSON.parse(localStorage.getItem('currentUser') || '{}');
-        expect(stored.name).toBe('Cliente');
+        expect(localStorageSetItemSpy).toHaveBeenCalledWith('currentUser', JSON.stringify(clienteUser));
     });
 
     describe('login()', () => {
-        test('debe establecer currentUser y devolver redirect a /admin para Administrador', () => {
+        test('debe establecer currentUser y devolver redirect a /admin para Administrador', async () => {
             const { result } = renderHook(() => useAuth(), { wrapper: AuthProviderWrapper });
-            let loginResult;
+            let loginResult: LoginResult = { success: false, message: '', redirect: '/' }; 
+            
+            loginApiMock.mockResolvedValue({ nombre: 'Admin L-Up', rol: 'Administrador' } as any);
+            getPerfilApiMock.mockResolvedValue(adminUser);
 
-            act(() => {
-                loginResult = result.current.login(adminUser.email, adminUser.password);
+            await act(async () => {
+                loginResult = await result.current.login(adminUser.email, 'admin');
             });
 
             expect(result.current.currentUser?.role).toBe('Administrador');
@@ -79,12 +108,15 @@ describe('AuthContext', () => {
             expect(loginResult.redirect).toBe('/admin');
         });
 
-        test('debe devolver redirect a /admin/ordenes para Vendedor', () => {
+        test('debe devolver redirect a /admin/ordenes para Vendedor', async () => {
             const { result } = renderHook(() => useAuth(), { wrapper: AuthProviderWrapper });
-            let loginResult;
+            let loginResult: LoginResult = { success: false, message: '', redirect: '/' }; 
+            
+            loginApiMock.mockResolvedValue({ nombre: 'Vendedor L-Up', rol: 'Vendedor' } as any);
+            getPerfilApiMock.mockResolvedValue(vendedorUser);
 
-            act(() => {
-                loginResult = result.current.login(vendedorUser.email, vendedorUser.password);
+            await act(async () => {
+                loginResult = await result.current.login(vendedorUser.email, 'vendedor');
             });
 
             expect(result.current.currentUser?.role).toBe('Vendedor');
@@ -92,12 +124,15 @@ describe('AuthContext', () => {
             expect(loginResult.redirect).toBe('/admin/ordenes');
         });
 
-        test('debe devolver redirect a / para Cliente', () => {
+        test('debe devolver redirect a / para Cliente', async () => { 
             const { result } = renderHook(() => useAuth(), { wrapper: AuthProviderWrapper });
-            let loginResult;
+            let loginResult: LoginResult = { success: false, message: '', redirect: '/' }; 
+            
+            loginApiMock.mockResolvedValue({ nombre: 'Cliente Test', rol: 'Cliente' } as any);
+            getPerfilApiMock.mockResolvedValue(clienteUser);
 
-            act(() => {
-                loginResult = result.current.login(clienteUser.email, clienteUser.password);
+            await act(async () => {
+                loginResult = await result.current.login(clienteUser.email, 'cl');
             });
 
             expect(result.current.currentUser?.role).toBe('Cliente');
@@ -105,12 +140,14 @@ describe('AuthContext', () => {
             expect(loginResult.redirect).toBe('/');
         });
 
-        test('debe fallar para credenciales incorrectas', () => {
+        test('debe fallar para credenciales incorrectas', async () => { 
             const { result } = renderHook(() => useAuth(), { wrapper: AuthProviderWrapper });
-            let loginResult;
+            let loginResult: LoginResult = { success: false, message: '', redirect: '/' };
 
-            act(() => {
-                loginResult = result.current.login('wrong@email.com', 'badpass');
+            vi.mocked(api.loginApi).mockRejectedValue(new Error('Credenciales inválidas'));
+
+            await act(async () => { 
+                loginResult = await result.current.login('wrong@email.com', 'badpass');
             });
 
             expect(result.current.currentUser).toBeNull();
@@ -120,47 +157,51 @@ describe('AuthContext', () => {
     });
 
     describe('register()', () => {
-        test('debe registrar y loguear a un nuevo usuario exitosamente', () => {
+        test('debe registrar y redirigir a login exitosamente', async () => {
             const { result } = renderHook(() => useAuth(), { wrapper: AuthProviderWrapper });
-            const newUserData: userData.RegisterData = { email: 'new@test.com', name: 'New', surname: 'User', password: 'p', rut: '5', birthdate: '' };
-            let registerResult;
-            
-            act(() => {
-                registerResult = result.current.register(newUserData);
+            const newUserData: userData.RegisterData = { email: 'new@test.com', name: 'New', surname: 'User', password: 'p', rut: '5', birthdate: '2000-01-01' };
+            let registerResult: LoginResult = { success: false, message: '', redirect: '/' };
+
+            registerApiMock.mockResolvedValue('Registro exitoso');
+
+            await act(async () => {
+                registerResult = await result.current.register(newUserData);
             });
 
-            expect(result.current.currentUser?.email).toBe('new@test.com');
+            expect(registerApiMock).toHaveBeenCalled();
             expect(registerResult.success).toBe(true);
             expect(registerResult.message).toContain('¡Registro Exitoso!');
+            expect(registerResult.redirect).toBe('/login');
         });
 
-        test('debe manejar errores cuando registerUser falla', () => {
+        test('debe manejar errores cuando register falla (ej. email duplicado)', async () => {
             const { result } = renderHook(() => useAuth(), { wrapper: AuthProviderWrapper });
-            const failedUserData: userData.RegisterData = { email: 'fail@test.com', name: 'Fail', surname: 'User', password: 'p', rut: '6', birthdate: '' };
-            let registerResult;
+            const failedUserData: userData.RegisterData = { email: 'fail@test.com', name: 'Fail', surname: 'User', password: 'p', rut: '6', birthdate: '2000-01-01' };
+            let registerResult: LoginResult = { success: false, message: '', redirect: '/' };
 
-            act(() => {
-                registerResult = result.current.register(failedUserData);
+            registerApiMock.mockRejectedValue(new Error('Error al procesar la solicitud: Correo duplicado'));
+
+            await act(async () => {
+                registerResult = await result.current.register(failedUserData);
             });
             
-            expect(result.current.currentUser).toBeNull();
             expect(registerResult.success).toBe(false);
-            expect(registerResult.message).toBe('Registro fallido');
+            expect(registerResult.message).toBe('Correo duplicado');
         });
     });
+    
+    test('debe limpiar currentUser, localStorage y llamar a logoutApi', () => {
+        localStorageSetItemSpy('currentUser', JSON.stringify(clienteUser));
+        const { result } = renderHook(() => useAuth(), { wrapper: AuthProviderWrapper });
+        
+        vi.mocked(api.logoutApi).mockResolvedValue({});
 
-    describe('logout()', () => {
-        test('debe limpiar currentUser y localStorage', () => {
-            localStorage.setItem('currentUser', JSON.stringify(clienteUser));
-            const { result } = renderHook(() => useAuth(), { wrapper: AuthProviderWrapper });
-            expect(result.current.currentUser).not.toBeNull();
-
-            act(() => {
-                result.current.logout();
-            });
-
-            expect(result.current.currentUser).toBeNull();
-            expect(localStorage.getItem('currentUser')).toBeNull();
+        act(() => {
+            result.current.logout();
         });
+
+        expect(vi.mocked(api.logoutApi)).toHaveBeenCalled();
+        expect(result.current.currentUser).toBeNull();
+        expect(localStorageRemoveItemSpy).toHaveBeenCalledWith('currentUser');
     });
 });

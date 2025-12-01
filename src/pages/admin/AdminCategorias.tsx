@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Table, Button, Form, Modal } from 'react-bootstrap';
-import { getCategories, saveCategory, deleteCategory, Category } from '../../data/categoryData';
+import { getCategories, createCategory, updateCategory, deleteCategory } from '../../services/adminService'; 
 import AdminConfirmModal from '../../components/AdminConfirmModal';
 import '../../styles/AdminStyle.css';
+import { Category } from '../../data/categoryData';
 
 type CategoryFormState = {
     id: number | null;
@@ -20,13 +21,20 @@ const AdminCategorias = () => {
     const [error, setError] = useState('');
     const [isEditMode, setIsEditMode] = useState(false);
 
+    const loadCategories = async () => {
+        try {
+            // [MODIFICADO] Usar la API
+            const data = await getCategories();
+            setCategories(data);
+        } catch (err) {
+            console.error("Error loading categories:", err);
+            setError("Error al cargar categorías.");
+        }
+    };
+
     useEffect(() => {
         loadCategories();
     }, []);
-
-    const loadCategories = () => {
-        setCategories(getCategories());
-    };
 
     const handleCloseModal = () => {
         setShowModal(false);
@@ -51,8 +59,10 @@ const AdminCategorias = () => {
         setCurrentCategory({ ...currentCategory, nombre: e.target.value });
     };
 
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        setError('');
+
         if (!currentCategory.nombre.trim()) {
             setError('El nombre de la categoría no puede estar vacío.');
             return;
@@ -67,9 +77,20 @@ const AdminCategorias = () => {
             return;
         }
 
-        saveCategory(currentCategory);
-        loadCategories();
-        handleCloseModal();
+        try {
+            if (isEditMode && currentCategory.id !== null) {
+                // [MODIFICADO] Usar la API para actualizar
+                await updateCategory(currentCategory.id, currentCategory.nombre);
+            } else {
+                // [MODIFICADO] Usar la API para crear
+                await createCategory(currentCategory.nombre);
+            }
+            loadCategories();
+            handleCloseModal();
+        } catch (err: any) {
+            console.error("Error saving category:", err);
+            setError(`Error: ${err.message || "No se pudo guardar la categoría."}`);
+        }
     };
 
     const handleDelete = (id: number) => {
@@ -77,10 +98,16 @@ const AdminCategorias = () => {
         setShowConfirmModal(true);
     };
 
-    const handleConfirmDelete = () => {
+    const handleConfirmDelete = async () => {
         if (categoryToDelete) {
-            deleteCategory(categoryToDelete);
-            loadCategories();
+            try {
+                // [MODIFICADO] Usar la API para eliminar
+                await deleteCategory(categoryToDelete);
+                loadCategories();
+            } catch (err: any) {
+                console.error("Error deleting category:", err);
+                setError("Error al eliminar la categoría. Revise si está en uso.");
+            }
         }
         setShowConfirmModal(false);
         setCategoryToDelete(null);

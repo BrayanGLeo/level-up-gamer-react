@@ -4,7 +4,6 @@ import { CartItem } from '../context/CartContext';
 
 const API_BASE_URL = 'http://localhost:8080/api/v1';
 
-// --- UTILIDAD PRINCIPAL PARA TODAS LAS LLAMADAS (CRUCIAL) ---
 export const fetchApi = async <T>(url: string, options: RequestInit = {}): Promise<T> => {
     const headers = {
         'Content-Type': 'application/json',
@@ -14,7 +13,7 @@ export const fetchApi = async <T>(url: string, options: RequestInit = {}): Promi
     const response = await fetch(API_BASE_URL + url, {
         ...options,
         headers,
-        credentials: 'include', // <--- LA CLAVE: Permite enviar y recibir la cookie de sesión.
+        credentials: 'include', 
     });
 
     if (response.status === 401 || response.status === 403) {
@@ -28,15 +27,12 @@ export const fetchApi = async <T>(url: string, options: RequestInit = {}): Promi
         throw new Error(errorText || response.statusText);
     }
     
-    // Maneja respuestas vacías (DELETE o logout)
     if (response.status === 204 || response.headers.get('content-length') === '0') {
         return {} as T; 
     }
     
     return response.json() as Promise<T>;
 };
-
-// --- API: AUTENTICACIÓN Y PERFIL ---
 
 export type AuthApiResult = {
     nombre: string;
@@ -51,22 +47,27 @@ export const loginApi = async (email: string, password: string): Promise<AuthApi
 };
 
 export const registerApi = async (userData: RegisterData): Promise<string> => {
+    const apiPayload = {
+        nombre: userData.name, 
+        apellido: userData.surname,
+        rut: userData.rut,
+        email: userData.email,
+        password: userData.password
+    };
+    
     return fetchApi<string>('/auth/register', {
         method: 'POST',
-        body: JSON.stringify(userData)
+        body: JSON.stringify(apiPayload)
     });
 };
 
 export const getPerfilApi = async (): Promise<User> => {
-    // Usa la cookie de sesión para obtener el objeto Usuario completo y validar la sesión
     return fetchApi<User>('/auth/perfil', { method: 'GET' });
 };
 
 export const logoutApi = async (): Promise<any> => {
     return fetchApi<any>('/auth/logout', { method: 'POST' });
 };
-
-// --- EJEMPLOS DE OTRAS LLAMADAS ---
 
 export const getProductsApi = async (): Promise<Product[]> => {
     return fetchApi<Product[]>('/tienda/productos', { method: 'GET' });
@@ -79,6 +80,3 @@ export const finalizeCheckoutApi = async (boletaRequest: any): Promise<any> => {
     });
 };
 
-export const getAdminProductsApi = async (): Promise<Product[]> => {
-    return fetchApi<Product[]>('/productos', { method: 'GET' });
-};

@@ -2,19 +2,36 @@ import React, { useState, useEffect } from 'react';
 import { Table, Button, Card, Badge } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { LinkContainer } from 'react-router-bootstrap';
-import { getProducts, deleteProductByCode, Product } from '../../data/productData';
+import { getAdminProducts, deleteProduct } from '../../services/adminService'; 
 import AdminConfirmModal from '../../components/AdminConfirmModal';
 import '../../styles/AdminStyle.css';
+import { Product } from '../../data/productData'; 
 
 const AdminProductList = () => {
     const [products, setProducts] = useState<Product[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const navigate = useNavigate();
     
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [productToDelete, setProductToDelete] = useState<string | null>(null);
 
+    const fetchProducts = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const data = await getAdminProducts();
+            setProducts(data);
+        } catch (err) {
+            console.error("Error fetching products:", err);
+            setError("Error al cargar productos desde la API.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
-        setProducts(getProducts());
+        fetchProducts();
     }, []);
 
     const handleDeleteClick = (codigo: string) => {
@@ -27,23 +44,36 @@ const AdminProductList = () => {
         setShowConfirmModal(false);
     };
 
-    const handleModalConfirm = () => {
+    const handleModalConfirm = async () => {
         if (productToDelete) {
-            deleteProductByCode(productToDelete);
-            setProducts(getProducts());
+            try {
+                await deleteProduct(productToDelete);
+                fetchProducts(); 
+            } catch (err) {
+                console.error("Error deleting product:", err);
+            }
         }
         handleModalClose();
     };
 
     const getStockBadge = (stock: number, stockCritico: number) => {
-        if (stock <= (stockCritico || 5)) {
+        const critico = stockCritico || 5;
+        if (stock <= critico) {
             return <Badge bg="danger">Crítico ({stock})</Badge>;
         }
-        if (stock < (stockCritico || 5) * 2) {
+        if (stock < critico * 2) {
             return <Badge bg="warning">Bajo ({stock})</Badge>;
         }
         return <Badge bg="success">{stock}</Badge>;
     };
+
+    if (loading) {
+        return <p className="text-center p-3">Cargando productos...</p>;
+    }
+    
+    if (error) {
+        return <p className="text-center p-3 text-danger">{error}</p>;
+    }
 
     return (
         <>
@@ -77,7 +107,7 @@ const AdminProductList = () => {
                                     <tr key={product.codigo}>
                                         <td><strong>{product.codigo}</strong></td>
                                         <td>{product.nombre}</td>
-                                        <td>{product.categoria}</td>
+                                        <td>{(product.categoria as any).nombre || product.categoria}</td>
                                         <td>${product.precio.toLocaleString('es-CL')}</td>
                                         <td>{getStockBadge(product.stock, product.stockCritico)}</td>
                                         <td>

@@ -1,3 +1,5 @@
+// brayangleo/level-up-gamer-react/level-up-gamer-react-6a40dce1a46143d8544bf36a6ca8bce18cba7bf0/src/pages/store/CheckoutPage.tsx
+
 import React, { useState, useEffect } from 'react';
 import { Container, Form, Button, Row, Col, Nav, Card, Alert, Toast, ToastContainer } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
@@ -166,11 +168,7 @@ const CheckoutPage = () => {
             if (updatedUser) {
                 updateCurrentUser(updatedUser);
             }
-            setModalInfo({
-                show: true,
-                title: '¡Compra Exitosa!',
-                message: `¡Gracias por tu compra, ${formData.nombre}! Tu pedido #${newOrder.number} ha sido realizado con éxito.`
-            });
+            navigate('/compra-exitosa', { state: { order: newOrder } });
         } else {
             const savedOrder = addGuestOrder(newOrder);
             navigate('/compra-exitosa', { state: { order: savedOrder } });

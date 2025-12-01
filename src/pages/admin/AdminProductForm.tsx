@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Form, Button, Card, Row, Col } from 'react-bootstrap';
 import { useNavigate, useParams } from 'react-router-dom';
-import { getProductByCode, saveProduct, Product } from '../../data/productData';
-import { getCategories, Category } from '../../data/categoryData';
+import { getProductByCode, createProduct, updateProduct, getCategories } from '../../services/adminService'; 
 import { validateProductForm } from '../../utils/validation';
 import AdminNotificationModal from '../../components/AdminNotificationModal';
 import '../../styles/AdminStyle.css';
+import { Product, Specifications } from '../../data/productData';
+import { Category } from '../../data/categoryData';
 
 const initialFormState: Product = {
     codigo: '',
@@ -14,8 +15,10 @@ const initialFormState: Product = {
     precio: 0,
     stock: 0,
     stockCritico: 5,
-    categoria: '',
-    imagen: ''
+    categoria: '', 
+    imagen: '',
+    features: [],
+    specifications: {}
 };
 
 const AdminProductForm = () => {
@@ -38,15 +41,30 @@ const AdminProductForm = () => {
     const [showNotifyModal, setShowNotifyModal] = useState(false);
     const [modalInfo, setModalInfo] = useState({ title: '', message: '' });
 
-    useEffect(() => {
-        setCategories(getCategories());
+    const fetchProductData = async () => {
+        try {
+            // [MODIFICADO] Obtener categorías de la API
+            const cats = await getCategories();
+            setCategories(cats);
 
-        if (isEditMode && codigo) {
-            const product = getProductByCode(codigo);
-            if (product) {
-                setFormData(product);
+            if (isEditMode && codigo) {
+                // [MODIFICADO] Obtener producto de la API
+                const product = await getProductByCode(codigo);
+                if (product) {
+                    setFormData({
+                        ...product,
+                        categoria: (product.categoria as any).nombre || product.categoria, 
+                    });
+                }
             }
+        } catch (error) {
+            console.error("Error fetching data:", error);
+            setErrors({ nombre: "Error al cargar datos iniciales o producto." });
         }
+    };
+
+    useEffect(() => {
+        fetchProductData();
     }, [isEditMode, codigo]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -59,17 +77,10 @@ const AdminProductForm = () => {
         navigate('/admin/productos');
     };
 
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         
         const formErrors: FormErrors = validateProductForm(formData as any);
-
-        if (!isEditMode) {
-            const existingProduct = getProductByCode(formData.codigo);
-            if (existingProduct) {
-                formErrors.codigo = 'Este código de producto ya existe. Por favor, ingrese uno diferente.';
-            }
-        }
 
         setErrors(formErrors);
 
@@ -82,11 +93,35 @@ const AdminProductForm = () => {
                 stockCritico: parseInt(String(formData.stockCritico)) || 5,
             };
 
-            saveProduct(productToSave);
-            
-            const message = isEditMode ? 'Producto actualizado con éxito' : 'Producto guardado con éxito';
-            setModalInfo({ title: '¡Éxito!', message: message });
-            setShowNotifyModal(true);
+            const selectedCategory = categories.find(c => c.nombre === productToSave.categoria);
+
+            if (!selectedCategory) {
+                 setErrors({ categoria: "La categoría seleccionada es inválida." });
+                 return;
+            }
+
+            try {
+                let message = '';
+                if (isEditMode) {
+                    // [MODIFICADO] Usar la API para actualizar
+                    await updateProduct(productToSave, selectedCategory);
+                    message = 'Producto actualizado con éxito';
+                } else {
+                    // [MODIFICADO] Usar la API para crear
+                    await createProduct(productToSave, selectedCategory);
+                    message = 'Producto guardado con éxito';
+                }
+                
+                setModalInfo({ title: '¡Éxito!', message: message });
+                setShowNotifyModal(true);
+
+            } catch (error: any) {
+                const errorMessage = error.message.includes("ProductoController") ? 
+                                     "Error de código de producto duplicado o falta de datos." : 
+                                     error.message;
+                setModalInfo({ title: 'Error', message: errorMessage });
+                setShowNotifyModal(true);
+            }
         }
     };
 
