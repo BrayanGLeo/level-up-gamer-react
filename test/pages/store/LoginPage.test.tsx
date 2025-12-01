@@ -118,8 +118,8 @@ describe('LoginPage', () => {
     });
 
     describe('Authentication Logic', () => {
-        test('successful login shows modal and navigates after closing', () => {
-            const mockLogin = vi.fn(() => ({ success: true, redirect: '/admin', message: 'Bienvenido' }));
+        test('successful login shows modal and navigates after closing', async () => {
+            const mockLogin = vi.fn(async () => ({ success: true, redirect: '/admin', message: 'Bienvenido' }));
             mockedUseAuth.mockReturnValue({ login: mockLogin });
 
             render(
@@ -134,18 +134,18 @@ describe('LoginPage', () => {
 
             fireEvent.change(emailInput, { target: { value: 'user@example.cl' } });
             fireEvent.change(passwordInput, { target: { value: 'secret' } });
-            fireEvent.click(submitButton);
+            await fireEvent.click(submitButton); // Esperar la acción asíncrona
 
-            expect(screen.getByTestId('notif-close')).toBeInTheDocument();
+            const closeButton = await screen.findByTestId('notif-close'); // Esperar a que el modal aparezca
+            expect(closeButton).toBeInTheDocument();
             
-            const closeButton = screen.getByTestId('notif-close');
             fireEvent.click(closeButton);
 
             expect(mockedNavigate).toHaveBeenCalledWith('/admin');
         });
 
-        test('failed login shows modal with error message and does not navigate', () => {
-            const mockLogin = vi.fn(() => ({ success: false, message: 'Credenciales inválidas' }));
+        test('failed login shows modal with error message and does not navigate', async () => {
+            const mockLogin = vi.fn(async () => ({ success: false, message: 'Credenciales inválidas' }));
             mockedUseAuth.mockReturnValue({ login: mockLogin });
 
             render(
@@ -160,12 +160,12 @@ describe('LoginPage', () => {
 
             fireEvent.change(emailInput, { target: { value: 'user@example.cl' } });
             fireEvent.change(passwordInput, { target: { value: 'secret' } });
-            fireEvent.click(submitButton);
+            await fireEvent.click(submitButton); // Esperar la acción asíncrona
 
-            expect(screen.getByRole('heading', { name: /Error de Inicio de Sesión/i })).toBeInTheDocument();
+            expect(await screen.findByRole('heading', { name: /Error de Inicio de Sesión/i })).toBeInTheDocument();
             expect(screen.getByText(/Credenciales inválidas/i)).toBeInTheDocument();
             
-            const closeButton = screen.getByTestId('notif-close');
+            const closeButton = await screen.findByTestId('notif-close');
             fireEvent.click(closeButton);
 
             expect(mockedNavigate).not.toHaveBeenCalled();

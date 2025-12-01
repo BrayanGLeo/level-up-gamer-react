@@ -38,9 +38,7 @@ const loginApiMock = vi.mocked(api.loginApi);
 const getPerfilApiMock = vi.mocked(api.getPerfilApi);
 const registerApiMock = vi.mocked(api.registerApi);
 
-let localStorageGetItemSpy: vi.SpyInstance;
-let localStorageSetItemSpy: vi.SpyInstance;
-let localStorageRemoveItemSpy: vi.SpyInstance;
+
 
 
 describe('AuthContext', () => {
@@ -49,10 +47,6 @@ describe('AuthContext', () => {
         localStorage.clear();
         vi.clearAllMocks();
         vi.restoreAllMocks();
-        
-        localStorageGetItemSpy = vi.spyOn(window.localStorage.__proto__ as Storage, 'getItem');
-        localStorageSetItemSpy = vi.spyOn(window.localStorage.__proto__ as Storage, 'setItem');
-        localStorageRemoveItemSpy = vi.spyOn(window.localStorage.__proto__ as Storage, 'removeItem');
         
         loginApiMock.mockClear();
         getPerfilApiMock.mockClear();
@@ -66,21 +60,8 @@ describe('AuthContext', () => {
         const { result } = renderHook(() => useAuth(), { wrapper: AuthProviderWrapper });
         expect(result.current.currentUser).toBeNull();
     });
-
-    test('debe cargar el usuario desde localStorage si existe', async () => {
-        localStorageGetItemSpy.mockReturnValue(JSON.stringify(clienteUser));
-        getPerfilApiMock.mockResolvedValue(clienteUser); 
-
-        const { result } = renderHook(() => useAuth(), { wrapper: AuthProviderWrapper });
-        
-        await act(async () => {
-            await new Promise(resolve => setTimeout(resolve, 0)); 
-        });
-
-        expect(result.current.currentUser?.name).toBe(clienteUser.name);
-    });
     
-    test('updateCurrentUser debe actualizar el estado y localStorage', () => {
+    test('updateCurrentUser debe actualizar el estado', () => {
         const { result } = renderHook(() => useAuth(), { wrapper: AuthProviderWrapper });
         
         act(() => {
@@ -88,7 +69,6 @@ describe('AuthContext', () => {
         });
 
         expect(result.current.currentUser?.name).toBe('Cliente');
-        expect(localStorageSetItemSpy).toHaveBeenCalledWith('currentUser', JSON.stringify(clienteUser));
     });
 
     describe('login()', () => {
@@ -190,10 +170,14 @@ describe('AuthContext', () => {
         });
     });
     
-    test('debe limpiar currentUser, localStorage y llamar a logoutApi', () => {
-        localStorageSetItemSpy('currentUser', JSON.stringify(clienteUser));
+    test('debe limpiar currentUser y llamar a logoutApi', () => {
         const { result } = renderHook(() => useAuth(), { wrapper: AuthProviderWrapper });
         
+        // Mockear un usuario ya logueado para que haya algo que "limpiar"
+        act(() => {
+            result.current.updateCurrentUser(clienteUser as any);
+        });
+
         vi.mocked(api.logoutApi).mockResolvedValue({});
 
         act(() => {
@@ -202,6 +186,5 @@ describe('AuthContext', () => {
 
         expect(vi.mocked(api.logoutApi)).toHaveBeenCalled();
         expect(result.current.currentUser).toBeNull();
-        expect(localStorageRemoveItemSpy).toHaveBeenCalledWith('currentUser');
     });
 });

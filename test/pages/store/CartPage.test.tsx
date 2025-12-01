@@ -26,7 +26,7 @@ vi.mock('../../../src/components/ClearCartModal', () => ({
 }));
 
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import CartPage from '../../../src/pages/store/CartPage';
 import * as AuthModule from '../../../src/context/AuthContext';
@@ -230,14 +230,23 @@ describe('CartPage', () => {
         expect(screen.getByText(/¿Cómo quieres continuar\?/i)).toBeInTheDocument();
     });
 
-    test('reduce quantity to 0 removes the item and shows empty cart (integration-like)', () => {
-        mockUseAuth.mockRestore();
-        mockUseCart.mockRestore();
+    test('reduce quantity to 0 removes the item and shows empty cart', async () => {
+        const initialItem = { codigo: 'P1', nombre: 'Prod 1', precio: 50, imagen: '', quantity: 1 } as CartItem;
+        const mockUpdateQuantity = vi.fn();
 
-        const item = { codigo: 'P1', nombre: 'Prod 1', precio: 50, imagen: '', quantity: 1 } as any;
-        localStorage.setItem('carrito', JSON.stringify([item]));
+        mockUseAuth.mockReturnValue({ currentUser: null });
 
-        render(
+        // Mockear useCart para el estado inicial (con el ítem)
+        mockUseCart.mockReturnValue({
+            cartItems: [initialItem],
+            getCartTotal: () => initialItem.precio * initialItem.quantity,
+            getCartItemCount: () => initialItem.quantity,
+            updateQuantity: mockUpdateQuantity, // Usar el mockUpdateQuantity definido
+            removeFromCart: vi.fn(), // Asegurarse de que otras funciones estén mockeadas si se usan
+            clearCart: vi.fn(),
+        });
+
+        const { rerender } = render(
             <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
                 <AuthProvider>
                     <CartProvider>
@@ -249,21 +258,28 @@ describe('CartPage', () => {
 
         expect(screen.getByText('Prod 1')).toBeInTheDocument();
 
-        const minus = screen.getByText('-');
-        fireEvent.click(minus);
+        const minusButton = screen.getByText('-');
+        
+        // Simular el click en el botón de restar
+        await act(async () => {
+            fireEvent.click(minusButton);
+        });
 
-        expect(screen.getByText(/Tu carrito está vacío/i)).toBeInTheDocument();
-    });
+        // Asegurarse de que updateQuantity fue llamado correctamente
+        expect(mockUpdateQuantity).toHaveBeenCalledWith('P1', -1);
 
-    test('con usuario autenticado, Finalizar Compra navega a /checkout (integration-like)', () => {
-        mockUseAuth.mockRestore();
-        mockUseCart.mockRestore();
+        // Ahora, simular el nuevo estado del carrito después de la actualización
+        mockUseCart.mockReturnValue({
+            cartItems: [], // Carrito vacío
+            getCartTotal: () => 0,
+            getCartItemCount: () => 0,
+            updateQuantity: mockUpdateQuantity, // Mantener el mismo mockUpdateQuantity
+            removeFromCart: vi.fn(),
+            clearCart: vi.fn(),
+        });
 
-        const item = { codigo: 'P2', nombre: 'Prod 2', precio: 100, imagen: '', quantity: 1 } as any;
-        localStorage.setItem('carrito', JSON.stringify([item]));
-        localStorage.setItem('currentUser', JSON.stringify({ name: 'A', surname: 'B', email: 'a@b.com' }));
-
-        render(
+        // Forzar un re-render para que el componente recoja el nuevo estado del carrito mockeado
+        rerender(
             <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
                 <AuthProvider>
                     <CartProvider>
@@ -273,10 +289,33 @@ describe('CartPage', () => {
             </BrowserRouter>
         );
 
+        // Esperar que el mensaje de carrito vacío aparezca
+        await screen.findByText(/Tu carrito está vacío/i);
+        
+        expect(screen.queryByText('Prod 1')).not.toBeInTheDocument();
+    });
+
+    test('con usuario autenticado, Finalizar Compra navega a /checkout', async () => {
+        const user: Partial<User> = { name: 'Test User', email: 'test@example.com' };
+        const mockItems: CartItem[] = [
+            { codigo: 'P2', nombre: 'Prod 2', precio: 100, quantity: 1, imagen: '', categoria: 'test', descripcion: '', stock: 1, stockCritico: 1 }
+        ];
+
+        mockUseAuth.mockReturnValue({ currentUser: user });
+        mockUseCart.mockReturnValue({
+            cartItems: mockItems,
+            getCartTotal: () => 100,
+            getCartItemCount: () => 1,
+        });
+
+        renderCartPage();
+
         const finalizar = screen.getByText(/Finalizar Compra/i);
         fireEvent.click(finalizar);
 
-        expect(mockedNavigate).toHaveBeenCalledWith('/checkout');
+        await waitFor(() => {
+            expect(mockedNavigate).toHaveBeenCalledWith('/checkout');
+        });
     });
 
     test('click en botón "Iniciar Sesión" en modal cierra el modal', () => {

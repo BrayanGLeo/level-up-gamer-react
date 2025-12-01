@@ -31,31 +31,19 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
     useEffect(() => {
         const checkSession = async () => {
-            const storedUser = localStorage.getItem('currentUser');
-            
-            if (storedUser) {
-                try {
-                    // Si el llamado a /perfil es exitoso, la cookie es válida y obtenemos el objeto Usuario completo.
-                    const userProfile = await getPerfilApi();
-                    
-                    const user: CurrentUser = { ...userProfile, role: userProfile.role };
-                    
-                    setCurrentUser(user);
-                    localStorage.setItem('currentUser', JSON.stringify(user));
-
-                } catch (e) {
-                    // 401/403 -> La cookie ya no es válida o ha expirado. Forzar cierre de sesión local.
-                    console.error("Sesión de servidor invalidada.");
-                    localStorage.removeItem('currentUser');
-                    setCurrentUser(null);
-                }
+            try {
+                const userProfile = await getPerfilApi();
+                const user: CurrentUser = { ...userProfile, role: userProfile.role };
+                setCurrentUser(user);
+            } catch (e) {
+                console.error("Sesión de servidor invalidada o no existente.");
+                setCurrentUser(null);
             }
         };
         checkSession();
     }, []);
 
     const updateCurrentUser = (user: CurrentUser) => {
-        localStorage.setItem('currentUser', JSON.stringify(user));
         setCurrentUser(user);
     };
 
@@ -69,7 +57,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
             const user: CurrentUser = { ...userProfile, role: loginResult.rol };
             
-            localStorage.setItem('currentUser', JSON.stringify(user));
             setCurrentUser(user);
 
             // Lógica de redirección
@@ -81,6 +68,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
                 return { success: true, redirect: '/', message: '¡Inicio de Sesión Exitoso!' };
             }
         } catch (error: any) {
+            setCurrentUser(null); // Asegura que currentUser se limpia en caso de fallo
             const message = error.message.includes('Credenciales inválidas') ? 'Correo o contraseña incorrectos.' : error.message;
             return { success: false, message: message };
         }
@@ -100,7 +88,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     const logout = (): LoginResult => {
         logoutApi().catch(console.error); // Llama al backend para invalidar la sesión
         
-        localStorage.removeItem('currentUser');
         setCurrentUser(null);
         return { success: true, message: 'Has cerrado la sesión.', redirect: '/' };
     };

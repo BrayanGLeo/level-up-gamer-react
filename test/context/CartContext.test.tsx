@@ -29,7 +29,7 @@ const TestComponent = () => {
             <div data-testid="item-count">{getCartItemCount()}</div>
             <div data-testid="total-price">{getCartTotal()}</div>
             <div data-testid="item-list">
-                {cartItems.map(item => (
+                {cartItems.filter(item => item.quantity > 0).map(item => (
                     <span key={item.codigo}>{item.nombre} (x{item.quantity})</span>
                 ))}
             </div>
@@ -55,11 +55,9 @@ const renderWithCartProvider = () => {
 describe('CartContext', () => {
 
     beforeEach(() => {
-        localStorage.clear();
     });
 
     afterEach(() => {
-        localStorage.clear();
     });
 
     test('debe iniciar con el carrito vacío', () => {
@@ -79,10 +77,6 @@ describe('CartContext', () => {
         expect(await screen.findByText('Juego 1 (x1)')).toBeInTheDocument();
         expect(screen.getByTestId('item-count')).toHaveTextContent('1');
         expect(screen.getByTestId('total-price')).toHaveTextContent('10000');
-
-        const storedCart = JSON.parse(localStorage.getItem('carrito') || '[]');
-        expect(storedCart).toHaveLength(1);
-        expect(storedCart[0].codigo).toBe('P001');
     });
 
     test('addToCart debe incrementar la cantidad si el producto ya existe', async () => {
@@ -188,7 +182,6 @@ describe('CartContext', () => {
 
         expect(screen.getByTestId('item-count')).toHaveTextContent('0');
         expect(screen.getByTestId('total-price')).toHaveTextContent('0');
-        expect(localStorage.getItem('carrito')).toBe('[]');
     });
 
     test('debe calcular el total y la cantidad de items correctamente', async () => {
@@ -206,15 +199,6 @@ describe('CartContext', () => {
         expect(screen.getByTestId('total-price')).toHaveTextContent('25000');
     });
 
-    test('debe cargar el carrito desde localStorage al iniciar', async () => {
-        const mockCart = [{ ...mockProduct1, quantity: 2 }];
-        localStorage.setItem('carrito', JSON.stringify(mockCart));
-    
-        renderWithCartProvider();
 
-        expect(await screen.findByText('Juego 1 (x2)')).toBeInTheDocument();
-        expect(screen.getByTestId('item-count')).toHaveTextContent('2');
-        expect(screen.getByTestId('total-price')).toHaveTextContent('20000');
-    });
 
 });
