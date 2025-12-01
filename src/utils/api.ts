@@ -104,3 +104,22 @@ export const finalizeCheckoutApi = async (boletaRequest: any): Promise<any> => {
         body: JSON.stringify(boletaRequest)
     });
 };
+
+export const getMyOrdersApi = async (): Promise<any[]> => {
+    return fetchApi<any[]>('/ordenes/mis-pedidos', { method: 'GET' });
+};
+
+export const getMyAddressesApi = async (): Promise<any[]> => {
+    return fetchApi<any[]>('/usuarios/direcciones', { method: 'GET' });
+};
+
+export const createAddressApi = async (address: any): Promise<any> => {
+    return fetchApi<any>('/usuarios/direcciones', {
+        method: 'POST',
+        body: JSON.stringify(address)
+    });
+};
+
+export const deleteAddressApi = async (id: number): Promise<void> => {
+    return fetchApi<void>(`/usuarios/direcciones/${id}`, { method: 'DELETE' });
+};
