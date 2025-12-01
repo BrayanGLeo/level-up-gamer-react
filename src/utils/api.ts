@@ -137,3 +137,11 @@ export const updateProfileApi = async (userData: Partial<User>): Promise<any> =>
         body: JSON.stringify(payload)
     });
 };
+
+export const getBlogPostsApi = async (): Promise<any[]> => {
+    return fetchApi<any[]>('/blog', { method: 'GET' });
+};
+
+export const getBlogPostByIdApi = async (id: number): Promise<any> => {
+    return fetchApi<any>(`/blog/${id}`, { method: 'GET' });
+};
