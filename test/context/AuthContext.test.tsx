@@ -1,9 +1,9 @@
 import React, { ReactNode } from 'react';
 import { render, act, renderHook } from '@testing-library/react';
 
-import { AuthProvider, useAuth, LoginResult } from '../../src/context/AuthContext'; 
+import { AuthProvider, useAuth, LoginResult } from '../../src/context/AuthContext';
 import * as userData from '../../src/data/userData';
-import * as api from '../../src/utils/api'; 
+import * as api from '../../src/utils/api';
 import { User } from '../../src/data/userData';
 
 const adminUser: User = { name: 'Admin', surname: 'L-Up', email: 'admin@admin.cl', password: 'admin', role: 'Administrador', rut: '1', emailHistory: [], isOriginalAdmin: true, addresses: [], orders: [] };
@@ -27,7 +27,7 @@ vi.mock('../../src/data/userData', async (importOriginal) => {
 
 vi.mock('../../src/utils/api', () => ({
     loginApi: vi.fn(),
-    getPerfilApi: vi.fn(() => Promise.reject(new Error('No session'))), // Por defecto, no hay sesión
+    getPerfilApi: vi.fn(() => Promise.reject(new Error('No session'))),
     registerApi: vi.fn(),
     logoutApi: vi.fn(),
 }));
@@ -45,11 +45,11 @@ describe('AuthContext', () => {
     let consoleErrorSpy: any;
 
     beforeEach(() => {
-        consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+        consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
         localStorage.clear();
         vi.clearAllMocks();
         vi.restoreAllMocks();
-        
+
         loginApiMock.mockClear();
         getPerfilApiMock.mockClear();
     });
@@ -62,17 +62,17 @@ describe('AuthContext', () => {
     test('debe iniciar con currentUser como null', async () => {
         const { result } = renderHook(() => useAuth(), { wrapper: AuthProviderWrapper });
         await act(async () => {
-            await Promise.resolve(); 
+            await Promise.resolve();
         });
         expect(result.current.currentUser).toBeNull();
     });
-    
+
     test('updateCurrentUser debe actualizar el estado', async () => {
         const { result } = renderHook(() => useAuth(), { wrapper: AuthProviderWrapper });
         await act(async () => {
             await Promise.resolve();
         });
-        
+
         act(() => {
             result.current.updateCurrentUser(clienteUser as any);
         });
@@ -83,8 +83,8 @@ describe('AuthContext', () => {
     describe('login()', () => {
         test('debe establecer currentUser y devolver redirect a /admin para Administrador', async () => {
             const { result } = renderHook(() => useAuth(), { wrapper: AuthProviderWrapper });
-            let loginResult: LoginResult = { success: false, message: '', redirect: '/' }; 
-            
+            let loginResult: LoginResult = { success: false, message: '', redirect: '/' };
+
             loginApiMock.mockResolvedValue({ nombre: 'Admin L-Up', rol: 'Administrador' } as any);
             getPerfilApiMock.mockResolvedValue(adminUser);
 
@@ -99,8 +99,8 @@ describe('AuthContext', () => {
 
         test('debe devolver redirect a /admin/ordenes para Vendedor', async () => {
             const { result } = renderHook(() => useAuth(), { wrapper: AuthProviderWrapper });
-            let loginResult: LoginResult = { success: false, message: '', redirect: '/' }; 
-            
+            let loginResult: LoginResult = { success: false, message: '', redirect: '/' };
+
             loginApiMock.mockResolvedValue({ nombre: 'Vendedor L-Up', rol: 'Vendedor' } as any);
             getPerfilApiMock.mockResolvedValue(vendedorUser);
 
@@ -113,10 +113,10 @@ describe('AuthContext', () => {
             expect(loginResult.redirect).toBe('/admin/ordenes');
         });
 
-        test('debe devolver redirect a / para Cliente', async () => { 
+        test('debe devolver redirect a / para Cliente', async () => {
             const { result } = renderHook(() => useAuth(), { wrapper: AuthProviderWrapper });
-            let loginResult: LoginResult = { success: false, message: '', redirect: '/' }; 
-            
+            let loginResult: LoginResult = { success: false, message: '', redirect: '/' };
+
             loginApiMock.mockResolvedValue({ nombre: 'Cliente Test', rol: 'Cliente' } as any);
             getPerfilApiMock.mockResolvedValue(clienteUser);
 
@@ -129,13 +129,13 @@ describe('AuthContext', () => {
             expect(loginResult.redirect).toBe('/');
         });
 
-        test('debe fallar para credenciales incorrectas', async () => { 
+        test('debe fallar para credenciales incorrectas', async () => {
             const { result } = renderHook(() => useAuth(), { wrapper: AuthProviderWrapper });
             let loginResult: LoginResult = { success: false, message: '', redirect: '/' };
 
             vi.mocked(api.loginApi).mockRejectedValue(new Error('Credenciales inválidas'));
 
-            await act(async () => { 
+            await act(async () => {
                 loginResult = await result.current.login('wrong@email.com', 'badpass');
             });
 
@@ -173,26 +173,25 @@ describe('AuthContext', () => {
             await act(async () => {
                 registerResult = await result.current.register(failedUserData);
             });
-            
+
             expect(registerResult.success).toBe(false);
             expect(registerResult.message).toBe('Correo duplicado');
         });
     });
-    
+
     test('debe limpiar currentUser y llamar a logoutApi', async () => {
         const { result } = renderHook(() => useAuth(), { wrapper: AuthProviderWrapper });
         await act(async () => {
             await Promise.resolve();
         });
-        
-        // Mockear un usuario ya logueado para que haya algo que "limpiar"
+
         act(() => {
             result.current.updateCurrentUser(clienteUser as any);
         });
 
         vi.mocked(api.logoutApi).mockResolvedValue({});
 
-        await act(async () => { 
+        await act(async () => {
             result.current.logout();
         });
 

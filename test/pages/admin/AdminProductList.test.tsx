@@ -2,7 +2,7 @@ import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { MemoryRouter, useNavigate } from 'react-router-dom';
 import AdminProductList from '../../../src/pages/admin/AdminProductList';
-import * as adminService from '../../../src/services/adminService'; 
+import * as adminService from '../../../src/services/adminService';
 import { Product } from '../../../src/data/productData';
 
 const mockNavigate = vi.fn();
@@ -20,7 +20,7 @@ vi.mock('../../../src/services/adminService');
 const mockGetAdminProducts = vi.mocked(adminService.getAdminProducts);
 const mockDeleteProduct = vi.mocked(adminService.deleteProduct);
 
-const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
 
 describe('AdminProductList', () => {
 
@@ -40,7 +40,7 @@ describe('AdminProductList', () => {
         render(<MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}><AdminProductList /></MemoryRouter>);
 
         await waitFor(() => expect(screen.getByText('Prod A')).toBeInTheDocument());
-        
+
         expect(screen.getByText('CatStringUnique')).toBeInTheDocument();
         expect(screen.getByText('CatObjectUnique')).toBeInTheDocument();
 
@@ -61,7 +61,7 @@ describe('AdminProductList', () => {
         await act(async () => fireEvent.click(confirmBtn));
 
         await waitFor(() => expect(mockDeleteProduct).toHaveBeenCalledWith('X1'));
-        expect(mockGetAdminProducts).toHaveBeenCalledTimes(2); 
+        expect(mockGetAdminProducts).toHaveBeenCalledTimes(2);
     });
 
     test('maneja error al eliminar (catch block)', async () => {
@@ -96,15 +96,15 @@ describe('AdminProductList', () => {
     test('maneja error de carga inicial', async () => {
         mockGetAdminProducts.mockRejectedValue(new Error("Fail load"));
         render(<MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}><AdminProductList /></MemoryRouter>);
-        
+
         await waitFor(() => expect(screen.getByText(/Error al cargar productos/i)).toBeInTheDocument());
     });
-    
+
     test('navega a editar', async () => {
         mockGetAdminProducts.mockResolvedValue([{ codigo: 'E1', nombre: 'EditMe', stock: 1, stockCritico: 1, precio: 1, categoria: 'c', imagen: '' }]);
         render(<MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}><AdminProductList /></MemoryRouter>);
         await waitFor(() => screen.getByText('EditMe'));
-        
+
         fireEvent.click(screen.getByText('Editar'));
         expect(mockNavigate).toHaveBeenCalledWith('/admin/productos/editar/E1');
     });

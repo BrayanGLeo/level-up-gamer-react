@@ -72,13 +72,13 @@ describe('RegisterPage', () => {
         mockValidateTextField.mockReturnValue(false);
         mockValidateRut.mockReturnValue(false);
 
-        render(<BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}><RegisterPage /></BrowserRouter>);  
+        render(<BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}><RegisterPage /></BrowserRouter>);
 
         fireEvent.click(screen.getByRole('button', { name: /Registrarse/i }));
 
         expect(await screen.findByText('El nombre solo debe contener letras y espacios (máx 30 caracteres).')).toBeInTheDocument();
         expect(await screen.findByText('El RUT no es válido (ej: 12345678-9).')).toBeInTheDocument();
-        
+
         expect(mockRegister).not.toHaveBeenCalled();
     });
 
@@ -119,14 +119,14 @@ describe('RegisterPage', () => {
         fireEvent.click(screen.getByRole('button', { name: /Registrarse/i }));
 
         const modalElements = await screen.findAllByText('¡Registro Exitoso!');
-        
+
         expect(modalElements.length).toBeGreaterThan(0);
 
         expect(mockRegister).toHaveBeenCalledWith(expect.objectContaining({
             email: 'test@gmail.com',
             rut: '12345678-9',
         }));
-        
+
         expect(await screen.findByText('¡Bienvenido! Tu cuenta ha sido creada.')).toBeInTheDocument();
     });
 
@@ -153,7 +153,7 @@ describe('RegisterPage', () => {
 
         const closeButtons = screen.getAllByRole('button');
         const acceptButton = closeButtons.find((btn) => btn.textContent === 'Aceptar' || btn.getAttribute('aria-label')?.includes('close'));
-        
+
         if (acceptButton) {
             fireEvent.click(acceptButton);
             expect(mockedNavigate).toHaveBeenCalledWith('/store');
@@ -162,7 +162,7 @@ describe('RegisterPage', () => {
 
     test('maneja excepción en el registro (catch block)', async () => {
         mockRegister.mockRejectedValue(new Error('Fallo inesperado'));
-        const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+        const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
 
         render(<BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}><RegisterPage /></BrowserRouter>);
 

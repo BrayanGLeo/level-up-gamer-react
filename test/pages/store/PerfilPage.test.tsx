@@ -116,7 +116,7 @@ describe('PerfilPage', () => {
             onload: ((ev: any) => void) | null = null;
             readAsDataURL(_file: any) {
                 if (this.onload) {
-                    this.onload({ target: { result: null } }); 
+                    this.onload({ target: { result: null } });
                 }
             }
         }
@@ -144,7 +144,7 @@ describe('PerfilPage', () => {
         mockUseAuth.mockReturnValue({ currentUser: user, updateCurrentUser: mockUpdate });
 
         render(<PerfilPage />);
-        
+
         const input = document.getElementById('file-input') as HTMLInputElement;
         fireEvent.change(input, { target: { files: [] } });
 

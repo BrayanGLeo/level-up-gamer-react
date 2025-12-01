@@ -108,10 +108,10 @@ describe('LoginPage', () => {
                     <LoginPage />
                 </MemoryRouter>
             );
-        
+
             const emailInput = screen.getByLabelText(/Correo Electrónico:/i);
             fireEvent.change(emailInput, { target: { value: 'test@hotmail.com' } });
-        
+
             const submitButton = screen.getByRole('button', { name: /Acceder/i });
             fireEvent.click(submitButton);
         });
@@ -135,12 +135,12 @@ describe('LoginPage', () => {
             fireEvent.change(emailInput, { target: { value: 'user@example.cl' } });
             fireEvent.change(passwordInput, { target: { value: 'secret' } });
             await act(async () => {
-                fireEvent.click(submitButton); 
+                fireEvent.click(submitButton);
             });
 
             const closeButton = await screen.findByTestId('notif-close'); // Esperar a que el modal aparezca
             expect(closeButton).toBeInTheDocument();
-            
+
             await act(async () => {
                 fireEvent.click(closeButton);
             });
@@ -165,14 +165,14 @@ describe('LoginPage', () => {
             fireEvent.change(emailInput, { target: { value: 'user@example.cl' } });
             fireEvent.change(passwordInput, { target: { value: 'secret' } });
             await act(async () => {
-                fireEvent.click(submitButton); 
+                fireEvent.click(submitButton);
             });
 
             expect(await screen.findByRole('heading', { name: /Error de Inicio de Sesión/i })).toBeInTheDocument();
             expect(screen.getByText(/Credenciales inválidas/i)).toBeInTheDocument();
-            
+
             const closeButton = await screen.findByTestId('notif-close');
-            
+
             await act(async () => {
                 fireEvent.click(closeButton);
             });

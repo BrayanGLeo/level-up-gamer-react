@@ -7,7 +7,6 @@ vi.mock('react-router-dom', async (importOriginal) => {
     };
 });
 
-// El mock define los botones como "Confirm Remove" / "Hide"
 vi.mock('../../../src/components/RemoveFromCartModal', () => ({
     default: ({ show, onHide, onConfirm, product }: any) => (
         show ? <div>
@@ -17,12 +16,11 @@ vi.mock('../../../src/components/RemoveFromCartModal', () => ({
     )
 }));
 
-// El mock define los botones como "Confirm Clear" / "Hide"
 vi.mock('../../../src/components/ClearCartModal', () => ({
     default: ({ show, onHide, onConfirm }: any) => (
         show ? <div>
             <button data-testid="clear-confirm" onClick={() => onConfirm && onConfirm()}>Confirm Clear</button>
-            <button data-testid="clear-hide" onClick={() => onHide && onHide()}>Hide</button> {/* Aquí dice Hide */}
+            <button data-testid="clear-hide" onClick={() => onHide && onHide()}>Hide</button>
         </div> : null
     )
 }));

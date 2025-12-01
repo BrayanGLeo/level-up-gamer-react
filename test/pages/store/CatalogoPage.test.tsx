@@ -35,7 +35,7 @@ const mockProducts: Product[] = [
     { codigo: 'P003', nombre: 'Consola Xbox', categoria: 'consolas', precio: 500000, descripcion: 'Consola', stock: 1, stockCritico: 1, imagen: '' }
 ];
 
-const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
 
 describe('CatalogoPage', () => {
 

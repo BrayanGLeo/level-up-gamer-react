@@ -128,7 +128,7 @@ describe('OrderSuccessPage', () => {
 
             const downloadButton = screen.getByRole('button', { name: /Descargar Boleta/i });
             fireEvent.click(downloadButton);
-            
+
             expect(saveSpy).toHaveBeenCalledWith('boleta_777.pdf');
         });
 
@@ -155,7 +155,7 @@ describe('OrderSuccessPage', () => {
 
             const downloadButton = screen.getByRole('button', { name: /Descargar Boleta/i });
             fireEvent.click(downloadButton);
-            
+
             expect(saveSpy).toHaveBeenCalledWith('boleta_888.pdf');
         });
 
@@ -187,7 +187,7 @@ describe('OrderSuccessPage', () => {
 
             const downloadButton = screen.getByRole('button', { name: /Descargar Boleta/i });
             fireEvent.click(downloadButton);
-            
+
             expect(saveSpy).toHaveBeenCalledWith('boleta_999.pdf');
         });
     });
