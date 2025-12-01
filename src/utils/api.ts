@@ -16,6 +16,9 @@ export const fetchApi = async <T>(url: string, options: RequestInit = {}): Promi
     });
 
     if (response.status === 401 || response.status === 403) {
+        if (url.includes('/auth/login')) {
+            throw new Error('Credenciales inválidas');
+        }
         localStorage.removeItem('currentUser');
         throw new Error('Sesión expirada o acceso denegado.');
     }
@@ -67,7 +70,6 @@ export const registerApi = async (userData: RegisterData): Promise<string> => {
         email: userData.email,
         password: userData.password
     };
-
     return fetchApi<string>('/auth/register', {
         method: 'POST',
         body: JSON.stringify(apiPayload)
@@ -105,6 +107,14 @@ export const finalizeCheckoutApi = async (boletaRequest: any): Promise<any> => {
     });
 };
 
+export const getBlogPostsApi = async (): Promise<any[]> => {
+    return fetchApi<any[]>('/blog', { method: 'GET' });
+};
+
+export const getBlogPostByIdApi = async (id: number): Promise<any> => {
+    return fetchApi<any>(`/blog/${id}`, { method: 'GET' });
+};
+
 export const getMyOrdersApi = async (): Promise<any[]> => {
     return fetchApi<any[]>('/ordenes/mis-pedidos', { method: 'GET' });
 };
@@ -130,17 +140,8 @@ export const updateProfileApi = async (userData: Partial<User>): Promise<any> =>
         apellido: userData.surname,
         password: userData.password
     };
-
     return fetchApi<any>('/auth/perfil', {
         method: 'PUT',
         body: JSON.stringify(payload)
     });
-};
-
-export const getBlogPostsApi = async (): Promise<any[]> => {
-    return fetchApi<any[]>('/blog', { method: 'GET' });
-};
-
-export const getBlogPostByIdApi = async (id: number): Promise<any> => {
-    return fetchApi<any>(`/blog/${id}`, { method: 'GET' });
 };
