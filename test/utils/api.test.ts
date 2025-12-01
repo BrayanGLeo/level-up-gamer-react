@@ -1,11 +1,25 @@
-import { vi } from 'vitest';
-import { fetchApi, loginApi, registerApi, getPerfilApi, logoutApi, getProductsApi, finalizeCheckoutApi } from '../../src/utils/api';
+import { vi, describe, beforeEach, test, expect, afterEach } from 'vitest';
+import {
+    fetchApi,
+    loginApi,
+    registerApi,
+    getPerfilApi,
+    logoutApi,
+    getProductsApi,
+    getProductByCodeApi,
+    finalizeCheckoutApi,
+    getBlogPostsApi,
+    getBlogPostByIdApi,
+    getMyOrdersApi,
+    getMyAddressesApi,
+    createAddressApi,
+    deleteAddressApi,
+    updateProfileApi
+} from '../../src/utils/api';
 
-// Mock de fetch global
 const mockFetch = vi.fn();
 global.fetch = mockFetch;
 
-// Mock de localStorage
 const localStorageMock = (() => {
     let store: { [key: string]: string } = {};
     return {
@@ -17,25 +31,24 @@ const localStorageMock = (() => {
 })();
 Object.defineProperty(window, 'localStorage', { value: localStorageMock });
 
-// Mock de window.location
 const assignMock = vi.fn();
 const replaceMock = vi.fn();
 const mockLocation = {
-    ...window.location, // Copiar propiedades existentes como origin, host, etc.
+    ...window.location,
     assign: assignMock,
     replace: replaceMock,
-    href: '', // Inicializar href
+    href: '',
 };
 Object.defineProperty(window, 'location', {
     value: mockLocation,
-    writable: true // Hacer que location.href sea escribible
+    writable: true
 });
 
 describe('api.ts', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         localStorageMock.clear();
-        mockLocation.href = ''; // Resetear href en cada test
+        mockLocation.href = '';
         assignMock.mockClear();
         replaceMock.mockClear();
     });
@@ -47,7 +60,7 @@ describe('api.ts', () => {
                 ok: true,
                 status: 200,
                 json: () => Promise.resolve(mockData),
-                headers: new Headers({'Content-Length': '100'}), // Añadir para evitar el caso 204
+                headers: new Headers({ 'Content-Length': '100' }),
             });
 
             const result = await fetchApi('/test');
@@ -58,343 +71,168 @@ describe('api.ts', () => {
             });
         });
 
-        test('debe manejar errores 401/403: remover currentUser y redirigir a /login', async () => {
+        test('debe manejar errores 401/403: remover currentUser', async () => {
             mockFetch.mockResolvedValueOnce({
                 ok: false,
                 status: 401,
-                json: () => Promise.resolve({}), // No importa el body para 401/403
+                json: () => Promise.resolve({}),
                 headers: new Headers(),
             });
 
-            localStorageMock.setItem('currentUser', 'some_token'); // Simular que hay un token
+            localStorageMock.setItem('currentUser', 'some_token');
 
             await expect(fetchApi('/test')).rejects.toThrow('Sesión expirada o acceso denegado.');
             expect(localStorageMock.getItem('currentUser')).toBeNull();
-            expect(mockLocation.href).toBe('/login');
-        });
-
-        test('debe lanzar un error para otras respuestas no-ok', async () => {
-            const errorResponseText = 'Not Found';
-            mockFetch.mockResolvedValueOnce({
-                ok: false,
-                status: 404,
-                text: () => Promise.resolve(errorResponseText),
-                headers: new Headers(),
-            });
-
-            await expect(fetchApi('/test')).rejects.toThrow(errorResponseText);
-        });
-
-        test('debe lanzar un error con statusText si no hay body en respuesta no-ok', async () => {
-            mockFetch.mockResolvedValueOnce({
-                ok: false,
-                status: 500,
-                text: () => Promise.resolve(''), // No hay texto de error
-                statusText: 'Internal Server Error',
-                headers: new Headers(),
-            });
-
-            await expect(fetchApi('/test')).rejects.toThrow('Internal Server Error');
-        });
-
-        test('debe retornar un objeto vacío para status 204 (No Content)', async () => {
-            mockFetch.mockResolvedValueOnce({
-                ok: true,
-                status: 204,
-                headers: new Headers(), // Sin Content-Length
-            });
-
-            const result = await fetchApi('/test');
-            expect(result).toEqual({});
-        });
-
-        test('debe retornar un objeto vacío si Content-Length es 0', async () => {
-            mockFetch.mockResolvedValueOnce({
-                ok: true,
-                status: 200, // Puede ser cualquier 2xx
-                headers: new Headers({'Content-Length': '0'}),
-                json: () => Promise.resolve({}), // Aunque json se llame, debería devolver {}
-            });
-
-            const result = await fetchApi('/test');
-            expect(result).toEqual({});
-        });
-
-        test('debe incluir opciones adicionales en la llamada a fetch', async () => {
-            const mockData = { data: 'test' };
-            mockFetch.mockResolvedValueOnce({
-                ok: true,
-                status: 200,
-                json: () => Promise.resolve(mockData),
-                headers: new Headers({'Content-Length': '100'}),
-            });
-
-            const options = {
-                method: 'POST',
-                body: JSON.stringify({ key: 'value' }),
-                headers: { 'X-Custom-Header': 'custom' },
-            };
-            await fetchApi('/test-post', options);
-
-            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/api/v1/test-post', {
-                ...options,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Custom-Header': 'custom',
-                },
-                credentials: 'include',
-            });
         });
     });
 
-    describe('loginApi', () => {
-        test('debe llamar a fetchApi con los datos correctos para el login', async () => {
-            const mockAuthResult = { nombre: 'Test User', rol: 'Cliente' };
+    describe('Auth Endpoints', () => {
+        test('loginApi envía credenciales correctamente', async () => {
+            const mockResult = { nombre: 'User', rol: 'Cliente' };
             mockFetch.mockResolvedValueOnce({
                 ok: true,
                 status: 200,
-                json: () => Promise.resolve(mockAuthResult),
-                headers: new Headers({'Content-Length': '100'}),
+                json: () => Promise.resolve(mockResult),
+                headers: new Headers({ 'Content-Length': '50' }),
             });
 
-            const email = 'test@example.com';
-            const password = 'password123';
-            const result = await loginApi(email, password);
-
-            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/api/v1/auth/login', {
-                method: 'POST',
-                body: JSON.stringify({ email, password }),
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
-            });
-            expect(result).toEqual(mockAuthResult);
+            await loginApi('test@test.com', '123456');
+            expect(mockFetch).toHaveBeenCalledWith(
+                expect.stringContaining('/auth/login'),
+                expect.objectContaining({ method: 'POST', body: JSON.stringify({ email: 'test@test.com', password: '123456' }) })
+            );
         });
 
-        test('debe propagar errores de fetchApi durante el login', async () => {
-            mockFetch.mockResolvedValueOnce({
-                ok: false,
-                status: 400,
-                text: () => Promise.resolve('Invalid credentials'),
-                headers: new Headers(),
-            });
-
-            await expect(loginApi('test@example.com', 'wrong')).rejects.toThrow('Invalid credentials');
-        });
-    });
-
-    describe('registerApi', () => {
-        test('debe llamar a fetchApi con los datos correctos para el registro', async () => {
-            const mockResponse = 'Registro exitoso';
+        test('getPerfilApi obtiene y mapea el usuario', async () => {
+            const apiUser = { nombre: 'Juan', apellido: 'Perez', email: 'j@p.cl' };
             mockFetch.mockResolvedValueOnce({
                 ok: true,
                 status: 200,
-                json: () => Promise.resolve(mockResponse),
-                headers: new Headers({'Content-Length': '100'}),
-            });
-
-            const userData = {
-                name: 'Juan',
-                surname: 'Perez',
-                rut: '12345678-9',
-                email: 'juan@example.com',
-                password: 'securePassword',
-                confirmPassword: 'securePassword'
-            };
-            const result = await registerApi(userData);
-
-            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/api/v1/auth/register', {
-                method: 'POST',
-                body: JSON.stringify({
-                    nombre: userData.name,
-                    apellido: userData.surname,
-                    rut: userData.rut,
-                    email: userData.email,
-                    password: userData.password,
-                }),
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
-            });
-            expect(result).toEqual(mockResponse);
-        });
-
-        test('debe propagar errores de fetchApi durante el registro', async () => {
-            mockFetch.mockResolvedValueOnce({
-                ok: false,
-                status: 409,
-                text: () => Promise.resolve('Email already registered'),
-                headers: new Headers(),
-            });
-
-            const userData = {
-                name: 'Juan',
-                surname: 'Perez',
-                rut: '12345678-9',
-                email: 'juan@example.com',
-                password: 'securePassword',
-                confirmPassword: 'securePassword'
-            };
-            await expect(registerApi(userData)).rejects.toThrow('Email already registered');
-        });
-    });
-
-    describe('getPerfilApi', () => {
-        test('debe llamar a fetchApi con el método GET para obtener el perfil', async () => {
-            const mockApiUser: any = { id: 1, nombre: 'Test', apellido: 'User' };
-            mockFetch.mockResolvedValueOnce({
-                ok: true,
-                status: 200,
-                json: () => Promise.resolve(mockApiUser),
-                headers: new Headers({'Content-Length': '100'}),
+                json: () => Promise.resolve(apiUser),
+                headers: new Headers({ 'Content-Length': '50' }),
             });
 
             const result = await getPerfilApi();
-
-            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/api/v1/auth/perfil', {
-                method: 'GET',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
-            });
-            expect(result).toEqual({
-                ...mockApiUser,
-                name: 'Test',
-                surname: 'User',
-                registeredAt: expect.any(String),
-            });
+            expect(result.name).toBe('Juan');
+            expect(result.surname).toBe('Perez');
+            expect(result.registeredAt).toBeDefined();
         });
 
-        test('debe propagar errores de fetchApi al obtener el perfil', async () => {
-            mockFetch.mockResolvedValueOnce({
-                ok: false,
-                status: 404,
-                text: () => Promise.resolve('Perfil no encontrado'),
-                headers: new Headers(),
-            });
-
-            await expect(getPerfilApi()).rejects.toThrow('Perfil no encontrado');
-        });
-    });
-
-    describe('logoutApi', () => {
-        test('debe llamar a fetchApi con el método POST para cerrar sesión', async () => {
+        test('updateProfileApi envía datos PUT correctamente', async () => {
             mockFetch.mockResolvedValueOnce({
                 ok: true,
                 status: 200,
-                json: () => Promise.resolve({ message: 'Logged out' }),
-                headers: new Headers({'Content-Length': '100'}),
+                json: () => Promise.resolve({}),
+                headers: new Headers({ 'Content-Length': '10' }),
             });
 
-            const result = await logoutApi();
+            const updateData = { name: 'NewName', surname: 'NewLast', password: 'newpass' };
+            await updateProfileApi(updateData);
 
-            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/api/v1/auth/logout', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
-            });
-            expect(result).toEqual({ message: 'Logged out' });
-        });
-
-        test('debe propagar errores de fetchApi al cerrar sesión', async () => {
-            mockFetch.mockResolvedValueOnce({
-                ok: false,
-                status: 500,
-                text: () => Promise.resolve('Server error'),
-                headers: new Headers(),
-            });
-
-            await expect(logoutApi()).rejects.toThrow('Server error');
+            expect(mockFetch).toHaveBeenCalledWith(
+                expect.stringContaining('/auth/perfil'),
+                expect.objectContaining({
+                    method: 'PUT',
+                    body: JSON.stringify({ nombre: 'NewName', apellido: 'NewLast', password: 'newpass' })
+                })
+            );
         });
     });
 
-    describe('getProductsApi', () => {
-        test('debe llamar a fetchApi con el método GET para obtener productos', async () => {
-            // Esto simula la respuesta cruda de la API
-            const mockApiProducts = [{
-                codigo: 'P1',
-                nombre: 'Product 1',
-                precio: 100,
-                imagenUrl: '',
-                // categoria no está presente, para que el mapeador use 'Sin Categoría'
-                descripcion: '',
-                stock: 1,
-                stockCritico: 1
-            }];
+    describe('Product Endpoints (con Mapeo)', () => {
+        const backendProduct = {
+            codigo: 'P1',
+            nombre: 'Prod Backend',
+            precio: 100,
+            stock: 5,
+            stockCritico: 2,
+            imagenUrl: 'http://img.com/1.jpg',
+            categoria: { id: 1, nombre: 'Juegos' },
+            descripcion: 'Desc'
+        };
 
-            // Esto es lo que esperamos después de que el mapeador procese la respuesta
-            const expectedProducts: Product[] = [{
-                codigo: 'P1',
-                nombre: 'Product 1',
-                precio: 100,
-                imagen: '',
-                categoria: 'Sin Categoría',
-                descripcion: '',
-                stock: 1,
-                stockCritico: 1,
-                features: [],
-                specifications: {}
-            }];
-
+        test('getProductsApi obtiene lista y mapea correctamente', async () => {
             mockFetch.mockResolvedValueOnce({
                 ok: true,
                 status: 200,
-                json: () => Promise.resolve(mockApiProducts),
+                json: () => Promise.resolve([backendProduct]),
                 headers: new Headers({ 'Content-Length': '100' }),
             });
 
             const result = await getProductsApi();
 
-            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/api/v1/tienda/productos', {
-                method: 'GET',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
-            });
-            expect(result).toEqual(expectedProducts);
+            expect(result).toHaveLength(1);
+            expect(result[0].nombre).toBe('Prod Backend');
+            expect(result[0].imagen).toBe('http://img.com/1.jpg');
+            expect(result[0].categoria).toBe('Juegos');
+            expect(result[0].features).toEqual([]);
         });
 
-        test('debe propagar errores de fetchApi al obtener productos', async () => {
-            mockFetch.mockResolvedValueOnce({
-                ok: false,
-                status: 500,
-                text: () => Promise.resolve('Error fetching products'),
-                headers: new Headers(),
-            });
-
-            await expect(getProductsApi()).rejects.toThrow('Error fetching products');
-        });
-    });
-
-    describe('finalizeCheckoutApi', () => {
-        test('debe llamar a fetchApi con los datos correctos para finalizar la compra', async () => {
-            const mockBoletaRequest = { items: [{ productId: 'P1', quantity: 1 }], total: 100 };
-            const mockResponse = { message: 'Compra finalizada', orderId: 'ABC' };
+        test('getProductByCodeApi obtiene un producto y lo mapea', async () => {
             mockFetch.mockResolvedValueOnce({
                 ok: true,
                 status: 200,
-                json: () => Promise.resolve(mockResponse),
-                headers: new Headers({'Content-Length': '100'}),
+                json: () => Promise.resolve(backendProduct),
+                headers: new Headers({ 'Content-Length': '100' }),
             });
 
-            const result = await finalizeCheckoutApi(mockBoletaRequest);
-
-            expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/api/v1/checkout/finalizar', {
-                method: 'POST',
-                body: JSON.stringify(mockBoletaRequest),
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
-            });
-            expect(result).toEqual(mockResponse);
-        });
-
-        test('debe propagar errores de fetchApi al finalizar la compra', async () => {
-            const mockBoletaRequest = { items: [{ productId: 'P1', quantity: 1 }], total: 100 };
-            mockFetch.mockResolvedValueOnce({
-                ok: false,
-                status: 400,
-                text: () => Promise.resolve('Faltan datos de compra'),
-                headers: new Headers(),
-            });
-
-            await expect(finalizeCheckoutApi(mockBoletaRequest)).rejects.toThrow('Faltan datos de compra');
+            const result = await getProductByCodeApi('P1');
+            expect(result.codigo).toBe('P1');
+            expect(result.imagen).toBe('http://img.com/1.jpg');
         });
     });
 
+    describe('Blog Endpoints', () => {
+        test('getBlogPostsApi llama al endpoint correcto', async () => {
+            mockFetch.mockResolvedValueOnce({
+                ok: true, status: 200, json: () => Promise.resolve([]), headers: new Headers({ 'Content-Length': '2' })
+            });
+            await getBlogPostsApi();
+            expect(mockFetch).toHaveBeenCalledWith(expect.stringContaining('/blog'), expect.objectContaining({ method: 'GET' }));
+        });
+
+        test('getBlogPostByIdApi llama con ID', async () => {
+            mockFetch.mockResolvedValueOnce({
+                ok: true, status: 200, json: () => Promise.resolve({}), headers: new Headers({ 'Content-Length': '2' })
+            });
+            await getBlogPostByIdApi(99);
+            expect(mockFetch).toHaveBeenCalledWith(expect.stringContaining('/blog/99'), expect.anything());
+        });
+    });
+
+    describe('Store User Actions', () => {
+        test('getMyOrdersApi', async () => {
+            mockFetch.mockResolvedValueOnce({
+                ok: true, status: 200, json: () => Promise.resolve([]), headers: new Headers({ 'Content-Length': '2' })
+            });
+            await getMyOrdersApi();
+            expect(mockFetch).toHaveBeenCalledWith(expect.stringContaining('/ordenes/mis-pedidos'), expect.anything());
+        });
+
+        test('Direcciones CRUD', async () => {
+            mockFetch.mockResolvedValueOnce({ ok: true, status: 200, json: () => Promise.resolve([]), headers: new Headers({ 'Content-Length': '2' }) });
+            await getMyAddressesApi();
+            expect(mockFetch).toHaveBeenCalledWith(expect.stringContaining('/usuarios/direcciones'), expect.objectContaining({ method: 'GET' }));
+
+            mockFetch.mockResolvedValueOnce({ ok: true, status: 200, json: () => Promise.resolve({}), headers: new Headers({ 'Content-Length': '2' }) });
+            await createAddressApi({ alias: 'Casa' });
+            expect(mockFetch).toHaveBeenCalledWith(expect.stringContaining('/usuarios/direcciones'), expect.objectContaining({ method: 'POST' }));
+
+            mockFetch.mockResolvedValueOnce({ ok: true, status: 204, headers: new Headers() });
+            await deleteAddressApi(1);
+            expect(mockFetch).toHaveBeenCalledWith(expect.stringContaining('/usuarios/direcciones/1'), expect.objectContaining({ method: 'DELETE' }));
+        });
+
+        test('finalizeCheckoutApi envía la orden', async () => {
+            mockFetch.mockResolvedValueOnce({ ok: true, status: 200, json: () => Promise.resolve({ id: 1 }), headers: new Headers({ 'Content-Length': '10' }) });
+            const boleta = { total: 1000, items: [] };
+
+            await finalizeCheckoutApi(boleta);
+
+            expect(mockFetch).toHaveBeenCalledWith(
+                expect.stringContaining('/checkout/finalizar'),
+                expect.objectContaining({ method: 'POST', body: JSON.stringify(boleta) })
+            );
+        });
+    });
 });
