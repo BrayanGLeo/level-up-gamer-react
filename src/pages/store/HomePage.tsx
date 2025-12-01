@@ -1,21 +1,37 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Container, Row, Col } from 'react-bootstrap';
+import { Container, Row, Col, Spinner } from 'react-bootstrap';
 import ProductCard from '../../components/ProductCard';
 import BlogPostSummary from '../../components/BlogPostSummary';
-import { getProducts, Product } from '../../data/productData';
+import { getProductsApi } from '../../utils/api';
+import { Product } from '../../data/productData';
 import { getBlogPosts } from '../../data/blogData';
 import heroBackground from '../../assets/Fondo.png';
 import { useCart } from '../../context/CartContext';
 import AddToCartModal from '../../components/AddToCartModal';
 
 const HomePage = () => {
-    const featuredProducts = getProducts().slice(0, 4);
+    const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
+    const [loading, setLoading] = useState(true);
+    
     const featuredPosts = getBlogPosts().slice(0, 2);
     const { addToCart } = useCart();
     const [showModal, setShowModal] = useState(false);
-
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+
+    useEffect(() => {
+        const loadFeatured = async () => {
+            try {
+                const allProducts = await getProductsApi();
+                setFeaturedProducts(allProducts.slice(0, 4));
+            } catch (error) {
+                console.error("Error cargando productos destacados", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        loadFeatured();
+    }, []);
 
     const handleAddToCart = (product: Product) => {
         addToCart(product);
@@ -40,16 +56,20 @@ const HomePage = () => {
             <section id="featured-products" className="section-catalogo" style={{ paddingTop: '50px', backgroundColor: '#111' }}>
                 <Container>
                     <h2 className="section-title">Productos Destacados</h2>
-                    <Row>
-                        {featuredProducts.map(product => (
-                            <Col key={product.codigo} md={4} lg={3} className="mb-4">
-                                <ProductCard
-                                    product={product}
-                                    onAddToCartClick={handleAddToCart}
-                                />
-                            </Col>
-                        ))}
-                    </Row>
+                    {loading ? (
+                        <div className="text-center"><Spinner animation="border" variant="primary" /></div>
+                    ) : (
+                        <Row>
+                            {featuredProducts.map(product => (
+                                <Col key={product.codigo} md={4} lg={3} className="mb-4">
+                                    <ProductCard
+                                        product={product}
+                                        onAddToCartClick={handleAddToCart}
+                                    />
+                                </Col>
+                            ))}
+                        </Row>
+                    )}
                 </Container>
             </section>
 

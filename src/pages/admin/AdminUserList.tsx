@@ -59,14 +59,14 @@ const AdminUserList = () => {
         setUserToDelete(null);
     };
 
-    const handleShowHistory = (user: User) => {
-        setSelectedUser(user);
-        setShowHistoryModal(true);
-    };
-
     const handleCloseHistory = () => {
         setShowHistoryModal(false);
         setSelectedUser(null);
+    };
+
+    const handleShowHistory = (user: User) => {
+        setSelectedUser(user);
+        setShowHistoryModal(true);
     };
 
     const getRoleBadge = (role: User['role']) => {
@@ -87,7 +87,7 @@ const AdminUserList = () => {
             <Card className="admin-card">
                 <Card.Header>Lista de Usuarios Registrados</Card.Header>
                 <Card.Body>
-                    <div className="admin-table-container" style={{padding: 0, boxShadow: 'none'}}>
+                    <div className="admin-table-container" style={{ padding: 0, boxShadow: 'none' }}>
                         <Table hover responsive>
                             <thead>
                                 <tr>

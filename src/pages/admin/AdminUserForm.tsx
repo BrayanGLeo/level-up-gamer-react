@@ -81,7 +81,7 @@ const AdminUserForm = () => {
                         email: formData.email, password: formData.password || '123456',
                         birthdate: formData.fechaNacimiento
                     });
-                    setModalInfo({ title: '¡Éxito!', message: 'Usuario creado con éxito (Rol inicial: Cliente)' });
+                    setModalInfo({ title: '¡Éxito!', message: 'Usuario creado con éxito' });
                 }
                 setShowNotifyModal(true);
             } catch (error: any) {
@@ -104,6 +104,7 @@ const AdminUserForm = () => {
                         <Form.Group className="form-group mb-3">
                             <Form.Label>RUN</Form.Label>
                             <Form.Control name="run" value={formData.run} onChange={handleChange} isInvalid={!!errors.run} readOnly={isEditMode} />
+                            <Form.Control.Feedback type="invalid">{errors.run}</Form.Control.Feedback>
                         </Form.Group>
                         <Row>
                             <Col><Form.Group className="form-group mb-3"><Form.Label>Nombre</Form.Label><Form.Control name="nombre" value={formData.nombre} onChange={handleChange} /></Form.Group></Col>

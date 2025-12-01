@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
+import { useAuth } from '../../context/AuthContext';
 import { Row, Col } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import '../../styles/AdminStyle.css';
 import { getProductsApi, fetchApi } from '../../utils/api';
 
 const AdminDashboard = () => {
+    const { currentUser } = useAuth();
     const [stats, setStats] = useState({ sales: 0, products: 0, users: 0, orders: 0 });
 
     useEffect(() => {
@@ -12,9 +14,9 @@ const AdminDashboard = () => {
             try {
                 const [products, users, orders, totalSales] = await Promise.all([
                     getProductsApi(),
-                    fetchApi<any[]>('/admin/usuarios', { method: 'GET' }),
-                    fetchApi<any[]>('/ordenes', { method: 'GET' }),
-                    fetchApi<number>('/admin/reportes/total-ventas', { method: 'GET' })
+                    fetchApi<any[]>('/admin/usuarios', { method: 'GET' }).catch(() => []),
+                    fetchApi<any[]>('/ordenes', { method: 'GET' }).catch(() => []),
+                    fetchApi<number>('/admin/reportes/total-ventas', { method: 'GET' }).catch(() => 0)
                 ]);
 
                 setStats({
@@ -24,7 +26,7 @@ const AdminDashboard = () => {
                     sales: totalSales || 0
                 });
             } catch (error) {
-                console.error("Error loading dashboard stats", error);
+                console.error("Error cargando estadísticas", error);
             }
         };
         loadStats();
@@ -33,7 +35,10 @@ const AdminDashboard = () => {
     return (
         <>
             <div className="admin-page-header">
-                <div><h1>Dashboard</h1><p>Resumen de las actividades diarias</p></div>
+                <div>
+                    <h1>Dashboard</h1>
+                    <p>Resumen de las actividades diarias</p>
+                </div>
             </div>
 
             <Row className="admin-stats-grid">
@@ -74,6 +79,7 @@ const AdminDashboard = () => {
                     </div>
                 </Col>
             </Row>
+
             <div className="admin-nav-grid">
                 <Link to="/admin" className="admin-nav-card">
                     <div className="nav-card-icon">🏠</div>
@@ -98,6 +104,14 @@ const AdminDashboard = () => {
                 <Link to="/admin/reportes" className="admin-nav-card">
                     <div className="nav-card-icon">📊</div>
                     <h5 className="nav-card-title">Reportes</h5>
+                </Link>
+                <Link to="/admin/perfil" className="admin-nav-card">
+                    <div className="nav-card-icon">👤</div>
+                    <h5 className="nav-card-title">Perfil</h5>
+                </Link>
+                <Link to="/" className="admin-nav-card">
+                    <div className="nav-card-icon">🌐</div>
+                    <h5 className="nav-card-title">Tienda</h5>
                 </Link>
             </div>
         </>

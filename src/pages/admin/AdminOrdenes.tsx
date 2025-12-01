@@ -1,54 +1,77 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Table, Button, Badge, Form } from 'react-bootstrap';
-import { getUsers, updateOrderStatus, Order, getGuestOrders } from '../../data/userData';
+import { fetchApi } from '../../utils/api';
 import OrderDetailModal from '../../components/OrderDetailModal';
 import '../../styles/AdminStyle.css';
 
-type AdminOrder = Order & {
+type AdminOrder = {
+    number: number;
+    date: string;
+    total: number;
     status: string;
     clientName: string;
     userRUT: string;
+    items: any[];
+    shipping: any;
+    id: number;
+    customer: any;
 };
 
-const ESTADOS_ORDEN: string[] = [
-    "Pendiente",
-    "Procesando",
-    "En preparación",
-    "En tránsito",
-    "Completado"
-];
+const ESTADOS_ORDEN = ["Pendiente", "Procesando", "En preparación", "En tránsito", "Completado", "Cancelado"];
 
 const AdminOrdenes = () => {
     const [allOrders, setAllOrders] = useState<AdminOrder[]>([]);
     const [showModal, setShowModal] = useState(false);
-    const [selectedOrder, setSelectedOrder] = useState<AdminOrder | null>(null);
-
+    const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
 
     useEffect(() => {
-        const users = getUsers();
+        const fetchOrders = async () => {
+            try {
+                const data = await fetchApi<any[]>('/ordenes', { method: 'GET' });
 
-        const ordersFromAllUsers: AdminOrder[] = users.flatMap(user =>
-            (user.orders || []).map((order: Order) => ({
-                ...order,
-                status: order.status || 'Pendiente',
-                clientName: `${user.name} ${user.surname} (Registrado)`,
-                userRUT: user.rut
-            }))
-        );
+                const mapped = data.map(o => ({
+                    id: o.id,
+                    number: o.numeroOrden,
+                    date: new Date(o.fechaCompra).toLocaleDateString(),
+                    total: o.total,
+                    status: o.estado,
+                    clientName: o.usuario ? `${o.usuario.nombre} ${o.usuario.apellido}` : 'Invitado',
+                    userRUT: o.usuario ? o.usuario.rut : 'invitado',
+                    customer: {
+                        name: o.usuario ? o.usuario.nombre : 'Invitado',
+                        surname: o.usuario ? o.usuario.apellido : '',
+                        email: o.usuario ? o.usuario.email : '',
+                    },
+                    shipping: o.tipoEntrega === 'Retiro en Tienda' ? { type: 'Retiro en Tienda' } : { type: 'Despacho', ...o },
+                    items: o.detalles.map((d: any) => ({
+                        codigo: d.producto.codigo,
+                        nombre: d.producto.nombre,
+                        quantity: d.cantidad,
+                        precio: d.precioUnitario,
+                        imagen: d.producto.imagenUrl
+                    }))
+                }));
 
-        const guestOrders = getGuestOrders();
-        const ordersFromGuests: AdminOrder[] = guestOrders.map(order => ({
-            ...order,
-            status: order.status || 'Pendiente',
-            clientName: `${order.customer.name} ${order.customer.surname} (Invitado)`,
-            userRUT: 'invitado'
-        }));
-
-        const allCombinedOrders = [...ordersFromAllUsers, ...ordersFromGuests];
-        allCombinedOrders.sort((a, b) => b.number - a.number);
-
-        setAllOrders(allCombinedOrders);
+                setAllOrders(mapped.sort((a: any, b: any) => b.number - a.number));
+            } catch (error) {
+                console.error("Error fetching orders", error);
+            }
+        };
+        fetchOrders();
     }, []);
+
+    const handleStatusChange = async (id: number, newStatus: string) => {
+        try {
+            await fetchApi(`/ordenes/${id}/estado`, {
+                method: 'PATCH',
+                body: JSON.stringify({ estado: newStatus })
+            });
+
+            setAllOrders(prev => prev.map(o => o.id === id ? { ...o, status: newStatus } : o));
+        } catch (error) {
+            alert('Error al actualizar estado');
+        }
+    };
 
     const handleShowModal = (order: AdminOrder) => {
         setSelectedOrder(order);
@@ -60,109 +83,44 @@ const AdminOrdenes = () => {
         setSelectedOrder(null);
     };
 
-    const handleStatusChange = (userRUT: string, orderNumber: number, newStatus: string) => {
-        updateOrderStatus(userRUT, orderNumber, newStatus);
-
-        setAllOrders(prevOrders =>
-            prevOrders.map(order =>
-                order.number === orderNumber ? { ...order, status: newStatus } : order
-            )
-        );
-    };
-
     const getStatusBadge = (status: string) => {
         switch (status) {
-            case 'Pendiente':
-                return <Badge bg="secondary">{status}</Badge>;
-            case 'Procesando':
-                return <Badge bg="primary">{status}</Badge>;
-            case 'En preparación':
-                return <Badge bg="info">{status}</Badge>;
-            case 'En tránsito':
-                return <Badge bg="warning">{status}</Badge>;
-            case 'Completado':
-                return <Badge bg="success">{status}</Badge>;
-            default:
-                return <Badge bg="dark">{status}</Badge>;
+            case 'Pendiente': return <Badge bg="secondary">{status}</Badge>;
+            case 'Completado': return <Badge bg="success">{status}</Badge>;
+            default: return <Badge bg="primary">{status}</Badge>;
         }
     };
 
     return (
         <>
-            <div className="admin-page-header">
-                <h1>Órdenes</h1>
-            </div>
-
+            <div className="admin-page-header"><h1>Órdenes</h1></div>
             <Card className="admin-card">
-                <Card.Header>Historial de Órdenes</Card.Header>
                 <Card.Body>
-                    <div className="admin-table-container" style={{ padding: 0, boxShadow: 'none' }}>
-                        {allOrders.length === 0 ? (
-                            <div className="text-center p-5">
-                                <span style={{ fontSize: '3rem' }}>🛒</span>
-                                <h3 className="mt-3">No hay órdenes</h3>
-                                <p className="text-muted">
-                                    Aún no se ha realizado ninguna compra en la tienda.
-                                </p>
-                            </div>
-                        ) : (
-                            <Table hover responsive>
-                                <thead>
-                                    <tr>
-                                        <th>N° Orden</th>
-                                        <th>Fecha</th>
-                                        <th>Cliente</th>
-                                        <th>Total</th>
-                                        <th>Estado</th>
-                                        <th>Cambiar Estado</th>
-                                        <th>Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {allOrders.map(order => (
-                                        <tr key={order.number}>
-                                            <td><strong>#{order.number}</strong></td>
-                                            <td>{order.date}</td>
-                                            <td>{order.clientName}</td>
-                                            <td>${order.total.toLocaleString('es-CL')}</td>
-                                            <td>{getStatusBadge(order.status!)}</td>
-                                            <td>
-                                                <Form.Select
-                                                    size="sm"
-                                                    value={order.status}
-                                                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => handleStatusChange(order.userRUT, order.number, e.target.value)}
-                                                    className="admin-form-container"
-                                                >
-                                                    {ESTADOS_ORDEN.map(estado => (
-                                                        <option key={estado} value={estado}>
-                                                            {estado}
-                                                        </option>
-                                                    ))}
-                                                </Form.Select>
-                                            </td>
-                                            <td>
-                                                <Button
-                                                    variant="primary"
-                                                    size="sm"
-                                                    onClick={() => handleShowModal(order)}
-                                                >
-                                                    Ver Detalles
-                                                </Button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </Table>
-                        )}
-                    </div>
+                    <Table hover responsive>
+                        <thead>
+                            <tr><th>N°</th><th>Fecha</th><th>Cliente</th><th>Total</th><th>Estado</th><th>Acción</th><th>Detalle</th></tr>
+                        </thead>
+                        <tbody>
+                            {allOrders.map(order => (
+                                <tr key={order.number}>
+                                    <td>#{order.number}</td>
+                                    <td>{order.date}</td>
+                                    <td>{order.clientName}</td>
+                                    <td>${order.total.toLocaleString('es-CL')}</td>
+                                    <td>{getStatusBadge(order.status)}</td>
+                                    <td>
+                                        <Form.Select size="sm" value={order.status} onChange={(e) => handleStatusChange(order.id, e.target.value)}>
+                                            {ESTADOS_ORDEN.map(e => <option key={e} value={e}>{e}</option>)}
+                                        </Form.Select>
+                                    </td>
+                                    <td><Button size="sm" onClick={() => handleShowModal(order)}>Ver</Button></td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </Table>
                 </Card.Body>
             </Card>
-
-            <OrderDetailModal
-                show={showModal}
-                onHide={handleCloseModal}
-                order={selectedOrder}
-            />
+            <OrderDetailModal show={showModal} onHide={handleCloseModal} order={selectedOrder} />
         </>
     );
 };
