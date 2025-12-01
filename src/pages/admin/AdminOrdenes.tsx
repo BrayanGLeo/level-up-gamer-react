@@ -35,14 +35,26 @@ const AdminOrdenes = () => {
                     date: new Date(o.fechaCompra).toLocaleDateString(),
                     total: o.total,
                     status: o.estado,
-                    clientName: o.usuario ? `${o.usuario.nombre} ${o.usuario.apellido}` : 'Invitado',
-                    userRUT: o.usuario ? o.usuario.rut : 'invitado',
+                    clientName: o.usuario
+                        ? `${o.usuario.nombre} ${o.usuario.apellido}`
+                        : `${o.nombreCliente || 'Invitado'} ${o.apellidoCliente || ''}`,
+
+                    userRUT: o.usuario ? o.usuario.rut : 'N/A',
+
                     customer: {
-                        name: o.usuario ? o.usuario.nombre : 'Invitado',
-                        surname: o.usuario ? o.usuario.apellido : '',
-                        email: o.usuario ? o.usuario.email : '',
+                        name: o.usuario ? o.usuario.nombre : (o.nombreCliente || 'Invitado'),
+                        surname: o.usuario ? o.usuario.apellido : (o.apellidoCliente || ''),
+                        email: o.usuario ? o.usuario.email : 'No registrado',
                     },
-                    shipping: o.tipoEntrega === 'Retiro en Tienda' ? { type: 'Retiro en Tienda' } : { type: 'Despacho', ...o },
+
+                    shipping: o.tipoEntrega === 'Retiro en Tienda'
+                        ? { type: 'Retiro en Tienda' }
+                        : {
+                            type: 'Despacho',
+                            direccionCompleta: o.direccionEnvio,
+                            ...o
+                        },
+
                     items: o.detalles.map((d: any) => ({
                         codigo: d.producto.codigo,
                         nombre: d.producto.nombre,
@@ -51,7 +63,6 @@ const AdminOrdenes = () => {
                         imagen: d.producto.imagenUrl
                     }))
                 }));
-
                 setAllOrders(mapped.sort((a: any, b: any) => b.number - a.number));
             } catch (error) {
                 console.error("Error fetching orders", error);
