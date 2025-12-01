@@ -75,6 +75,15 @@ describe('OrderSuccessPage', () => {
         expect(screen.getByRole('button', { name: /Volver a la tienda/i })).toBeInTheDocument();
     });
 
+    test('maneja estado incompleto (state existe pero sin order)', () => {
+        render(
+            <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={[{ state: {} }]}>
+                <OrderSuccessPage />
+            </MemoryRouter>
+        );
+        expect(screen.getByText(/No se encontró información del pedido/i)).toBeInTheDocument();
+    });
+
     describe('PDF Download Logic', () => {
         test('download receipt for in-store pickup calls save with correct filename', () => {
             const order: Order = {

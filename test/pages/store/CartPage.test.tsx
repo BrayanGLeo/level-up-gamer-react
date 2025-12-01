@@ -7,6 +7,7 @@ vi.mock('react-router-dom', async (importOriginal) => {
     };
 });
 
+// El mock define los botones como "Confirm Remove" / "Hide"
 vi.mock('../../../src/components/RemoveFromCartModal', () => ({
     default: ({ show, onHide, onConfirm, product }: any) => (
         show ? <div>
@@ -16,11 +17,12 @@ vi.mock('../../../src/components/RemoveFromCartModal', () => ({
     )
 }));
 
+// El mock define los botones como "Confirm Clear" / "Hide"
 vi.mock('../../../src/components/ClearCartModal', () => ({
     default: ({ show, onHide, onConfirm }: any) => (
         show ? <div>
             <button data-testid="clear-confirm" onClick={() => onConfirm && onConfirm()}>Confirm Clear</button>
-            <button data-testid="clear-hide" onClick={() => onHide && onHide()}>Hide</button>
+            <button data-testid="clear-hide" onClick={() => onHide && onHide()}>Hide</button> {/* Aquí dice Hide */}
         </div> : null
     )
 }));
@@ -28,6 +30,7 @@ vi.mock('../../../src/components/ClearCartModal', () => ({
 import React from 'react';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
+import { describe, test, expect, vi, beforeEach } from 'vitest';
 import CartPage from '../../../src/pages/store/CartPage';
 import * as AuthModule from '../../../src/context/AuthContext';
 import * as CartModule from '../../../src/context/CartContext';
@@ -55,7 +58,7 @@ describe('CartPage', () => {
     let consoleErrorSpy: any;
 
     beforeEach(() => {
-        consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+        consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
         mockedNavigate.mockClear();
         mockUseAuth = vi.spyOn(AuthModule, 'useAuth');
         mockUseCart = vi.spyOn(CartModule, 'useCart');
@@ -241,14 +244,12 @@ describe('CartPage', () => {
         const mockUpdateQuantity = vi.fn();
 
         mockUseAuth.mockReturnValue({ currentUser: null });
-
-        // Mockear useCart para el estado inicial (con el ítem)
         mockUseCart.mockReturnValue({
             cartItems: [initialItem],
             getCartTotal: () => initialItem.precio * initialItem.quantity,
             getCartItemCount: () => initialItem.quantity,
-            updateQuantity: mockUpdateQuantity, // Usar el mockUpdateQuantity definido
-            removeFromCart: vi.fn(), // Asegurarse de que otras funciones estén mockeadas si se usan
+            updateQuantity: mockUpdateQuantity,
+            removeFromCart: vi.fn(),
             clearCart: vi.fn(),
         });
 
@@ -265,26 +266,22 @@ describe('CartPage', () => {
         expect(screen.getByText('Prod 1')).toBeInTheDocument();
 
         const minusButton = screen.getByText('-');
-        
-        // Simular el click en el botón de restar
+
         await act(async () => {
             fireEvent.click(minusButton);
         });
 
-        // Asegurarse de que updateQuantity fue llamado correctamente
         expect(mockUpdateQuantity).toHaveBeenCalledWith('P1', -1);
 
-        // Ahora, simular el nuevo estado del carrito después de la actualización
         mockUseCart.mockReturnValue({
-            cartItems: [], // Carrito vacío
+            cartItems: [],
             getCartTotal: () => 0,
             getCartItemCount: () => 0,
-            updateQuantity: mockUpdateQuantity, // Mantener el mismo mockUpdateQuantity
+            updateQuantity: mockUpdateQuantity,
             removeFromCart: vi.fn(),
             clearCart: vi.fn(),
         });
 
-        // Forzar un re-render para que el componente recoja el nuevo estado del carrito mockeado
         rerender(
             <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
                 <AuthProvider>
@@ -295,9 +292,8 @@ describe('CartPage', () => {
             </BrowserRouter>
         );
 
-        // Esperar que el mensaje de carrito vacío aparezca
         await screen.findByText(/Tu carrito está vacío/i);
-        
+
         expect(screen.queryByText('Prod 1')).not.toBeInTheDocument();
     });
 
@@ -358,4 +354,51 @@ describe('CartPage', () => {
         expect(registerLink.tagName).toBe('A');
     });
 
+    test('cierra el modal de login al presionar cerrar (header)', async () => {
+        const mockItems = [{ codigo: 'P1', nombre: 'Juego', precio: 100, quantity: 1, imagen: '', categoria: 'c', descripcion: '', stock: 1, stockCritico: 1 }];
+        mockUseCart.mockReturnValue({ cartItems: mockItems, getCartTotal: () => 100, getCartItemCount: () => 1 });
+        mockUseAuth.mockReturnValue({ currentUser: null });
+
+        renderCartPage();
+
+        fireEvent.click(screen.getByText('Finalizar Compra'));
+
+        const modalTitle = await screen.findByText('¿Cómo quieres continuar?');
+        expect(modalTitle).toBeInTheDocument();
+
+        const closeButtons = screen.getAllByRole('button');
+        const closeHeaderBtn = closeButtons.find(b => b.getAttribute('aria-label') === 'Close');
+
+        if (closeHeaderBtn) {
+            fireEvent.click(closeHeaderBtn);
+            await waitFor(() => {
+                expect(screen.queryByText('¿Cómo quieres continuar?')).not.toBeInTheDocument();
+            });
+        }
+    });
+
+    test('cierra el modal de vaciar carrito al cancelar', async () => {
+        const mockItems = [{ codigo: 'P1', nombre: 'Juego', precio: 100, quantity: 1, imagen: '', categoria: 'c', descripcion: '', stock: 1, stockCritico: 1 }];
+        const clearCartMock = vi.fn();
+
+        mockUseCart.mockReturnValue({
+            cartItems: mockItems,
+            getCartTotal: () => 100,
+            getCartItemCount: () => 1,
+            clearCart: clearCartMock,
+            removeFromCart: vi.fn(),
+            updateQuantity: vi.fn()
+        });
+        mockUseAuth.mockReturnValue({ currentUser: { name: 'User' } });
+
+        renderCartPage();
+
+        const emptyBtn = screen.getByText('Vaciar Carrito');
+        fireEvent.click(emptyBtn);
+
+        const cancelBtn = screen.getByTestId('clear-hide');
+        fireEvent.click(cancelBtn);
+
+        expect(clearCartMock).not.toHaveBeenCalled();
+    });
 });

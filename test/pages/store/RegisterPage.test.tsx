@@ -159,4 +159,17 @@ describe('RegisterPage', () => {
             expect(mockedNavigate).toHaveBeenCalledWith('/store');
         }
     });
+
+    test('maneja excepción en el registro (catch block)', async () => {
+        mockRegister.mockRejectedValue(new Error('Fallo inesperado'));
+        const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+        render(<BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}><RegisterPage /></BrowserRouter>);
+
+        fillForm();
+        fireEvent.click(screen.getByRole('button', { name: /Registrarse/i }));
+
+        expect(await screen.findByText('Ocurrió un error inesperado.')).toBeInTheDocument();
+        expect(consoleSpy).toHaveBeenCalled();
+    });
 });

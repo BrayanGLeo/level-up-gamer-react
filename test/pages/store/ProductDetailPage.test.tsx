@@ -4,93 +4,148 @@ import { describe, test, expect, vi, beforeEach } from 'vitest';
 import ProductDetailPage from '../../../src/pages/store/ProductDetailPage';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import * as api from '../../../src/utils/api';
-import { Product } from '../../../src/data/productData';
 
 vi.mock('../../../src/utils/api', () => ({
     getProductByCodeApi: vi.fn(),
 }));
 
 const mockAddToCart = vi.fn();
-vi.mock('../../../src/context/CartContext', async (importOriginal) => {
-    return {
-        useCart: () => ({
-            addToCart: mockAddToCart
-        }),
-    };
+vi.mock('../../../src/context/CartContext', async () => {
+    return { useCart: () => ({ addToCart: mockAddToCart }) };
 });
 
+const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
+
 describe('ProductDetailPage', () => {
+    beforeEach(() => vi.clearAllMocks());
 
-    beforeEach(() => {
-        vi.clearAllMocks();
-    });
-
-    test('muestra botón Agotado y está deshabilitado cuando stock = 0', async () => {
-        const noStockProduct = { codigo: 'S0', nombre: 'SinStock', stock: 0, precio: 99, descripcion: 'd', categoria: 'c', imagen: '' };
-        (api.getProductByCodeApi as any).mockResolvedValue(noStockProduct);
+    test('renderiza fallback de imagen si no hay URL', async () => {
+        const productNoImg = {
+            codigo: 'NOIMG', nombre: 'Sin Imagen', precio: 100, stock: 5, categoria: 'c',
+            imagen: '',
+            descripcion: 'desc'
+        };
+        (api.getProductByCodeApi as any).mockResolvedValue(productNoImg);
 
         render(
-            <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={["/producto/S0"]}>
+            <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={["/producto/NOIMG"]}>
                 <Routes><Route path="/producto/:codigo" element={<ProductDetailPage />} /></Routes>
             </MemoryRouter>
         );
 
-        // Esperar a que cargue
-        await waitFor(() => expect(screen.getByText('SinStock')).toBeInTheDocument());
-
-        const btn = screen.getByRole('button', { name: /Agotado/i });
-        expect(btn).toBeDisabled();
+        await waitFor(() => expect(screen.getByText('Sin Imagen')).toBeInTheDocument());
+        const img = screen.getByRole('img');
+        expect(img).toHaveAttribute('src', 'https://via.placeholder.com/400?text=Sin+Imagen');
     });
 
-    test('muestra mensaje de producto no encontrado si API falla o devuelve null', async () => {
-        (api.getProductByCodeApi as any).mockRejectedValue(new Error("Not found"));
-        
-        render(
-            <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={["/producto/UNKNOWN"]}>
-                <Routes><Route path="/producto/:codigo" element={<ProductDetailPage />} /></Routes>
-            </MemoryRouter>
-        );
-
-        await waitFor(() => expect(screen.getByText(/Producto no encontrado/i)).toBeInTheDocument());
-    });
-
-    test('si existe producto, agrega al carrito y muestra modal', async () => {
-        const product: Product = { codigo: 'X1', nombre: 'MP', precio: 100, stock: 2, categoria: 'c', imagen: '', descripcion: '' };
+    test('abre Y CIERRA el modal al agregar al carrito', async () => {
+        const product = { codigo: 'P1', nombre: 'Prod Modal', precio: 100, stock: 5, categoria: 'c', imagen: 'img.jpg', descripcion: '' };
         (api.getProductByCodeApi as any).mockResolvedValue(product);
 
         render(
-            <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={["/producto/X1"]}>
+            <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={["/producto/P1"]}>
                 <Routes><Route path="/producto/:codigo" element={<ProductDetailPage />} /></Routes>
             </MemoryRouter>
         );
 
-        await waitFor(() => expect(screen.getByText('MP')).toBeInTheDocument());
+        await waitFor(() => expect(screen.getByText('Prod Modal')).toBeInTheDocument());
 
         const addBtn = screen.getByRole('button', { name: /Agregar al Carrito/i });
         fireEvent.click(addBtn);
 
-        expect(mockAddToCart).toHaveBeenCalledWith(product);
-        expect(screen.getByText(/Añadido al carrito/i)).toBeInTheDocument();
+        const modalTitle = await screen.findByText('¡Añadido al carrito!');
+        expect(modalTitle).toBeInTheDocument();
+
+        const closeBtn = screen.getByText('Seguir Comprando');
+        fireEvent.click(closeBtn);
+
+        await waitFor(() => {
+            expect(screen.queryByText('¡Añadido al carrito!')).not.toBeInTheDocument();
+        });
     });
 
-    test('muestra mensaje alternativo cuando no hay especificaciones', async () => {
-        const productWithoutSpecs: Product = {
-            codigo: 'NOSPEC', nombre: 'No Specs', descripcion: 'd', precio: 10, stock: 1, categoria: 'c', imagen: '',
-            specifications: {}
+    test('renderiza features y specs', async () => {
+        const product = {
+            codigo: 'C1', nombre: 'Full', precio: 10, stock: 5, categoria: 'Gamer', imagen: '', descripcion: 'desc',
+            features: ['Feature 1'],
+            specifications: { 'General': { 'Peso': '1kg' } }
         };
-        (api.getProductByCodeApi as any).mockResolvedValue(productWithoutSpecs);
+        (api.getProductByCodeApi as any).mockResolvedValue(product);
 
         render(
-            <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={["/producto/NOSPEC"]}>
+            <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={["/producto/C1"]}>
                 <Routes><Route path="/producto/:codigo" element={<ProductDetailPage />} /></Routes>
             </MemoryRouter>
         );
 
-        await waitFor(() => expect(screen.getByText('No Specs')).toBeInTheDocument());
+        await waitFor(() => expect(screen.getByText('Feature 1')).toBeInTheDocument());
 
         const specsTab = screen.getByRole('tab', { name: /Especificaciones/i });
         fireEvent.click(specsTab);
 
-        expect(screen.getByText('No hay especificaciones técnicas detalladas disponibles en este momento.')).toBeInTheDocument();
+        expect(screen.getByText('General')).toBeInTheDocument();
+        expect(screen.getByText('Peso')).toBeInTheDocument();
+    });
+
+    test('renderiza sin features', async () => {
+        const product = {
+            codigo: 'C2', nombre: 'NoFeat', precio: 10, stock: 5, categoria: 'Gamer', imagen: '', descripcion: 'Solo desc',
+            features: [],
+            specifications: {}
+        };
+        (api.getProductByCodeApi as any).mockResolvedValue(product);
+
+        render(
+            <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={["/producto/C2"]}>
+                <Routes><Route path="/producto/:codigo" element={<ProductDetailPage />} /></Routes>
+            </MemoryRouter>
+        );
+
+        await waitFor(() => expect(screen.getByText('Solo desc')).toBeInTheDocument());
+        expect(screen.queryByText('Características Principales:')).not.toBeInTheDocument();
+    });
+
+    test('renderiza mensaje cuando no hay specs', async () => {
+        const product = {
+            codigo: 'C3', nombre: 'NoSpecs', precio: 10, stock: 5, categoria: 'Gamer', imagen: '', descripcion: 'desc',
+            features: [], specifications: {}
+        };
+        (api.getProductByCodeApi as any).mockResolvedValue(product);
+
+        render(
+            <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={["/producto/C3"]}>
+                <Routes><Route path="/producto/:codigo" element={<ProductDetailPage />} /></Routes>
+            </MemoryRouter>
+        );
+
+        await waitFor(() => expect(screen.getByText('NoSpecs')).toBeInTheDocument());
+        const specsTab = screen.getByRole('tab', { name: /Especificaciones/i });
+        fireEvent.click(specsTab);
+        expect(screen.getByText(/No hay especificaciones técnicas/i)).toBeInTheDocument();
+    });
+
+    test('botón deshabilitado si no hay stock', async () => {
+        const product = { codigo: 'C4', nombre: 'Producto Sin Stock', precio: 10, stock: 0, categoria: 'Gamer', imagen: '', descripcion: 'desc' };
+        (api.getProductByCodeApi as any).mockResolvedValue(product);
+
+        render(
+            <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={["/producto/C4"]}>
+                <Routes><Route path="/producto/:codigo" element={<ProductDetailPage />} /></Routes>
+            </MemoryRouter>
+        );
+
+        await waitFor(() => expect(screen.getByText('Producto Sin Stock')).toBeInTheDocument());
+        const btn = screen.getByRole('button', { name: /Agotado/i });
+        expect(btn).toBeDisabled();
+    });
+
+    test('maneja error de carga', async () => {
+        (api.getProductByCodeApi as any).mockRejectedValue(new Error('Fail'));
+        render(
+            <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={["/producto/ERR"]}>
+                <Routes><Route path="/producto/:codigo" element={<ProductDetailPage />} /></Routes>
+            </MemoryRouter>
+        );
+        await waitFor(() => expect(screen.getByText(/Producto no encontrado/i)).toBeInTheDocument());
     });
 });

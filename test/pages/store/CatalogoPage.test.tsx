@@ -24,10 +24,7 @@ vi.mock('../../../src/context/CartContext', async (importOriginal) => {
     const actual = await importOriginal() as object;
     return {
         ...actual,
-        useCart: () => ({
-            addToCart: mockAddToCart,
-            cartItems: [],
-        }),
+        useCart: () => ({ addToCart: mockAddToCart, cartItems: [] }),
         CartProvider: ({ children }: any) => <div>{children}</div>
     };
 });
@@ -38,10 +35,13 @@ const mockProducts: Product[] = [
     { codigo: 'P003', nombre: 'Consola Xbox', categoria: 'consolas', precio: 500000, descripcion: 'Consola', stock: 1, stockCritico: 1, imagen: '' }
 ];
 
+const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
 describe('CatalogoPage', () => {
 
     beforeEach(() => {
         vi.clearAllMocks();
+        consoleSpy.mockClear();
         (api.getProductsApi as any).mockResolvedValue(mockProducts);
     });
 
@@ -51,11 +51,23 @@ describe('CatalogoPage', () => {
                 <CatalogoPage />
             </BrowserRouter>
         );
+        await waitFor(() => expect(screen.getByText('Juego de PS5')).toBeInTheDocument());
+        expect(screen.getByText('Mouse Gamer')).toBeInTheDocument();
+    });
+
+    test('maneja error al cargar productos (API fail)', async () => {
+        (api.getProductsApi as any).mockRejectedValue(new Error('Error 500'));
+
+        render(
+            <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+                <CatalogoPage />
+            </BrowserRouter>
+        );
 
         await waitFor(() => {
-            expect(screen.getByText('Juego de PS5')).toBeInTheDocument();
+            expect(screen.getByText(/Error al cargar los productos/i)).toBeInTheDocument();
         });
-        expect(screen.getByText('Mouse Gamer')).toBeInTheDocument();
+        expect(consoleSpy).toHaveBeenCalled();
     });
 
     test('filtra productos por la barra de búsqueda', async () => {
@@ -64,7 +76,6 @@ describe('CatalogoPage', () => {
                 <CatalogoPage />
             </BrowserRouter>
         );
-
         await waitFor(() => expect(screen.getByText('Juego de PS5')).toBeInTheDocument());
 
         const searchInput = screen.getByPlaceholderText(/Buscar por nombre.../i);
@@ -80,14 +91,13 @@ describe('CatalogoPage', () => {
                 <CatalogoPage />
             </BrowserRouter>
         );
-
         await waitFor(() => expect(screen.getByText('Juego de PS5')).toBeInTheDocument());
 
         const filterButton = screen.getByText('Filtros');
-        await act(async () => { fireEvent.click(filterButton); });
+        await act(async () => fireEvent.click(filterButton));
 
         const categoryButton = screen.getByText('Juegos');
-        await act(async () => { fireEvent.click(categoryButton); });
+        await act(async () => fireEvent.click(categoryButton));
 
         expect(screen.getByText('Juego de PS5')).toBeInTheDocument();
         expect(screen.queryByText('Mouse Gamer')).not.toBeInTheDocument();
@@ -99,7 +109,6 @@ describe('CatalogoPage', () => {
                 <CatalogoPage />
             </BrowserRouter>
         );
-
         await waitFor(() => expect(screen.getByText('Juego de PS5')).toBeInTheDocument());
 
         const searchInput = screen.getByPlaceholderText(/Buscar por nombre.../i);
@@ -114,7 +123,6 @@ describe('CatalogoPage', () => {
                 <CatalogoPage />
             </BrowserRouter>
         );
-
         await waitFor(() => expect(screen.getByText('Juego de PS5')).toBeInTheDocument());
 
         const addButton = screen.getAllByText('Agregar')[0];

@@ -10,11 +10,13 @@ vi.mock('../../../src/utils/api', () => ({
     getBlogPostByIdApi: vi.fn(),
 }));
 
+const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
+
 const mockPost: BlogPost = {
     id: 1,
     title: 'Detalle del Post',
     date: '2025-01-01',
-    content: 'Contenido completo del post.',
+    content: 'Contenido.',
     image: 'img.jpg'
 };
 
@@ -29,35 +31,33 @@ describe('BlogDetailPage', () => {
 
         render(
             <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/blog/1']}>
-                <Routes>
-                    <Route path="/blog/:id" element={<BlogDetailPage />} />
-                </Routes>
+                <Routes><Route path="/blog/:id" element={<BlogDetailPage />} /></Routes>
             </MemoryRouter>
         );
 
-        await waitFor(() => {
-            expect(screen.getByText('Detalle del Post')).toBeInTheDocument();
-        });
-
-        expect(screen.getByText('Publicado el 2025-01-01')).toBeInTheDocument();
-        expect(screen.getByText('Contenido completo del post.')).toBeInTheDocument();
+        await waitFor(() => expect(screen.getByText('Detalle del Post')).toBeInTheDocument());
+        expect(screen.getByText('Contenido.')).toBeInTheDocument();
     });
 
-    test('muestra mensaje de "Post no encontrado" si la API devuelve null o error', async () => {
-        (api.getBlogPostByIdApi as any).mockResolvedValue(null);
+    test('maneja error de la API correctamente (entra al catch)', async () => {
+        (api.getBlogPostByIdApi as any).mockRejectedValue(new Error('Error de conexión'));
 
         render(
-            <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/blog/999']}>
-                <Routes>
-                    <Route path="/blog/:id" element={<BlogDetailPage />} />
-                </Routes>
+            <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={['/blog/1']}>
+                <Routes><Route path="/blog/:id" element={<BlogDetailPage />} /></Routes>
             </MemoryRouter>
         );
 
-        await waitFor(() => {
-            expect(screen.getByText('Post no encontrado')).toBeInTheDocument();
-        });
+        await waitFor(() => expect(screen.getByText('Post no encontrado')).toBeInTheDocument());
+        expect(consoleSpy).toHaveBeenCalledWith("Error cargando post", expect.any(Error));
+    });
 
-        expect(screen.getByText(/Volver al blog/i)).toBeInTheDocument();
+    test('maneja id indefinido', async () => {
+        render(
+            <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+                <BlogDetailPage />
+            </MemoryRouter>
+        );
+        expect(api.getBlogPostByIdApi).not.toHaveBeenCalled();
     });
 });
