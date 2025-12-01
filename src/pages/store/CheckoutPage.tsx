@@ -1,13 +1,11 @@
-// brayangleo/level-up-gamer-react/level-up-gamer-react-6a40dce1a46143d8544bf36a6ca8bce18cba7bf0/src/pages/store/CheckoutPage.tsx
-
 import React, { useState, useEffect } from 'react';
-import { Container, Form, Button, Row, Col, Nav, Card, Alert, Toast, ToastContainer } from 'react-bootstrap';
+import { Container, Form, Button, Row, Col, Nav, Card, Alert } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import { regionesData } from '../../data/chileData';
-import { addOrderToUser, addAddress, Address, Order, addGuestOrder } from '../../data/userData';
-import { getProductByCode, saveProduct } from '../../data/productData';
+import { Address } from '../../data/userData';
+import { finalizeCheckoutApi } from '../../utils/api';
 import { validateRut, validateBasicEmail, validatePhone, validateRequiredField } from '../../utils/validation';
 import NotificationModal from '../../components/NotificationModal';
 import '../../styles/Forms.css';
@@ -37,14 +35,15 @@ const CheckoutPage = () => {
     const [deliveryMethod, setDeliveryMethod] = useState<string | null>(null);
     const [comunas, setComunas] = useState<string[]>([]);
 
-    const { currentUser, updateCurrentUser } = useAuth();
+    const { currentUser } = useAuth();
     const { cartItems, getCartTotal, clearCart } = useCart();
     const navigate = useNavigate();
 
     const [savedAddresses, setSavedAddresses] = useState<Address[]>([]);
     const [selectedAddressId, setSelectedAddressId] = useState<number | string | null>(null);
-    const [modalInfo, setModalInfo] = useState({ show: false, title: '', message: '' });
-    const [showSaveToast, setShowSaveToast] = useState(false);
+
+    const [isProcessing, setIsProcessing] = useState(false);
+    const [paymentError, setPaymentError] = useState('');
 
     useEffect(() => {
         if (currentUser) {
@@ -101,6 +100,7 @@ const CheckoutPage = () => {
         setComunas(regionEncontrada ? regionEncontrada.comunas : []);
         setSelectedAddressId('new');
     };
+
     const handleSelectAddress = (address: Address) => {
         setFormData({ ...formData, ...address });
         setSelectedAddressId(address.id);
@@ -126,89 +126,56 @@ const CheckoutPage = () => {
         return date.toLocaleDateString('es-CL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
     };
 
-    const handleSimulatedPayment = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const handlePayment = async (e: React.MouseEvent<HTMLButtonElement>) => {
         e.preventDefault();
+        setIsProcessing(true);
+        setPaymentError('');
 
-        try {
-            cartItems.forEach(item => {
-                const product = getProductByCode(item.codigo);
-
-                if (product) {
-                    const newStock = product.stock - item.quantity;
-                    const updatedProduct = {
-                        ...product,
-                        stock: Math.max(0, newStock)
-                    };
-                    saveProduct(updatedProduct);
-                } else {
-                    console.warn(`El producto con código ${item.codigo} no se encontró y no se pudo actualizar el stock.`);
-                }
-            });
-        } catch (error) {
-            console.error("Error al actualizar el stock:", error);
-        }
-
-        const newOrder: Order = {
-            number: Date.now(),
-            date: new Date().toLocaleDateString('es-CL'),
-            items: cartItems,
+        const boletaRequest = {
+            usuarioEmail: currentUser?.email || null,
             total: getCartTotal(),
-            customer: { name: formData.nombre, surname: formData.apellidos, email: formData.email, phone: formData.telefono },
-            shipping: deliveryMethod === 'despacho' ? {
-                type: 'Despacho a Domicilio',
-                calle: formData.calle, numero: formData.numero, depto: formData.depto, comuna: formData.comuna, region: formData.region,
-                recibeNombre: formData.recibeNombre, recibeApellido: formData.recibeApellido, recibeTelefono: formData.recibeTelefono
-            } : { type: 'Retiro en Tienda' }
+            tipoEntrega: deliveryMethod === 'despacho' ? 'Despacho a Domicilio' : 'Retiro en Tienda',
+            estado: 'Pendiente',
+
+            nombreCliente: formData.nombre,
+            apellidoCliente: formData.apellidos,
+            telefonoCliente: formData.telefono,
+
+            items: cartItems.map(item => ({
+                codigoProducto: item.codigo,
+                cantidad: item.quantity,
+                precioUnitario: item.precio
+            }))
         };
 
-        clearCart();
+        try {
+            const response = await finalizeCheckoutApi(boletaRequest);
 
-        if (currentUser) {
-            const updatedUser = addOrderToUser(currentUser.rut, newOrder);
-            if (updatedUser) {
-                updateCurrentUser(updatedUser);
-            }
-            navigate('/compra-exitosa', { state: { order: newOrder } });
-        } else {
-            const savedOrder = addGuestOrder(newOrder);
-            navigate('/compra-exitosa', { state: { order: savedOrder } });
-        }
-    };
-
-    const handleModalClose = () => {
-        setModalInfo({ show: false, title: '', message: '' });
-        navigate('/pedidos');
-    };
-
-    const handleSaveAddress = () => {
-        if (validateStep2() && currentUser) {
-            const newAddress: Omit<Address, 'id'> = {
-                alias: `${formData.calle} ${formData.numero}` || 'Dirección Nueva',
-                region: formData.region,
-                comuna: formData.comuna,
-                calle: formData.calle,
-                numero: formData.numero,
-                depto: formData.depto,
-                recibeNombre: formData.recibeNombre,
-                recibeApellido: formData.recibeApellido,
-                recibeTelefono: formData.recibeTelefono
+            const successOrder = {
+                number: response.numeroOrden,
+                date: new Date().toLocaleDateString(),
+                total: boletaRequest.total,
+                items: cartItems,
+                customer: { name: formData.nombre, surname: formData.apellidos, email: formData.email, phone: formData.telefono },
+                shipping: deliveryMethod === 'despacho' ? {
+                    type: 'Despacho a Domicilio',
+                    calle: formData.calle, numero: formData.numero, depto: formData.depto,
+                    comuna: formData.comuna, region: formData.region,
+                    recibeNombre: formData.recibeNombre, recibeApellido: formData.recibeApellido
+                } : { type: 'Retiro en Tienda' }
             };
 
-            const updatedUser = addAddress(currentUser.rut, newAddress);
-            if (updatedUser) {
-                updateCurrentUser(updatedUser);
-                setSavedAddresses(updatedUser.addresses);
-                const newId = updatedUser.addresses[updatedUser.addresses.length - 1].id;
-                setSelectedAddressId(newId);
-                setShowSaveToast(true);
+            clearCart();
+            navigate('/compra-exitosa', { state: { order: successOrder } });
+
+        } catch (error: any) {
+            console.error("Error en checkout", error);
+            setPaymentError(error.message || 'Error al procesar el pago. Revisa el stock o tu conexión.');
+            if (error.message.includes("Stock insuficiente")) {
+                alert(error.message);
             }
-        } else if (!currentUser) {
-        } else {
-            setModalInfo({
-                show: true,
-                title: "Error al Guardar",
-                message: "Por favor, completa todos los campos de dirección antes de guardar (Región, Comuna, Calle, Número, y datos de quién recibe)."
-            });
+        } finally {
+            setIsProcessing(false);
         }
     };
 
@@ -248,12 +215,7 @@ const CheckoutPage = () => {
                             checked={deliveryMethod === 'despacho'}
                             onChange={(e) => setDeliveryMethod(e.target.value)}
                             className={deliveryMethod === 'despacho' ? 'active' : ''}
-                            label={
-                                <>
-                                    <strong>Despacho a Domicilio</strong>
-                                    <p className="text-secondary mb-0">Recibe tu pedido en la comodidad de tu casa.</p>
-                                </>
-                            }
+                            label={<><strong>Despacho a Domicilio</strong><p className="text-secondary mb-0">Recibe tu pedido en la comodidad de tu casa.</p></>}
                         />
                         <Form.Check
                             type="radio"
@@ -263,12 +225,7 @@ const CheckoutPage = () => {
                             checked={deliveryMethod === 'retiro'}
                             onChange={(e) => setDeliveryMethod(e.target.value)}
                             className={deliveryMethod === 'retiro' ? 'active' : ''}
-                            label={
-                                <>
-                                    <strong>Retiro en Tienda</strong>
-                                    <p className="text-secondary mb-0">Retira sin costo en nuestra tienda.</p>
-                                </>
-                            }
+                            label={<><strong>Retiro en Tienda</strong><p className="text-secondary mb-0">Retira sin costo en nuestra tienda.</p></>}
                         />
                         {!!errors.deliveryMethod && <div className="invalid-feedback d-block">{errors.deliveryMethod}</div>}
                     </Form.Group>
@@ -327,12 +284,6 @@ const CheckoutPage = () => {
                                         <Form.Control type="tel" name="recibeTelefono" value={formData.recibeTelefono} onChange={handleChange} isInvalid={!!errors.recibeTelefono} required />
                                         <Form.Control.Feedback type="invalid">{errors.recibeTelefono}</Form.Control.Feedback>
                                     </Form.Group>
-
-                                    {currentUser && (
-                                        <Button variant="outline-success" size="sm" className="mb-3" onClick={handleSaveAddress}>
-                                            Guardar dirección
-                                        </Button>
-                                    )}
                                 </>
                             )}
                         </>
@@ -344,8 +295,6 @@ const CheckoutPage = () => {
                             <Alert variant="info">
                                 <p>Puedes retirar tu pedido en nuestra tienda principal:</p>
                                 <p><strong>Dirección:</strong> Calle Falsa 123, Springfield</p>
-                                <p><strong>Región:</strong> Metropolitana de Santiago</p>
-                                <p><strong>Comuna:</strong> Santiago</p>
                                 <p><strong>Fecha estimada de retiro:</strong> {getPickupDate()}</p>
                             </Alert>
                         </>
@@ -391,7 +340,8 @@ const CheckoutPage = () => {
                         )}
                     </Col>
                     <Col md={5}>
-                        <h5>Método de Pago (Simulado)</h5>
+                        <h5>Método de Pago</h5>
+                        {paymentError && <Alert variant="danger">{paymentError}</Alert>}
                         <div>
                             <Form.Group className="form-group">
                                 <Form.Label>Método de Pago</Form.Label>
@@ -400,57 +350,37 @@ const CheckoutPage = () => {
                                     <option value="transferencia">Transferencia (Simulación)</option>
                                 </Form.Select>
                             </Form.Group>
-                            <Button onClick={handleSimulatedPayment} className="btn w-100">
-                                Realizar Pedido y Pagar
+                            <Button
+                                onClick={handlePayment}
+                                className="btn w-100"
+                                disabled={isProcessing}
+                            >
+                                {isProcessing ? 'Procesando...' : 'Pagar y Finalizar Compra'}
                             </Button>
                         </div>
                     </Col>
                 </Row>
-                <Button variant="secondary" onClick={prevStep} className="mt-3">Volver</Button>
+                <Button variant="secondary" onClick={prevStep} className="mt-3" disabled={isProcessing}>Volver</Button>
             </Card.Body>
         </Card>
     );
 
     return (
-        <>
-            <main className="form-container">
-                <Container>
-                    <h2 className="section-title">Finalizar Compra</h2>
+        <main className="form-container">
+            <Container>
+                <h2 className="section-title">Finalizar Compra</h2>
 
-                    <Nav variant="pills" justify className="mb-4">
-                        <Nav.Item><Nav.Link active={step === 1} disabled={step < 1} onClick={() => step > 1 && setStep(1)}>1. Tus datos</Nav.Link></Nav.Item>
-                        <Nav.Item><Nav.Link active={step === 2} disabled={step < 2} onClick={() => step > 2 && setStep(2)}>2. Forma de entrega</Nav.Link></Nav.Item>
-                        <Nav.Item><Nav.Link active={step === 3} disabled={step < 3}>3. Resumen y Pago</Nav.Link></Nav.Item>
-                    </Nav>
+                <Nav variant="pills" justify className="mb-4">
+                    <Nav.Item><Nav.Link active={step === 1} disabled={step !== 1 && isProcessing} onClick={() => !isProcessing && step > 1 && setStep(1)}>1. Tus datos</Nav.Link></Nav.Item>
+                    <Nav.Item><Nav.Link active={step === 2} disabled={step !== 2 && isProcessing} onClick={() => !isProcessing && step > 2 && setStep(2)}>2. Forma de entrega</Nav.Link></Nav.Item>
+                    <Nav.Item><Nav.Link active={step === 3} disabled={step !== 3 && isProcessing}>3. Resumen y Pago</Nav.Link></Nav.Item>
+                </Nav>
 
-                    {step === 1 && renderStep1()}
-                    {step === 2 && renderStep2()}
-                    {step === 3 && renderStep3()}
-                </Container>
-            </main>
-
-            <NotificationModal
-                show={modalInfo.show}
-                onHide={handleModalClose}
-                title={modalInfo.title}
-                message={modalInfo.message}
-            />
-
-            <ToastContainer position="top-end" className="p-3 toast-container">
-                <Toast
-                    onClose={() => setShowSaveToast(false)}
-                    show={showSaveToast}
-                    delay={2000}
-                    autohide
-                    className="custom-toast"
-                >
-                    <Toast.Header>
-                        <strong className="me-auto">Notificación</strong>
-                    </Toast.Header>
-                    <Toast.Body>¡Dirección guardada en tu perfil!</Toast.Body>
-                </Toast>
-            </ToastContainer>
-        </>
+                {step === 1 && renderStep1()}
+                {step === 2 && renderStep2()}
+                {step === 3 && renderStep3()}
+            </Container>
+        </main>
     );
 };
 

@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { Container, Row, Col, Image, Button, Alert, Tabs, Tab, Table } from 'react-bootstrap';
+import React, { useState, useEffect } from 'react';
+import { Container, Row, Col, Image, Button, Alert, Tabs, Tab, Table, Spinner } from 'react-bootstrap';
 import { useParams, Link } from 'react-router-dom';
-import { getProductByCode, Product, Specifications } from '../../data/productData';
+import { Product, Specifications } from '../../data/productData';
+import { getProductByCodeApi } from '../../utils/api';
 import { useCart } from '../../context/CartContext';
 import AddToCartModal from '../../components/AddToCartModal';
 import '../../styles/ProductDetail.css';
@@ -28,13 +29,32 @@ const renderSpecifications = (specs: Specifications) => {
     );
 };
 
-
 const ProductDetailPage = () => {
     const { codigo } = useParams<{ codigo: string }>();
-    const product: Product | undefined = codigo ? getProductByCode(codigo) : undefined;
+
+    const [product, setProduct] = useState<Product | undefined>(undefined);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(false);
 
     const { addToCart } = useCart();
     const [showModal, setShowModal] = useState(false);
+
+    useEffect(() => {
+        const loadProduct = async () => {
+            if (!codigo) return;
+            setLoading(true);
+            try {
+                const data = await getProductByCodeApi(codigo);
+                setProduct(data);
+            } catch (err) {
+                console.error("Producto no encontrado o error de red", err);
+                setError(true);
+            } finally {
+                setLoading(false);
+            }
+        };
+        loadProduct();
+    }, [codigo]);
 
     const handleAddToCart = () => {
         if (product) {
@@ -43,7 +63,15 @@ const ProductDetailPage = () => {
         }
     };
 
-    if (!product) {
+    if (loading) {
+        return (
+            <main className="product-detail-main d-flex justify-content-center align-items-center">
+                <Spinner animation="border" variant="primary" />
+            </main>
+        );
+    }
+
+    if (error || !product) {
         return (
             <main className="product-detail-main">
                 <Container>
@@ -66,24 +94,29 @@ const ProductDetailPage = () => {
                 <Container>
                     <Row>
                         <Col md={6} className="product-detail-image-col">
-                            <Image src={product.imagen} alt={product.nombre} fluid className="product-detail-image" />
+                            <Image
+                                src={product.imagen || 'https://via.placeholder.com/400?text=Sin+Imagen'}
+                                alt={product.nombre}
+                                fluid
+                                className="product-detail-image"
+                            />
                         </Col>
-                        
+
                         <Col md={6} className="product-detail-info-col">
                             <h2 className="product-detail-title">{product.nombre}</h2>
-                            
+
                             <div className="product-detail-price">
                                 {product.precio.toLocaleString('es-CL', { style: 'currency', currency: 'CLP' })}
                             </div>
 
                             <p className="product-detail-stock">
-                                {product.stock > 0 
-                                    ? `Stock disponible: ${product.stock} unidades` 
+                                {product.stock > 0
+                                    ? `Stock disponible: ${product.stock} unidades`
                                     : 'Agotado'}
                             </p>
 
-                            <Button 
-                                onClick={handleAddToCart} 
+                            <Button
+                                onClick={handleAddToCart}
                                 className="btn btn-lg w-100"
                                 disabled={product.stock === 0}
                             >
@@ -101,14 +134,13 @@ const ProductDetailPage = () => {
                     <Row>
                         <Col>
                             <Tabs defaultActiveKey="descripcion" id="product-info-tabs" className="product-tabs mb-3">
-                                
                                 <Tab eventKey="descripcion" title="Descripción">
                                     <div className="product-tab-content">
                                         <h4>Descripción General</h4>
                                         <p className="product-detail-description">
                                             {product.descripcion}
                                         </p>
-                                        
+
                                         {product.features && product.features.length > 0 && (
                                             <>
                                                 <h5 className="mt-4">Características Principales:</h5>
@@ -121,25 +153,19 @@ const ProductDetailPage = () => {
                                         )}
                                     </div>
                                 </Tab>
-                                
-                                <Tab 
-                                    eventKey="especificaciones" 
-                                    title="Especificaciones"
-                                >
+
+                                <Tab eventKey="especificaciones" title="Especificaciones">
                                     <div className="product-tab-content">
                                         <h4>Especificaciones Técnicas</h4>
-                                        
-                                        {product.specifications && Object.keys(product.specifications).length > 0 ? 
+                                        {product.specifications && Object.keys(product.specifications).length > 0 ?
                                             renderSpecifications(product.specifications) :
-                                            <p>No hay especificaciones técnicas detalladas para este producto.</p>
+                                            <p>No hay especificaciones técnicas detalladas disponibles en este momento.</p>
                                         }
                                     </div>
                                 </Tab>
-
                             </Tabs>
                         </Col>
                     </Row>
-
                 </Container>
             </main>
 
