@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import { MemoryRouter, BrowserRouter } from 'react-router-dom';
 import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
 import LoginPage from '../../../src/pages/store/LoginPage';
@@ -55,7 +55,7 @@ describe('LoginPage', () => {
 
     describe('Form Rendering and Interaction', () => {
         const MockLoginPage = () => (
-            <BrowserRouter>
+            <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
                 <AuthProvider>
                     <LoginPage />
                 </AuthProvider>
@@ -85,7 +85,7 @@ describe('LoginPage', () => {
     describe('Input Validation', () => {
         test('shows validation errors for invalid email or password formats', () => {
             render(
-                <MemoryRouter>
+                <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
                     <LoginPage />
                 </MemoryRouter>
             );
@@ -104,7 +104,7 @@ describe('LoginPage', () => {
 
         test('shows error message for invalid email domain (based on validation)', () => {
             render(
-                <MemoryRouter>
+                <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
                     <LoginPage />
                 </MemoryRouter>
             );
@@ -123,7 +123,7 @@ describe('LoginPage', () => {
             mockedUseAuth.mockReturnValue({ login: mockLogin });
 
             render(
-                <MemoryRouter>
+                <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
                     <LoginPage />
                 </MemoryRouter>
             );
@@ -134,12 +134,16 @@ describe('LoginPage', () => {
 
             fireEvent.change(emailInput, { target: { value: 'user@example.cl' } });
             fireEvent.change(passwordInput, { target: { value: 'secret' } });
-            await fireEvent.click(submitButton); // Esperar la acción asíncrona
+            await act(async () => {
+                fireEvent.click(submitButton); 
+            });
 
             const closeButton = await screen.findByTestId('notif-close'); // Esperar a que el modal aparezca
             expect(closeButton).toBeInTheDocument();
             
-            fireEvent.click(closeButton);
+            await act(async () => {
+                fireEvent.click(closeButton);
+            });
 
             expect(mockedNavigate).toHaveBeenCalledWith('/admin');
         });
@@ -149,7 +153,7 @@ describe('LoginPage', () => {
             mockedUseAuth.mockReturnValue({ login: mockLogin });
 
             render(
-                <MemoryRouter>
+                <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
                     <LoginPage />
                 </MemoryRouter>
             );
@@ -160,13 +164,18 @@ describe('LoginPage', () => {
 
             fireEvent.change(emailInput, { target: { value: 'user@example.cl' } });
             fireEvent.change(passwordInput, { target: { value: 'secret' } });
-            await fireEvent.click(submitButton); // Esperar la acción asíncrona
+            await act(async () => {
+                fireEvent.click(submitButton); 
+            });
 
             expect(await screen.findByRole('heading', { name: /Error de Inicio de Sesión/i })).toBeInTheDocument();
             expect(screen.getByText(/Credenciales inválidas/i)).toBeInTheDocument();
             
             const closeButton = await screen.findByTestId('notif-close');
-            fireEvent.click(closeButton);
+            
+            await act(async () => {
+                fireEvent.click(closeButton);
+            });
 
             expect(mockedNavigate).not.toHaveBeenCalled();
         });

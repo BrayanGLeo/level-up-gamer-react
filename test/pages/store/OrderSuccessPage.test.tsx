@@ -51,7 +51,7 @@ describe('OrderSuccessPage', () => {
         };
 
         render(
-            <MemoryRouter initialEntries={[{ state: { order } }]}>
+            <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={[{ state: { order } }]}>
                 <OrderSuccessPage />
             </MemoryRouter>
         );
@@ -65,7 +65,7 @@ describe('OrderSuccessPage', () => {
 
     test('renders error message when no order state is passed', () => {
         render(
-            <MemoryRouter initialEntries={[{ state: null }]}>
+            <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={[{ state: null }]}>
                 <OrderSuccessPage />
             </MemoryRouter>
         );
@@ -84,7 +84,7 @@ describe('OrderSuccessPage', () => {
             };
 
             render(
-                <MemoryRouter initialEntries={[{ state: { order } }]}>
+                <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={[{ state: { order } }]}>
                     <OrderSuccessPage />
                 </MemoryRouter>
             );
@@ -112,7 +112,7 @@ describe('OrderSuccessPage', () => {
             };
 
             render(
-                <MemoryRouter initialEntries={[{ state: { order } }]}>
+                <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={[{ state: { order } }]}>
                     <OrderSuccessPage />
                 </MemoryRouter>
             );
@@ -139,7 +139,7 @@ describe('OrderSuccessPage', () => {
             };
 
             render(
-                <MemoryRouter initialEntries={[{ state: { order } }]}>
+                <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={[{ state: { order } }]}>
                     <OrderSuccessPage />
                 </MemoryRouter>
             );
@@ -171,7 +171,7 @@ describe('OrderSuccessPage', () => {
             };
 
             render(
-                <MemoryRouter initialEntries={[{ state: { order } }]}>
+                <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={[{ state: { order } }]}>
                     <OrderSuccessPage />
                 </MemoryRouter>
             );

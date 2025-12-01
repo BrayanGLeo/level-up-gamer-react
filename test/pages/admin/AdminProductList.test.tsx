@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { MemoryRouter, useNavigate } from 'react-router-dom';
 import AdminProductList from '../../../src/pages/admin/AdminProductList';
@@ -33,7 +33,7 @@ describe('AdminProductList', () => {
         mockDeleteProduct.mockResolvedValue(undefined); // deleteProduct no devuelve nada
 
         render(
-            <MemoryRouter>
+            <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
                 <AdminProductList />
             </MemoryRouter>
         );
@@ -46,9 +46,16 @@ describe('AdminProductList', () => {
         fireEvent.click(delButtons[0]);
 
         const confirmBtn = await screen.findByRole('button', { name: /Confirmar/i });
-        fireEvent.click(confirmBtn);
+        await act(async () => {
+            fireEvent.click(confirmBtn);
+        });
 
-        expect(mockDeleteProduct).toHaveBeenCalledWith('A1');
+        await waitFor(() => {
+            expect(mockDeleteProduct).toHaveBeenCalledWith('A1');
+        });
+        await waitFor(() => {
+            expect(screen.queryByText('¿Estás seguro de que quieres eliminar este producto?')).not.toBeInTheDocument();
+        });
     });
 
     test('muestra los badges de stock correctamente', async () => {
@@ -58,7 +65,7 @@ describe('AdminProductList', () => {
             { codigo: 'OK', nombre: 'Prod OK', categoria: { nombre: 'cat' } as any, precio: 300, stock: 20, stockCritico: 5, imagen: '' }
         ]);
         
-        render(<MemoryRouter><AdminProductList /></MemoryRouter>);
+        render(<MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}><AdminProductList /></MemoryRouter>);
 
         await screen.findByText('Productos'); 
 
@@ -74,7 +81,7 @@ describe('AdminProductList', () => {
             { codigo: 'OK-DEF', nombre: 'Prod OK Defecto', categoria: { nombre: 'cat' } as any, precio: 300, stock: 15, imagen: '' }
         ]);
         
-        render(<MemoryRouter><AdminProductList /></MemoryRouter>);
+        render(<MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}><AdminProductList /></MemoryRouter>);
 
         await screen.findByText('Productos'); 
 
@@ -88,7 +95,7 @@ describe('AdminProductList', () => {
             { codigo: 'EDIT-ME', nombre: 'Prod a Editar', categoria: { nombre: 'cat' } as any, precio: 100, stock: 10, stockCritico: 5, imagen: '' }
         ]);
 
-        render(<MemoryRouter><AdminProductList /></MemoryRouter>);
+        render(<MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}><AdminProductList /></MemoryRouter>);
         
         await screen.findByText('Productos'); 
 
@@ -103,7 +110,7 @@ describe('AdminProductList', () => {
             { codigo: 'A1', nombre: 'Prod A', categoria: { nombre: 'cat' } as any, precio: 100, stock: 2, stockCritico: 2, imagen: '' }
         ]);
 
-        render(<MemoryRouter><AdminProductList /></MemoryRouter>);
+        render(<MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}><AdminProductList /></MemoryRouter>);
 
         await screen.findByText('Productos'); 
 
@@ -113,7 +120,9 @@ describe('AdminProductList', () => {
         expect(await screen.findByText('¿Estás seguro de que quieres eliminar este producto?')).toBeInTheDocument();
 
         const cancelButton = screen.getByRole('button', { name: /Cancelar/i });
-        fireEvent.click(cancelButton);
+        await act(async () => {
+            fireEvent.click(cancelButton);
+        });
 
         await waitFor(() => {
             expect(screen.queryByText('¿Estás seguro de que quieres eliminar este producto?')).not.toBeInTheDocument();
@@ -131,7 +140,7 @@ describe('AdminProductList', () => {
         const products = [productWithHighStock];
         mockGetAdminProducts.mockResolvedValue(products);
 
-        render(<MemoryRouter><AdminProductList /></MemoryRouter>);
+        render(<MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}><AdminProductList /></MemoryRouter>);
 
         await screen.findByText('Productos'); 
 

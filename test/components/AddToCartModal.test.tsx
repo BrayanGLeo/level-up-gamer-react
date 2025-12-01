@@ -15,7 +15,7 @@ describe('AddToCartModal (extra)', () => {
         const product = { codigo: 'X1', nombre: 'P', descripcion: '', precio: 1000, stock: 1, stockCritico: 1, categoria: 't', imagen: 'img' } as Product;
 
         render(
-            <MemoryRouter>
+            <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
                 <AddToCartModal show={true} onHide={mockOnHide} product={product} />
             </MemoryRouter>
         );

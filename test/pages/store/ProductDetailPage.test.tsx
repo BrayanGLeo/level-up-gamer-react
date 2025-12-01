@@ -38,7 +38,7 @@ describe('ProductDetailPage', () => {
         });
 
         render(
-            <MemoryRouter initialEntries={["/producto/S0"]}>
+            <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={["/producto/S0"]}>
                 <Routes><Route path="/producto/:codigo" element={<ProductDetailPage />} /></Routes>
             </MemoryRouter>
         );
@@ -50,7 +50,7 @@ describe('ProductDetailPage', () => {
     test('muestra mensaje de producto no encontrado si getProductByCode devuelve undefined', () => {
         (pd.getProductByCode as vi.Mock).mockReturnValue(undefined);
         render(
-            <MemoryRouter initialEntries={["/producto/UNKNOWN"]}>
+            <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={["/producto/UNKNOWN"]}>
                 <Routes><Route path="/producto/:codigo" element={<ProductDetailPage />} /></Routes>
             </MemoryRouter>
         );
@@ -65,7 +65,7 @@ describe('ProductDetailPage', () => {
         mockUseCart.mockReturnValue({ addToCart: mockAddToCart });
 
         render(
-            <MemoryRouter initialEntries={["/producto/X1"]}>
+            <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={["/producto/X1"]}>
                 <Routes><Route path="/producto/:codigo" element={<ProductDetailPage />} /></Routes>
             </MemoryRouter>
         );
@@ -86,7 +86,7 @@ describe('ProductDetailPage', () => {
         (pd.getProductByCode as vi.Mock).mockReturnValue(productWithFeatures);
 
         render(
-            <MemoryRouter initialEntries={["/producto/FEAT"]}>
+            <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={["/producto/FEAT"]}>
                 <Routes><Route path="/producto/:codigo" element={<ProductDetailPage />} /></Routes>
             </MemoryRouter>
         );
@@ -106,7 +106,7 @@ describe('ProductDetailPage', () => {
         (pd.getProductByCode as vi.Mock).mockReturnValue(productWithoutSpecs);
 
         render(
-            <MemoryRouter initialEntries={["/producto/NOSPEC"]}>
+            <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={["/producto/NOSPEC"]}>
                 <Routes><Route path="/producto/:codigo" element={<ProductDetailPage />} /></Routes>
             </MemoryRouter>
         );
@@ -124,7 +124,7 @@ describe('ProductDetailPage', () => {
         (pd.getProductByCode as vi.Mock).mockReturnValue(productWithoutSpecs);
 
         render(
-            <MemoryRouter initialEntries={["/producto/NOSPEC-UNDEF"]}>
+            <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={["/producto/NOSPEC-UNDEF"]}>
                 <Routes><Route path="/producto/:codigo" element={<ProductDetailPage />} /></Routes>
             </MemoryRouter>
         );
@@ -143,7 +143,7 @@ describe('ProductDetailPage', () => {
         (pd.getProductByCode as vi.Mock).mockReturnValue(productWithSpecs);
 
         render(
-            <MemoryRouter initialEntries={["/producto/SP"]}>
+            <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }} initialEntries={["/producto/SP"]}>
                 <Routes><Route path="/producto/:codigo" element={<ProductDetailPage />} /></Routes>
             </MemoryRouter>
         );

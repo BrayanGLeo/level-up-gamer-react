@@ -27,7 +27,7 @@ vi.mock('../../src/data/userData', async (importOriginal) => {
 
 vi.mock('../../src/utils/api', () => ({
     loginApi: vi.fn(),
-    getPerfilApi: vi.fn(),
+    getPerfilApi: vi.fn(() => Promise.reject(new Error('No session'))), // Por defecto, no hay sesión
     registerApi: vi.fn(),
     logoutApi: vi.fn(),
 }));
@@ -56,13 +56,19 @@ describe('AuthContext', () => {
         vi.restoreAllMocks();
     });
 
-    test('debe iniciar con currentUser como null', () => {
+    test('debe iniciar con currentUser como null', async () => {
         const { result } = renderHook(() => useAuth(), { wrapper: AuthProviderWrapper });
+        await act(async () => {
+            await Promise.resolve(); 
+        });
         expect(result.current.currentUser).toBeNull();
     });
     
-    test('updateCurrentUser debe actualizar el estado', () => {
+    test('updateCurrentUser debe actualizar el estado', async () => {
         const { result } = renderHook(() => useAuth(), { wrapper: AuthProviderWrapper });
+        await act(async () => {
+            await Promise.resolve();
+        });
         
         act(() => {
             result.current.updateCurrentUser(clienteUser as any);
@@ -170,8 +176,11 @@ describe('AuthContext', () => {
         });
     });
     
-    test('debe limpiar currentUser y llamar a logoutApi', () => {
+    test('debe limpiar currentUser y llamar a logoutApi', async () => {
         const { result } = renderHook(() => useAuth(), { wrapper: AuthProviderWrapper });
+        await act(async () => {
+            await Promise.resolve();
+        });
         
         // Mockear un usuario ya logueado para que haya algo que "limpiar"
         act(() => {
@@ -180,7 +189,7 @@ describe('AuthContext', () => {
 
         vi.mocked(api.logoutApi).mockResolvedValue({});
 
-        act(() => {
+        await act(async () => { 
             result.current.logout();
         });
 

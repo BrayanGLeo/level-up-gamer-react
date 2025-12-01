@@ -37,7 +37,7 @@ const mockUseCart = useCart as vi.Mock;
 
 const renderHeader = () => {
     return render(
-        <BrowserRouter>
+        <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
             <AuthProvider>
                 <CartProvider>
                     <Header />
