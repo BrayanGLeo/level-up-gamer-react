@@ -63,6 +63,7 @@ const AdminOrdenes = () => {
                         imagen: d.producto.imagenUrl
                     }))
                 }));
+
                 setAllOrders(mapped.sort((a: any, b: any) => b.number - a.number));
             } catch (error) {
                 console.error("Error fetching orders", error);

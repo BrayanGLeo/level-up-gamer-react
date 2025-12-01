@@ -55,9 +55,11 @@ const OrderDetailModal = ({ show, onHide, order }: OrderDetailModalProps) => {
                             <div>
                                 <strong>Tipo de Entrega:</strong>
                                 <p>Despacho a Domicilio</p>
-
                                 {(order.shipping as any).direccionCompleta ? (
-                                    <p>{(order.shipping as any).direccionCompleta}</p>
+                                    <>
+                                        <strong>Dirección de Envío:</strong>
+                                        <p>{(order.shipping as any).direccionCompleta}</p>
+                                    </>
                                 ) : (
                                     <>
                                         <strong>Recibe:</strong>
