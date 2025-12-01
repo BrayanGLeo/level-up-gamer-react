@@ -49,17 +49,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
     const login = async (email: string, password: string): Promise<LoginResult> => {
         try {
-            // Llama a /auth/login (establece la cookie en el navegador)
             const loginResult: AuthApiResult = await loginApi(email, password);
             
-            // Llama a /auth/perfil (obtener el objeto completo gracias a la cookie)
             const userProfile = await getPerfilApi();
 
             const user: CurrentUser = { ...userProfile, role: loginResult.rol };
             
             setCurrentUser(user);
 
-            // Lógica de redirección
             if (user.role === 'Administrador') {
                 return { success: true, redirect: '/admin', message: 'Inicio de sesión de administrador exitoso.' };
             } else if (user.role === 'Vendedor') {
@@ -68,13 +65,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
                 return { success: true, redirect: '/', message: '¡Inicio de Sesión Exitoso!' };
             }
         } catch (error: any) {
-            setCurrentUser(null); // Asegura que currentUser se limpia en caso de fallo
+            setCurrentUser(null);
             const message = error.message.includes('Credenciales inválidas') ? 'Correo o contraseña incorrectos.' : error.message;
             return { success: false, message: message };
         }
     };
 
-    // 🚨 3. Lógica de Registro
     const register = async (userData: RegisterData): Promise<LoginResult> => {
         try {
             await registerApi(userData);
@@ -84,9 +80,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         }
     };
 
-    // 🚨 4. Lógica de Logout
     const logout = (): LoginResult => {
-        logoutApi().catch(console.error); // Llama al backend para invalidar la sesión
+        logoutApi().catch(console.error);
         
         setCurrentUser(null);
         return { success: true, message: 'Has cerrado la sesión.', redirect: '/' };

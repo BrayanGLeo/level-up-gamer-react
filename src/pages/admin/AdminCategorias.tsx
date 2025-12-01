@@ -23,7 +23,6 @@ const AdminCategorias = () => {
 
     const loadCategories = async () => {
         try {
-            // [MODIFICADO] Usar la API
             const data = await getCategories();
             setCategories(data);
         } catch (err) {
@@ -79,10 +78,8 @@ const AdminCategorias = () => {
 
         try {
             if (isEditMode && currentCategory.id !== null) {
-                // [MODIFICADO] Usar la API para actualizar
                 await updateCategory(currentCategory.id, currentCategory.nombre);
             } else {
-                // [MODIFICADO] Usar la API para crear
                 await createCategory(currentCategory.nombre);
             }
             loadCategories();
@@ -101,7 +98,6 @@ const AdminCategorias = () => {
     const handleConfirmDelete = async () => {
         if (categoryToDelete) {
             try {
-                // [MODIFICADO] Usar la API para eliminar
                 await deleteCategory(categoryToDelete);
                 loadCategories();
             } catch (err: any) {

@@ -2,17 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { Table, Button, Card, Badge } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { LinkContainer } from 'react-router-bootstrap';
-import { getAdminProducts, deleteProduct } from '../../services/adminService'; 
+import { getAdminProducts, deleteProduct } from '../../services/adminService';
 import AdminConfirmModal from '../../components/AdminConfirmModal';
 import '../../styles/AdminStyle.css';
-import { Product } from '../../data/productData'; 
+import { Product } from '../../data/productData';
 
 const AdminProductList = () => {
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const navigate = useNavigate();
-    
+
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [productToDelete, setProductToDelete] = useState<string | null>(null);
 
@@ -48,7 +48,7 @@ const AdminProductList = () => {
         if (productToDelete) {
             try {
                 await deleteProduct(productToDelete);
-                fetchProducts(); 
+                fetchProducts();
             } catch (err) {
                 console.error("Error deleting product:", err);
             }
@@ -70,7 +70,7 @@ const AdminProductList = () => {
     if (loading) {
         return <p className="text-center p-3">Cargando productos...</p>;
     }
-    
+
     if (error) {
         return <p className="text-center p-3 text-danger">{error}</p>;
     }
@@ -79,7 +79,7 @@ const AdminProductList = () => {
         <>
             <div className="admin-page-header">
                 <h1>Productos</h1>
-                
+
                 <LinkContainer to="/admin/productos/nuevo">
                     <Button className="btn-admin">
                         Nuevo Producto
@@ -90,7 +90,7 @@ const AdminProductList = () => {
             <Card className="admin-card">
                 <Card.Header>Inventario de Productos</Card.Header>
                 <Card.Body>
-                    <div className="admin-table-container" style={{padding: 0, boxShadow: 'none'}}>
+                    <div className="admin-table-container" style={{ padding: 0, boxShadow: 'none' }}>
                         <Table hover responsive>
                             <thead>
                                 <tr>

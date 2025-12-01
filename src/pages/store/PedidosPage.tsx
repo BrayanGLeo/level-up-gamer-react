@@ -3,7 +3,7 @@ import { Container, Table, Button, Spinner, Alert } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import OrderDetailModal from '../../components/OrderDetailModal';
-import { getMyOrdersApi } from '../../utils/api'; 
+import { getMyOrdersApi } from '../../utils/api';
 import '../../styles/Perfil.css';
 import { Order } from '../../data/userData';
 import jsPDF from 'jspdf';
@@ -30,9 +30,9 @@ const PedidosPage = () => {
                             name: boleta.usuario ? boleta.usuario.nombre : 'Invitado',
                             surname: boleta.usuario ? boleta.usuario.apellido : '',
                             email: boleta.usuario ? boleta.usuario.email : '',
-                            phone: 'No registrado' 
+                            phone: 'No registrado'
                         },
-                        shipping: boleta.tipoEntrega === 'Retiro en Tienda' ? { type: 'Retiro en Tienda' } : { type: 'Despacho', ...boleta }, 
+                        shipping: boleta.tipoEntrega === 'Retiro en Tienda' ? { type: 'Retiro en Tienda' } : { type: 'Despacho', ...boleta },
                         items: boleta.detalles.map((d: any) => ({
                             nombre: d.producto.nombre,
                             quantity: d.cantidad,

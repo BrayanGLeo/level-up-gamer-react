@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Form, Button, Card, Row, Col } from 'react-bootstrap';
 import { useNavigate, useParams } from 'react-router-dom';
-import { getProductByCode, createProduct, updateProduct, getCategories } from '../../services/adminService'; 
+import { getProductByCode, createProduct, updateProduct, getCategories } from '../../services/adminService';
 import { validateProductForm } from '../../utils/validation';
 import AdminNotificationModal from '../../components/AdminNotificationModal';
 import '../../styles/AdminStyle.css';
@@ -15,7 +15,7 @@ const initialFormState: Product = {
     precio: 0,
     stock: 0,
     stockCritico: 5,
-    categoria: '', 
+    categoria: '',
     imagen: '',
     features: [],
     specifications: {}
@@ -30,7 +30,7 @@ const AdminProductForm = () => {
         stock?: string;
         categoria?: string;
     }
-    
+
     const [errors, setErrors] = useState<FormErrors>({});
     const navigate = useNavigate();
     const { codigo } = useParams();
@@ -43,17 +43,15 @@ const AdminProductForm = () => {
 
     const fetchProductData = async () => {
         try {
-            // [MODIFICADO] Obtener categorías de la API
             const cats = await getCategories();
             setCategories(cats);
 
             if (isEditMode && codigo) {
-                // [MODIFICADO] Obtener producto de la API
                 const product = await getProductByCode(codigo);
                 if (product) {
                     setFormData({
                         ...product,
-                        categoria: (product.categoria as any).nombre || product.categoria, 
+                        categoria: (product.categoria as any).nombre || product.categoria,
                     });
                 }
             }
@@ -79,13 +77,13 @@ const AdminProductForm = () => {
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        
+
         const formErrors: FormErrors = validateProductForm(formData as any);
 
         setErrors(formErrors);
 
         if (Object.keys(formErrors).length === 0) {
-            
+
             const productToSave: Product = {
                 ...formData,
                 precio: parseFloat(String(formData.precio)) || 0,
@@ -96,29 +94,27 @@ const AdminProductForm = () => {
             const selectedCategory = categories.find(c => c.nombre === productToSave.categoria);
 
             if (!selectedCategory) {
-                 setErrors({ categoria: "La categoría seleccionada es inválida." });
-                 return;
+                setErrors({ categoria: "La categoría seleccionada es inválida." });
+                return;
             }
 
             try {
                 let message = '';
                 if (isEditMode) {
-                    // [MODIFICADO] Usar la API para actualizar
                     await updateProduct(productToSave, selectedCategory);
                     message = 'Producto actualizado con éxito';
                 } else {
-                    // [MODIFICADO] Usar la API para crear
                     await createProduct(productToSave, selectedCategory);
                     message = 'Producto guardado con éxito';
                 }
-                
+
                 setModalInfo({ title: '¡Éxito!', message: message });
                 setShowNotifyModal(true);
 
             } catch (error: any) {
-                const errorMessage = error.message.includes("ProductoController") ? 
-                                     "Error de código de producto duplicado o falta de datos." : 
-                                     error.message;
+                const errorMessage = error.message.includes("ProductoController") ?
+                    "Error de código de producto duplicado o falta de datos." :
+                    error.message;
                 setModalInfo({ title: 'Error', message: errorMessage });
                 setShowNotifyModal(true);
             }

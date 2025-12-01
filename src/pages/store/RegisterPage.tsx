@@ -29,7 +29,7 @@ const RegisterPage = () => {
         setFormData({ ...formData, [name]: value });
     };
 
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         let newErrors: Record<string, string> = {};
 
@@ -48,21 +48,26 @@ const RegisterPage = () => {
         setErrors(newErrors);
 
         if (Object.keys(newErrors).length === 0) {
-            const result = register({
-                name: formData.names,
-                surname: formData.surnames,
-                email: formData.email.trim().toLowerCase(),
-                password: formData.password,
-                rut: formData.rut,
-                birthdate: formData.birthdate
-            });
+            try {
+                const result = await register({
+                    name: formData.names,
+                    surname: formData.surnames,
+                    email: formData.email.trim().toLowerCase(),
+                    password: formData.password,
+                    rut: formData.rut,
+                    birthdate: formData.birthdate
+                });
 
-            setRegistrationResult(result);
+                setRegistrationResult(result);
 
-            if (result.success) {
-                setModalInfo({ show: true, title: '¡Registro Exitoso!', message: result.message });
-            } else {
-                setModalInfo({ show: true, title: 'Error de Registro', message: result.message });
+                if (result.success) {
+                    setModalInfo({ show: true, title: '¡Registro Exitoso!', message: result.message });
+                } else {
+                    setModalInfo({ show: true, title: 'Error de Registro', message: result.message });
+                }
+            } catch (error) {
+                console.error("Error en el registro:", error);
+                setModalInfo({ show: true, title: 'Error', message: 'Ocurrió un error inesperado.' });
             }
         }
     };

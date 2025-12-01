@@ -123,3 +123,16 @@ export const createAddressApi = async (address: any): Promise<any> => {
 export const deleteAddressApi = async (id: number): Promise<void> => {
     return fetchApi<void>(`/usuarios/direcciones/${id}`, { method: 'DELETE' });
 };
+
+export const updateProfileApi = async (userData: Partial<User>): Promise<any> => {
+    const payload = {
+        nombre: userData.name,
+        apellido: userData.surname,
+        password: userData.password
+    };
+    
+    return fetchApi<any>('/auth/perfil', {
+        method: 'PUT',
+        body: JSON.stringify(payload)
+    });
+};
