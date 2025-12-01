@@ -18,7 +18,7 @@ import {
 } from '../../src/utils/api';
 
 const mockFetch = vi.fn();
-global.fetch = mockFetch;
+globalThis.fetch = mockFetch;
 
 const localStorageMock = (() => {
     let store: { [key: string]: string } = {};
