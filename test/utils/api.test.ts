@@ -77,22 +77,27 @@ describe('api.ts', () => {
             expect(result).toEqual({});
         });
 
-        test('debe manejar error 401: remover currentUser', async () => {
+        test('debe manejar error 401: remover currentUser PERO NO REDIRIGIR', async () => {
             mockFetch.mockResolvedValueOnce({
                 ok: false, status: 401, json: () => Promise.resolve({}), headers: new Headers(),
             });
             localStorageMock.setItem('currentUser', 'token');
+
             await expect(fetchApi('/test')).rejects.toThrow('Sesión expirada o acceso denegado.');
             expect(localStorageMock.getItem('currentUser')).toBeNull();
+
+            expect(mockLocation.href).toBe('');
         });
 
-        test('debe manejar error 403: remover currentUser', async () => {
+        test('debe manejar error 403: remover currentUser PERO NO REDIRIGIR', async () => {
             mockFetch.mockResolvedValueOnce({
                 ok: false, status: 403, json: () => Promise.resolve({}), headers: new Headers(),
             });
             localStorageMock.setItem('currentUser', 'token');
+
             await expect(fetchApi('/test')).rejects.toThrow('Sesión expirada o acceso denegado.');
             expect(localStorageMock.getItem('currentUser')).toBeNull();
+            expect(mockLocation.href).toBe('');
         });
 
         test('debe lanzar error genérico para otros fallos (ej. 500)', async () => {
