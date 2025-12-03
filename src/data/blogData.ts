@@ -3,5 +3,6 @@ export interface BlogPost {
     title: string;
     date: string;
     image: string;
+    summary?: string;
     content: string;
 }

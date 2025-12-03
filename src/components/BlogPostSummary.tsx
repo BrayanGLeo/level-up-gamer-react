@@ -14,7 +14,7 @@ const BlogPostSummary = ({ post }: BlogPostSummaryProps) => {
                 <Link to={`/blog/${post.id}`}>{post.title}</Link>
             </h3>
             <p className="text-secondary">
-                {post.content.substring(0, 100)}...
+                {post.summary || post.content.substring(0, 100) + "..."}
             </p>
         </div>
     );

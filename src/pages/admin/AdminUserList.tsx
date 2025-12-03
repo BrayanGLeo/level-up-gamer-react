@@ -6,18 +6,18 @@ import { User } from '../../data/userData';
 import { useAuth } from '../../context/AuthContext';
 import EmailHistoryModal from '../../components/EmailHistoryModal';
 import AdminConfirmModal from '../../components/AdminConfirmModal';
+import AdminNotificationModal from '../../components/AdminNotificationModal';
 import '../../styles/AdminStyle.css';
 
 const AdminUserList = () => {
     const [users, setUsers] = useState<User[]>([]);
     const navigate = useNavigate();
-    const { currentUser } = useAuth();
-
+    const { currentUser, logout } = useAuth();
     const [showHistoryModal, setShowHistoryModal] = useState(false);
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
-
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [userToDelete, setUserToDelete] = useState<string | null>(null);
+    const [showWarningModal, setShowWarningModal] = useState(false);
 
     const fetchUsers = async () => {
         try {
@@ -34,7 +34,7 @@ const AdminUserList = () => {
 
     const handleDelete = (rut: string) => {
         if (rut === '12345678-9') {
-            alert('No puedes eliminar al administrador principal.');
+            setShowWarningModal(true);
             return;
         }
         setUserToDelete(rut);
@@ -45,6 +45,13 @@ const AdminUserList = () => {
         if (userToDelete) {
             try {
                 await deleteUserByRut(userToDelete);
+
+                if (currentUser && currentUser.rut === userToDelete) {
+                    logout();
+                    navigate('/');
+                    return;
+                }
+
                 fetchUsers();
             } catch (error) {
                 console.error("Error deleting user", error);
@@ -67,6 +74,10 @@ const AdminUserList = () => {
     const handleShowHistory = (user: User) => {
         setSelectedUser(user);
         setShowHistoryModal(true);
+    };
+
+    const handleCloseWarning = () => {
+        setShowWarningModal(false);
     };
 
     const getRoleBadge = (role: User['role']) => {
@@ -123,8 +134,27 @@ const AdminUserList = () => {
                     </div>
                 </Card.Body>
             </Card>
+
             <EmailHistoryModal show={showHistoryModal} onHide={handleCloseHistory} user={selectedUser} />
-            <AdminConfirmModal show={showConfirmModal} onHide={handleCloseConfirm} onConfirm={handleConfirmDelete} title="Confirmar Eliminación" message="¿Estás seguro de que quieres eliminar este usuario?" />
+
+            <AdminConfirmModal
+                show={showConfirmModal}
+                onHide={handleCloseConfirm}
+                onConfirm={handleConfirmDelete}
+                title="Confirmar Eliminación"
+                message={
+                    userToDelete === currentUser?.rut
+                        ? "Estás a punto de eliminar tu propia cuenta. Se cerrará tu sesión inmediatamente. ¿Deseas continuar?"
+                        : "¿Estás seguro de que quieres eliminar este usuario?"
+                }
+            />
+
+            <AdminNotificationModal
+                show={showWarningModal}
+                onHide={handleCloseWarning}
+                title="Acción Denegada"
+                message="No puedes eliminar al administrador principal del sistema."
+            />
         </>
     );
 };
