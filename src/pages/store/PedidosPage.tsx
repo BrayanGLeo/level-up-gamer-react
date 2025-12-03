@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Table, Button, Spinner, Alert } from 'react-bootstrap';
+import { Container, Table, Button, Spinner, Badge } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import OrderDetailModal from '../../components/OrderDetailModal';
 import { getMyOrdersApi } from '../../utils/api';
 import '../../styles/Perfil.css';
 import { Order } from '../../data/userData';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
 
 const PedidosPage = () => {
     const { currentUser } = useAuth();
@@ -21,26 +19,42 @@ const PedidosPage = () => {
             const fetchOrders = async () => {
                 try {
                     const data = await getMyOrdersApi();
+
                     const mappedOrders = data.map((boleta: any) => ({
                         number: boleta.numeroOrden,
                         date: new Date(boleta.fechaCompra).toLocaleDateString(),
                         total: boleta.total,
                         status: boleta.estado,
+
+                        displayAddress: boleta.tipoEntrega === 'Retiro en Tienda'
+                            ? 'Retiro en Tienda'
+                            : (boleta.direccionEnvio || 'Dirección no disponible'),
+
                         customer: {
-                            name: boleta.usuario ? boleta.usuario.nombre : 'Invitado',
-                            surname: boleta.usuario ? boleta.usuario.apellido : '',
-                            email: boleta.usuario ? boleta.usuario.email : '',
-                            phone: 'No registrado'
+                            name: boleta.usuario ? boleta.usuario.nombre : (boleta.nombreCliente || 'Invitado'),
+                            surname: boleta.usuario ? boleta.usuario.apellido : (boleta.apellidoCliente || ''),
+                            email: boleta.usuario ? boleta.usuario.email : 'No registrado',
+                            phone: boleta.telefonoCliente || 'No registrado'
                         },
-                        shipping: boleta.tipoEntrega === 'Retiro en Tienda' ? { type: 'Retiro en Tienda' } : { type: 'Despacho', ...boleta },
+
+                        shipping: boleta.tipoEntrega === 'Retiro en Tienda'
+                            ? { type: 'Retiro en Tienda' }
+                            : {
+                                type: 'Despacho',
+                                direccionCompleta: boleta.direccionEnvio,
+                                ...boleta
+                            },
+
                         items: boleta.detalles.map((d: any) => ({
+                            codigo: d.producto.codigo,
                             nombre: d.producto.nombre,
                             quantity: d.cantidad,
                             precio: d.precioUnitario,
                             imagen: d.producto.imagenUrl
                         }))
                     }));
-                    setOrders(mappedOrders);
+
+                    setOrders(mappedOrders.sort((a: any, b: any) => b.number - a.number));
                 } catch (error) {
                     console.error("Error cargando pedidos:", error);
                 } finally {
@@ -63,67 +77,6 @@ const PedidosPage = () => {
         setSelectedOrder(null);
     };
 
-    const handleDownloadBoleta = (order: Order) => {
-        const doc = new jsPDF();
-        const formatPrice = (price: number) => `$${price.toLocaleString('es-CL')}`;
-
-        doc.setFontSize(20);
-        doc.text("Resumen de Compra", 14, 22);
-
-        doc.setFontSize(12);
-        doc.text(`N° de orden: ${order.number}`, 14, 30);
-        doc.text(`Fecha de compra: ${order.date}`, 14, 36);
-
-        doc.setFontSize(16);
-        doc.text("Datos del Cliente", 14, 48);
-        doc.setFontSize(12);
-        doc.text(`Nombre: ${order.customer.name} ${order.customer.surname}`, 14, 56);
-        doc.text(`E-mail: ${order.customer.email}`, 14, 62);
-        doc.text(`Teléfono: ${order.customer.phone || 'No registrado'}`, 14, 68);
-
-        doc.setFontSize(16);
-        doc.text("Datos de Envío", 14, 80);
-        doc.setFontSize(12);
-        if (order.shipping.type === 'Retiro en Tienda') {
-            doc.text("Tipo de Entrega: Retiro en Tienda", 14, 88);
-            doc.text("Dirección: Calle Falsa 123, Springfield", 14, 94);
-        } else {
-            doc.text("Tipo de Entrega: Despacho a Domicilio", 14, 88);
-            if (order.shipping.recibeNombre) {
-                doc.text(`Recibe: ${order.shipping.recibeNombre} ${order.shipping.recibeApellido}`, 14, 94);
-                doc.text(`Dirección: ${order.shipping.calle} ${order.shipping.numero}${order.shipping.depto ? `, ${order.shipping.depto}` : ''}`, 14, 100);
-                doc.text(`Comuna: ${order.shipping.comuna}, ${order.shipping.region}`, 14, 106);
-            } else {
-                doc.text("Detalles de dirección no disponibles", 14, 94);
-            }
-        }
-
-        const tableColumn = ["Producto", "Cantidad", "Precio Unitario", "Total"];
-        const tableRows: (string | number)[][] = [];
-
-        order.items.forEach(item => {
-            const itemData = [
-                item.nombre,
-                item.quantity,
-                formatPrice(item.precio),
-                formatPrice(item.precio * item.quantity)
-            ];
-            tableRows.push(itemData);
-        });
-
-        autoTable(doc, {
-            startY: 115,
-            head: [tableColumn],
-            body: tableRows,
-        });
-
-        const finalY = (doc as any).lastAutoTable.finalY || 130;
-        doc.setFontSize(18);
-        doc.text(`Total: ${formatPrice(order.total)}`, 14, finalY + 15);
-
-        doc.save(`boleta_${order.number}.pdf`);
-    };
-
     if (loading) return <Container className="pt-5 mt-5 text-center"><Spinner animation="border" /></Container>;
 
     if (!currentUser) {
@@ -139,42 +92,58 @@ const PedidosPage = () => {
 
     return (
         <>
-            <main className="main-content" style={{ paddingTop: '100px' }}>
+            <main className="main-content" style={{ paddingTop: '100px', minHeight: '80vh' }}>
                 <section className="orders-section">
                     <Container>
                         <h2 className="section-title">Mis Pedidos</h2>
+
                         {orders.length === 0 ? (
-                            <p>Aún no has realizado ningún pedido. ¡<Link to="/catalogo">Explora nuestro catálogo</Link>!</p>
+                            <div className="text-center">
+                                <p className="text-secondary">Aún no has realizado ningún pedido.</p>
+                                <Link to="/catalogo" className="btn">Ir a comprar</Link>
+                            </div>
                         ) : (
-                            <Table striped bordered hover responsive variant="dark" className="order-table">
-                                <thead>
-                                    <tr>
-                                        <th>N° Orden</th>
-                                        <th>Fecha</th>
-                                        <th>Total</th>
-                                        <th>Estado</th>
-                                        <th>Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {orders.map(order => (
-                                        <tr key={order.number}>
-                                            <td>#{order.number}</td>
-                                            <td>{order.date}</td>
-                                            <td>${order.total.toLocaleString('es-CL')}</td>
-                                            <td>{order.status}</td>
-                                            <td>
-                                                <Button size="sm" onClick={() => handleShowModal(order)}>Detalles</Button>
-                                                <Button size="sm" variant="success" className="ms-2" onClick={() => handleDownloadBoleta(order)}>PDF</Button>
-                                            </td>
+                            <div className="table-responsive">
+                                <Table hover variant="dark" className="order-table align-middle">
+                                    <thead>
+                                        <tr>
+                                            <th>N° Orden</th>
+                                            <th>Dirección de Envío</th>
+                                            <th>Total</th>
+                                            <th className="text-center">Detalles</th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </Table>
+                                    </thead>
+                                    <tbody>
+                                        {(orders as any[]).map(order => (
+                                            <tr key={order.number}>
+                                                <td>
+                                                    <strong>#{order.number}</strong>
+                                                    <br />
+                                                    <small className="text-muted">{order.date}</small>
+                                                </td>
+                                                <td>{order.displayAddress}</td>
+                                                <td style={{ color: '#39FF14', fontWeight: 'bold' }}>
+                                                    ${order.total.toLocaleString('es-CL')}
+                                                </td>
+                                                <td className="text-center">
+                                                    <Button
+                                                        variant="primary"
+                                                        size="sm"
+                                                        onClick={() => handleShowModal(order)}
+                                                    >
+                                                        Ver Detalles
+                                                    </Button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </Table>
+                            </div>
                         )}
                     </Container>
                 </section>
             </main>
+
             <OrderDetailModal show={showModal} onHide={handleCloseModal} order={selectedOrder} />
         </>
     );

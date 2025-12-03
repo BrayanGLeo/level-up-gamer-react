@@ -33,16 +33,14 @@ const CheckoutPage = () => {
     const [formData, setFormData] = useState<ICheckoutForm>(initialFormState);
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [deliveryMethod, setDeliveryMethod] = useState<string | null>(null);
+    const [paymentMethod, setPaymentMethod] = useState<string | null>(null);
     const [comunas, setComunas] = useState<string[]>([]);
-
     const { currentUser } = useAuth();
     const { cartItems, getCartTotal, clearCart } = useCart();
     const navigate = useNavigate();
-
     const [savedAddresses, setSavedAddresses] = useState<Address[]>([]);
     const [selectedAddressId, setSelectedAddressId] = useState<number | string | null>(null);
     const [modalInfo, setModalInfo] = useState({ show: false, title: '', message: '' });
-
     const [isProcessing, setIsProcessing] = useState(false);
     const [paymentError, setPaymentError] = useState('');
 
@@ -74,16 +72,14 @@ const CheckoutPage = () => {
         if (!validateRequiredField(formData.apellidos, 100)) newErrors.apellidos = 'El apellido es requerido.';
         if (!validateRut(formData.rut)) newErrors.rut = 'El RUT no es válido.';
         if (!validateBasicEmail(formData.email)) newErrors.email = 'El E-mail no es válido.';
-        if (!validatePhone(formData.telefono)) newErrors.telefono = 'El teléfono no es válido (ej: 912345678).';
+        if (!validatePhone(formData.telefono)) newErrors.telefono = 'El teléfono no es válido.';
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
 
     const validateStep2 = () => {
         const newErrors: Record<string, string> = {};
-        if (!deliveryMethod) {
-            newErrors.deliveryMethod = 'Debes seleccionar una forma de entrega.';
-        }
+        if (!deliveryMethod) newErrors.deliveryMethod = 'Debes seleccionar una forma de entrega.';
         if (deliveryMethod === 'despacho') {
             if (!formData.region) newErrors.region = 'Selecciona una región.';
             if (!formData.comuna) newErrors.comuna = 'Selecciona una comuna.';
@@ -97,6 +93,14 @@ const CheckoutPage = () => {
         return Object.keys(newErrors).length === 0;
     };
 
+    const validateStep3 = () => {
+        if (!paymentMethod) {
+            setPaymentError('Por favor selecciona un método de pago.');
+            return false;
+        }
+        return true;
+    };
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
         setSelectedAddressId('new');
@@ -104,8 +108,8 @@ const CheckoutPage = () => {
     const handleRegionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const regionNombre = e.target.value;
         setFormData({ ...formData, region: regionNombre, comuna: '' });
-        const regionEncontrada = regionesData.find(r => r.nombre === regionNombre);
-        setComunas(regionEncontrada ? regionEncontrada.comunas : []);
+        const found = regionesData.find(r => r.nombre === regionNombre);
+        setComunas(found ? found.comunas : []);
         setSelectedAddressId('new');
     };
 
@@ -122,14 +126,13 @@ const CheckoutPage = () => {
             recibeTelefono: address.recibeTelefono
         }));
         setSelectedAddressId(address.id);
-        const regionEncontrada = regionesData.find(r => r.nombre === address.region);
-        setComunas(regionEncontrada ? regionEncontrada.comunas : []);
+        const found = regionesData.find(r => r.nombre === address.region);
+        setComunas(found ? found.comunas : []);
         setErrors({});
     };
 
     const handleSaveAddress = async () => {
         if (!validateStep2()) return;
-
         const newAddress = {
             alias: `${formData.calle} ${formData.numero}`,
             region: formData.region,
@@ -141,14 +144,12 @@ const CheckoutPage = () => {
             recibeApellido: formData.recibeApellido,
             recibeTelefono: formData.recibeTelefono
         };
-
         try {
             const savedAddr = await createAddressApi(newAddress);
             setSavedAddresses([...savedAddresses, savedAddr]);
             setSelectedAddressId(savedAddr.id);
-            setModalInfo({ show: true, title: 'Dirección Guardada', message: 'La dirección se ha guardado en tu perfil.' });
+            setModalInfo({ show: true, title: 'Dirección Guardada', message: 'La dirección se ha guardado.' });
         } catch (error) {
-            console.error(error);
             setModalInfo({ show: true, title: 'Error', message: 'No se pudo guardar la dirección.' });
         }
     };
@@ -165,25 +166,18 @@ const CheckoutPage = () => {
     };
     const prevStep = () => setStep(prev => prev - 1);
 
-    const getPickupDate = () => {
-        const date = new Date(Date.now() + 10 * 24 * 60 * 60 * 1000);
-        return date.toLocaleDateString('es-CL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-    };
-
     const handlePayment = async (e: React.MouseEvent<HTMLButtonElement>) => {
         e.preventDefault();
+        if (!validateStep3()) return;
+
         setIsProcessing(true);
         setPaymentError('');
 
         let direccionEnvioTexto = '';
         if (deliveryMethod === 'despacho') {
-            direccionEnvioTexto = `${formData.calle} #${formData.numero}`;
-            if (formData.depto) {
-                direccionEnvioTexto += `, Depto ${formData.depto}`;
-            }
-            direccionEnvioTexto += `, ${formData.comuna}, ${formData.region}`;
-
-            direccionEnvioTexto += ` (Recibe: ${formData.recibeNombre} ${formData.recibeApellido})`;
+            direccionEnvioTexto = `${formData.calle} #${formData.numero}, ${formData.comuna}, ${formData.region}`;
+            if (formData.depto) direccionEnvioTexto += `, Depto ${formData.depto}`;
+            direccionEnvioTexto += ` | Recibe: ${formData.recibeNombre} ${formData.recibeApellido} (${formData.recibeTelefono})`;
         } else {
             direccionEnvioTexto = 'Retiro en Tienda (Calle Falsa 123, Springfield)';
         }
@@ -192,12 +186,12 @@ const CheckoutPage = () => {
             usuarioEmail: currentUser?.email || null,
             total: getCartTotal(),
             tipoEntrega: deliveryMethod === 'despacho' ? 'Despacho a Domicilio' : 'Retiro en Tienda',
-            estado: 'Pendiente',
+            estado: 'Pagado',
+            metodoPago: paymentMethod,
 
             nombreCliente: formData.nombre,
             apellidoCliente: formData.apellidos,
             telefonoCliente: formData.telefono,
-
             direccionEnvio: direccionEnvioTexto,
 
             items: cartItems.map(item => ({
@@ -229,10 +223,8 @@ const CheckoutPage = () => {
 
         } catch (error: any) {
             console.error("Error en checkout", error);
-            setPaymentError(error.message || 'Error al procesar el pago.');
-            if (error.message.includes("Stock insuficiente")) {
-                alert(error.message);
-            }
+            alert(`Error al procesar la compra: ${error.message}`);
+            setPaymentError(error.message);
         } finally {
             setIsProcessing(false);
         }
@@ -246,8 +238,8 @@ const CheckoutPage = () => {
                 <Card.Title>Paso 1: Tus datos</Card.Title>
                 <Form noValidate>
                     <Row>
-                        <Col md={6}><Form.Group className="form-group" controlId="nombre"><Form.Label>Nombre:</Form.Label><Form.Control type="text" name="nombre" value={formData.nombre} onChange={handleChange} isInvalid={!!errors.nombre} required /><Form.Control.Feedback type="invalid">{errors.nombre}</Form.Control.Feedback></Form.Group></Col>
-                        <Col md={6}><Form.Group className="form-group" controlId="apellidos"><Form.Label>Apellidos:</Form.Label><Form.Control type="text" name="apellidos" value={formData.apellidos} onChange={handleChange} isInvalid={!!errors.apellidos} required /><Form.Control.Feedback type="invalid">{errors.apellidos}</Form.Control.Feedback></Form.Group></Col>
+                        <Col md={6}><Form.Group className="form-group" controlId="nombre"><Form.Label>Nombre:</Form.Label><Form.Control type="text" name="nombre" value={formData.nombre} onChange={handleChange} isInvalid={!!errors.nombre} required /></Form.Group></Col>
+                        <Col md={6}><Form.Group className="form-group" controlId="apellidos"><Form.Label>Apellidos:</Form.Label><Form.Control type="text" name="apellidos" value={formData.apellidos} onChange={handleChange} isInvalid={!!errors.apellidos} required /></Form.Group></Col>
                     </Row>
                     <Form.Group className="form-group" controlId="rut"><Form.Label>RUT:</Form.Label><Form.Control type="text" name="rut" value={formData.rut} onChange={handleChange} isInvalid={!!errors.rut} placeholder="12345678-K" required readOnly={!!currentUser} /><Form.Control.Feedback type="invalid">{errors.rut}</Form.Control.Feedback></Form.Group>
                     <Row>
@@ -268,8 +260,8 @@ const CheckoutPage = () => {
                 <Card.Title>Paso 2: Forma de entrega</Card.Title>
                 <Form noValidate>
                     <Form.Group className="form-group delivery-method-group">
-                        <Form.Check type="radio" name="deliveryMethod" id="despacho" value="despacho" checked={deliveryMethod === 'despacho'} onChange={(e) => setDeliveryMethod(e.target.value)} className={deliveryMethod === 'despacho' ? 'active' : ''} label={<><strong>Despacho a Domicilio</strong><p className="text-secondary mb-0">Recibe tu pedido en la comodidad de tu casa.</p></>} />
-                        <Form.Check type="radio" name="deliveryMethod" id="retiro" value="retiro" checked={deliveryMethod === 'retiro'} onChange={(e) => setDeliveryMethod(e.target.value)} className={deliveryMethod === 'retiro' ? 'active' : ''} label={<><strong>Retiro en Tienda</strong><p className="text-secondary mb-0">Retira sin costo en nuestra tienda.</p></>} />
+                        <Form.Check type="radio" name="deliveryMethod" id="despacho" value="despacho" checked={deliveryMethod === 'despacho'} onChange={(e) => setDeliveryMethod(e.target.value)} className={deliveryMethod === 'despacho' ? 'active' : ''} label="Despacho a Domicilio" />
+                        <Form.Check type="radio" name="deliveryMethod" id="retiro" value="retiro" checked={deliveryMethod === 'retiro'} onChange={(e) => setDeliveryMethod(e.target.value)} className={deliveryMethod === 'retiro' ? 'active' : ''} label="Retiro en Tienda" />
                         {!!errors.deliveryMethod && <div className="invalid-feedback d-block">{errors.deliveryMethod}</div>}
                     </Form.Group>
 
@@ -346,25 +338,85 @@ const CheckoutPage = () => {
                 <Card.Title>Paso 3: Resumen y Pago</Card.Title>
                 <Row>
                     <Col md={7}>
-                        <h5>Resumen</h5>
+                        <h5>Productos</h5>
                         {cartItems.map(item => (
-                            <div key={item.codigo} className="d-flex justify-content-between my-2">
-                                <span>{item.nombre} (x{item.quantity})</span>
+                            <div key={item.codigo} className="d-flex justify-content-between my-2 border-bottom pb-2">
+                                <span>{item.nombre} <small className="text-muted">(x{item.quantity})</small></span>
                                 <strong>${(item.precio * item.quantity).toLocaleString('es-CL')}</strong>
                             </div>
                         ))}
-                        <hr />
-                        <h4>Total: ${getCartTotal().toLocaleString('es-CL')}</h4>
+
+                        <div className="d-flex justify-content-between mt-3">
+                            <h4>Total:</h4>
+                            <h4 style={{ color: '#39FF14' }}>${getCartTotal().toLocaleString('es-CL')}</h4>
+                        </div>
                     </Col>
+
                     <Col md={5}>
-                        <h5>Pago</h5>
-                        {paymentError && <Alert variant="danger">{paymentError}</Alert>}
-                        <Button onClick={handlePayment} className="btn w-100" disabled={isProcessing}>
-                            {isProcessing ? 'Procesando...' : 'Pagar'}
+                        <div className="mb-4 p-3" style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', borderRadius: '8px' }}>
+                            <h5 className="mb-3" style={{ color: '#1E90FF' }}>Datos de Envío</h5>
+                            {deliveryMethod === 'despacho' ? (
+                                <>
+                                    <p className="mb-1"><strong>Dirección:</strong> {formData.calle} #{formData.numero} {formData.depto && `, Depto ${formData.depto}`}</p>
+                                    <p className="mb-1"><strong>Comuna:</strong> {formData.comuna}, {formData.region}</p>
+                                    <p className="mb-0"><strong>Recibe:</strong> {formData.recibeNombre} {formData.recibeApellido}</p>
+                                </>
+                            ) : (
+                                <>
+                                    <p className="mb-1"><strong>Retiro en Tienda</strong></p>
+                                    <p className="mb-0">Calle Falsa 123, Springfield</p>
+                                </>
+                            )}
+                        </div>
+
+                        <h5 className="mb-3">Selecciona Método de Pago</h5>
+                        <Form.Group className="mb-4">
+                            <Card
+                                className={`mb-2 p-2 ${paymentMethod === 'WebPay' ? 'border-primary' : ''}`}
+                                style={{ cursor: 'pointer', backgroundColor: paymentMethod === 'WebPay' ? 'rgba(30, 144, 255, 0.1)' : 'transparent' }}
+                                onClick={() => setPaymentMethod('WebPay')}
+                            >
+                                <Form.Check
+                                    type="radio"
+                                    id="webpay"
+                                    label={<strong>WebPay Plus (Débito/Crédito)</strong>}
+                                    name="payment"
+                                    checked={paymentMethod === 'WebPay'}
+                                    onChange={() => setPaymentMethod('WebPay')}
+                                />
+                            </Card>
+
+                            <Card
+                                className={`mb-2 p-2 ${paymentMethod === 'Transferencia' ? 'border-primary' : ''}`}
+                                style={{ cursor: 'pointer', backgroundColor: paymentMethod === 'Transferencia' ? 'rgba(30, 144, 255, 0.1)' : 'transparent' }}
+                                onClick={() => setPaymentMethod('Transferencia')}
+                            >
+                                <Form.Check
+                                    type="radio"
+                                    id="transferencia"
+                                    label={<strong>Transferencia Bancaria</strong>}
+                                    name="payment"
+                                    checked={paymentMethod === 'Transferencia'}
+                                    onChange={() => setPaymentMethod('Transferencia')}
+                                />
+                            </Card>
+                        </Form.Group>
+
+                        {paymentError && <Alert variant="danger" className="py-2">{paymentError}</Alert>}
+
+                        <Button
+                            onClick={handlePayment}
+                            className="btn w-100 btn-lg"
+                            disabled={isProcessing || !paymentMethod}
+                        >
+                            {isProcessing ? 'Procesando...' : 'Pagar Ahora'}
                         </Button>
                     </Col>
                 </Row>
-                <Button variant="secondary" onClick={prevStep} className="mt-3" disabled={isProcessing}>Volver</Button>
+
+                <Button variant="secondary" onClick={prevStep} className="mt-3" disabled={isProcessing}>
+                    Volver
+                </Button>
             </Card.Body>
         </Card>
     );

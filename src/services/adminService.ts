@@ -1,5 +1,5 @@
 import { fetchApi } from '../utils/api';
-import { Product, Specifications } from '../data/productData';
+import { Product } from '../data/productData';
 import { User } from '../data/userData';
 import { Category } from '../data/categoryData';
 
@@ -78,6 +78,13 @@ export const getAdminUsers = async (): Promise<User[]> => {
 
 export const getUserByRut = async (rut: string): Promise<User> => {
     return fetchApi<User>(`/admin/usuarios/rut/${rut}`, { method: 'GET' });
+};
+
+export const createUser = async (user: any): Promise<User> => {
+    return fetchApi<User>('/admin/usuarios', {
+        method: 'POST',
+        body: JSON.stringify(user)
+    });
 };
 
 export const updateAdminUser = async (user: User): Promise<User> => {

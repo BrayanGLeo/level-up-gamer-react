@@ -1,6 +1,6 @@
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
-import { User, RegisterData } from '../data/userData'; 
-import { loginApi, registerApi, getPerfilApi, logoutApi, AuthApiResult } from '../utils/api'; 
+import { User, RegisterData } from '../data/userData';
+import { loginApi, registerApi, getPerfilApi, logoutApi, AuthApiResult } from '../utils/api';
 
 export interface CurrentUser extends User {
     role: 'Administrador' | 'Vendedor' | 'Cliente';
@@ -50,11 +50,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     const login = async (email: string, password: string): Promise<LoginResult> => {
         try {
             const loginResult: AuthApiResult = await loginApi(email, password);
-            
+
             const userProfile = await getPerfilApi();
 
             const user: CurrentUser = { ...userProfile, role: loginResult.rol };
-            
+
             setCurrentUser(user);
 
             if (user.role === 'Administrador') {
@@ -74,15 +74,31 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     const register = async (userData: RegisterData): Promise<LoginResult> => {
         try {
             await registerApi(userData);
-            return { success: true, redirect: '/login', message: '¡Registro Exitoso! Inicia sesión para continuar.' };
+
+            const loginResult = await login(userData.email, userData.password);
+
+            if (loginResult.success) {
+                return {
+                    success: true,
+                    redirect: '/',
+                    message: '¡Registro Exitoso! Sesión iniciada automáticamente.'
+                };
+            } else {
+                return { success: true, redirect: '/login', message: 'Registro exitoso. Por favor inicia sesión.' };
+            }
+
         } catch (error: any) {
-            return { success: false, message: error.message.replace('Error al procesar la solicitud:', '').trim() };
+            let errorMsg = error.message;
+            if (error.message.includes("Error al procesar la solicitud:")) {
+                errorMsg = error.message.replace('Error al procesar la solicitud:', '').trim();
+            }
+            return { success: false, message: errorMsg };
         }
     };
 
     const logout = (): LoginResult => {
         logoutApi().catch(console.error);
-        
+
         setCurrentUser(null);
         return { success: true, message: 'Has cerrado la sesión.', redirect: '/' };
     };

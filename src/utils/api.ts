@@ -36,6 +36,24 @@ export const fetchApi = async <T>(url: string, options: RequestInit = {}): Promi
 };
 
 const mapProductFromApi = (apiProduct: any): Product => {
+    let parsedFeatures: string[] = [];
+    let parsedSpecs: any = {};
+
+    try {
+        if (apiProduct.features) {
+            parsedFeatures = typeof apiProduct.features === 'string'
+                ? JSON.parse(apiProduct.features)
+                : apiProduct.features;
+        }
+        if (apiProduct.specifications) {
+            parsedSpecs = typeof apiProduct.specifications === 'string'
+                ? JSON.parse(apiProduct.specifications)
+                : apiProduct.specifications;
+        }
+    } catch (e) {
+        console.error("Error al parsear especificaciones o características:", e);
+    }
+
     return {
         codigo: apiProduct.codigo,
         nombre: apiProduct.nombre,
@@ -45,10 +63,11 @@ const mapProductFromApi = (apiProduct: any): Product => {
         stockCritico: apiProduct.stockCritico,
         categoria: apiProduct.categoria ? apiProduct.categoria.nombre : 'Sin Categoría',
         imagen: apiProduct.imagenUrl || '',
-        features: [],
-        specifications: {}
+        features: Array.isArray(parsedFeatures) ? parsedFeatures : [],
+        specifications: parsedSpecs || {}
     };
 };
+
 
 export type AuthApiResult = {
     nombre: string;

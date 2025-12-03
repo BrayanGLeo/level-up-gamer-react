@@ -5,19 +5,20 @@ import OrderDetailModal from '../../components/OrderDetailModal';
 import '../../styles/AdminStyle.css';
 
 type AdminOrder = {
+    id: number;
     number: number;
     date: string;
     total: number;
     status: string;
+    paymentMethod: string;
     clientName: string;
     userRUT: string;
     items: any[];
     shipping: any;
-    id: number;
     customer: any;
 };
 
-const ESTADOS_ORDEN = ["Pendiente", "Procesando", "En preparación", "En tránsito", "Completado", "Cancelado"];
+const ESTADOS_ORDEN = ["Pendiente", "Pagado", "En preparación", "En tránsito", "Completado", "Cancelado"];
 
 const AdminOrdenes = () => {
     const [allOrders, setAllOrders] = useState<AdminOrder[]>([]);
@@ -32,9 +33,11 @@ const AdminOrdenes = () => {
                 const mapped = data.map(o => ({
                     id: o.id,
                     number: o.numeroOrden,
-                    date: new Date(o.fechaCompra).toLocaleDateString(),
+                    date: new Date(o.fechaCompra).toLocaleDateString() + ' ' + new Date(o.fechaCompra).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
                     total: o.total,
                     status: o.estado,
+                    paymentMethod: o.metodoPago || 'No especificado',
+                    
                     clientName: o.usuario
                         ? `${o.usuario.nombre} ${o.usuario.apellido}`
                         : `${o.nombreCliente || 'Invitado'} ${o.apellidoCliente || ''}`,
@@ -63,7 +66,6 @@ const AdminOrdenes = () => {
                         imagen: d.producto.imagenUrl
                     }))
                 }));
-
                 setAllOrders(mapped.sort((a: any, b: any) => b.number - a.number));
             } catch (error) {
                 console.error("Error fetching orders", error);
@@ -98,19 +100,30 @@ const AdminOrdenes = () => {
     const getStatusBadge = (status: string) => {
         switch (status) {
             case 'Pendiente': return <Badge bg="secondary">{status}</Badge>;
+            case 'Pagado': return <Badge bg="info" text="dark">{status}</Badge>;
             case 'Completado': return <Badge bg="success">{status}</Badge>;
+            case 'Cancelado': return <Badge bg="danger">{status}</Badge>;
             default: return <Badge bg="primary">{status}</Badge>;
         }
     };
 
     return (
         <>
-            <div className="admin-page-header"><h1>Órdenes</h1></div>
+            <div className="admin-page-header"><h1>Gestión de Órdenes</h1></div>
             <Card className="admin-card">
                 <Card.Body>
                     <Table hover responsive>
                         <thead>
-                            <tr><th>N°</th><th>Fecha</th><th>Cliente</th><th>Total</th><th>Estado</th><th>Acción</th><th>Detalle</th></tr>
+                            <tr>
+                                <th>N°</th>
+                                <th>Fecha</th>
+                                <th>Cliente</th>
+                                <th>Pago</th>
+                                <th>Total</th>
+                                <th>Estado</th>
+                                <th>Acción</th>
+                                <th>Detalle</th>
+                            </tr>
                         </thead>
                         <tbody>
                             {allOrders.map(order => (
@@ -118,14 +131,15 @@ const AdminOrdenes = () => {
                                     <td>#{order.number}</td>
                                     <td>{order.date}</td>
                                     <td>{order.clientName}</td>
+                                    <td><small>{order.paymentMethod}</small></td>
                                     <td>${order.total.toLocaleString('es-CL')}</td>
                                     <td>{getStatusBadge(order.status)}</td>
                                     <td>
-                                        <Form.Select size="sm" value={order.status} onChange={(e) => handleStatusChange(order.id, e.target.value)}>
+                                        <Form.Select size="sm" value={order.status} onChange={(e) => handleStatusChange(order.id, e.target.value)} style={{width: '130px'}}>
                                             {ESTADOS_ORDEN.map(e => <option key={e} value={e}>{e}</option>)}
                                         </Form.Select>
                                     </td>
-                                    <td><Button size="sm" onClick={() => handleShowModal(order)}>Ver</Button></td>
+                                    <td><Button size="sm" variant="outline-dark" onClick={() => handleShowModal(order)}>Ver</Button></td>
                                 </tr>
                             ))}
                         </tbody>

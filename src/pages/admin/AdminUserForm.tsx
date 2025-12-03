@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Form, Button, Row, Col, Card } from 'react-bootstrap';
 import { useNavigate, useParams } from 'react-router-dom';
-import { getUserByRut, updateAdminUser } from '../../services/adminService';
-import { registerApi } from '../../utils/api';
+import { getUserByRut, updateAdminUser, createUser } from '../../services/adminService';
 import { User } from '../../data/userData';
 import { validateUserForm } from '../../utils/validation';
 import { regionesData } from '../../data/chileData';
@@ -22,7 +21,6 @@ const AdminUserForm = () => {
     });
 
     const { currentUser } = useAuth();
-    const isRootAdmin = currentUser?.isOriginalAdmin === true;
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [comunas, setComunas] = useState<string[]>([]);
     const navigate = useNavigate();
@@ -64,27 +62,30 @@ const AdminUserForm = () => {
 
         if (Object.keys(formErrors).length === 0) {
             try {
-                if (isEditMode && rut) {
-                    const userToUpdate: any = {
-                        rut: formData.run, name: formData.nombre, surname: formData.apellidos,
-                        email: formData.email, role: formData.role,
-                        birthdate: formData.fechaNacimiento, direccion: formData.direccion,
-                        region: formData.region, comuna: formData.comuna
-                    };
-                    if (formData.password) userToUpdate.password = formData.password;
+                const userPayload: any = {
+                    rut: formData.run,
+                    nombre: formData.nombre,
+                    apellido: formData.apellidos,
+                    email: formData.email,
+                    rol: formData.role,
+                };
 
-                    await updateAdminUser(userToUpdate);
+                if (formData.password) {
+                    userPayload.password = formData.password;
+                } else if (!isEditMode) {
+                    userPayload.password = '123456';
+                }
+
+                if (isEditMode && rut) {
+                    await updateAdminUser(userPayload);
                     setModalInfo({ title: '¡Éxito!', message: 'Usuario actualizado con éxito' });
                 } else {
-                    await registerApi({
-                        name: formData.nombre, surname: formData.apellidos, rut: formData.run,
-                        email: formData.email, password: formData.password || '123456',
-                        birthdate: formData.fechaNacimiento
-                    });
+                    await createUser(userPayload);
                     setModalInfo({ title: '¡Éxito!', message: 'Usuario creado con éxito' });
                 }
                 setShowNotifyModal(true);
             } catch (error: any) {
+                console.error(error);
                 setModalInfo({ title: 'Error', message: error.message || 'Error al guardar usuario.' });
                 setShowNotifyModal(true);
             }
@@ -116,17 +117,19 @@ const AdminUserForm = () => {
                         </Form.Group>
                         {!isEditMode && (
                             <Form.Group className="form-group mb-3">
-                                <Form.Label>Contraseña</Form.Label>
-                                <Form.Control type="password" name="password" value={formData.password} onChange={handleChange} />
+                                <Form.Label>Contraseña (Por defecto: 123456)</Form.Label>
+                                <Form.Control type="password" name="password" value={formData.password} onChange={handleChange} placeholder="Dejar en blanco para usar default" />
                             </Form.Group>
                         )}
+                        
                         <Row>
                             <Col><Form.Group className="form-group mb-3"><Form.Label>Región</Form.Label><Form.Select name="region" value={formData.region} onChange={handleRegionChange}>{regionesData.map(r => <option key={r.nombre} value={r.nombre}>{r.nombre}</option>)}</Form.Select></Form.Group></Col>
                             <Col><Form.Group className="form-group mb-3"><Form.Label>Comuna</Form.Label><Form.Select name="comuna" value={formData.comuna} onChange={handleChange}>{comunas.map(c => <option key={c} value={c}>{c}</option>)}</Form.Select></Form.Group></Col>
                         </Row>
+
                         <Form.Group className="form-group mb-3">
                             <Form.Label>Rol</Form.Label>
-                            <Form.Select name="role" value={formData.role} onChange={handleChange} disabled={!isRootAdmin}>
+                            <Form.Select name="role" value={formData.role} onChange={handleChange}>
                                 <option value="Cliente">Cliente</option>
                                 <option value="Vendedor">Vendedor</option>
                                 <option value="Administrador">Administrador</option>
