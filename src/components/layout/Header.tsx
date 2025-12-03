@@ -42,7 +42,24 @@ const Header = () => {
                 onToggle={setExpanded}
             >
                 <Container>
-                    <Navbar.Brand as={Link} to="/" onClick={handleNavClose}>LEVEL-UP GAMER</Navbar.Brand>
+                    <Navbar.Brand as={Link} to="/" onClick={handleNavClose} className="d-flex align-items-center brand-container position-relative">
+                        <img
+                            alt="Level-Up Gamer Logo"
+                            src="/img/Logo.png"
+                            className="d-inline-block align-top"
+                            style={{
+                                height: '90px',
+                                width: 'auto',
+                                position: 'absolute',
+                                top: '50%',
+                                transform: 'translateY(-50%)',
+                                left: '-5%'
+                            }}
+                        />
+                        <span style={{ fontWeight: 'bold', letterSpacing: '1px', marginLeft: '80px' }}>
+                            LEVEL-UP GAMER
+                        </span>
+                    </Navbar.Brand>
                     <Navbar.Toggle aria-controls="basic-navbar-nav" />
                     <Navbar.Collapse id="basic-navbar-nav">
                         <Nav className="ms-auto align-items-center">
