@@ -1,33 +1,68 @@
 import { fetchApi } from '../utils/api';
-import { Product } from '../data/productData';
+import { Product, Specifications } from '../data/productData';
 import { User } from '../data/userData';
 import { Category } from '../data/categoryData';
+
+const mapToFrontendProduct = (apiProduct: any): Product => {
+    let parsedFeatures: string[] = [];
+    let parsedSpecs: any = {};
+
+    try {
+        if (apiProduct.features) {
+            parsedFeatures = typeof apiProduct.features === 'string'
+                ? JSON.parse(apiProduct.features)
+                : apiProduct.features;
+        }
+        if (apiProduct.specifications) {
+            parsedSpecs = typeof apiProduct.specifications === 'string'
+                ? JSON.parse(apiProduct.specifications)
+                : apiProduct.specifications;
+        }
+    } catch (e) {
+        console.error("Error al parsear datos del producto:", e);
+    }
+
+    return {
+        ...apiProduct,
+        imagen: apiProduct.imagenUrl || apiProduct.imagen || '',
+        features: Array.isArray(parsedFeatures) ? parsedFeatures : [],
+        specifications: parsedSpecs || {},
+        categoria: apiProduct.categoria ? (apiProduct.categoria.nombre || apiProduct.categoria) : ''
+    };
+};
 
 const serializeProduct = (product: Product, selectedCategory: Category): any => {
     const productToSend: any = {
         ...product,
+        imagenUrl: product.imagen,
         categoria: {
             id: selectedCategory.id,
             nombre: selectedCategory.nombre
         },
     };
 
-    if (product.features) {
+    if (product.features && Array.isArray(product.features)) {
         productToSend.features = JSON.stringify(product.features.filter(f => f.trim() !== ''));
+    } else {
+        productToSend.features = "[]";
     }
+
     if (product.specifications) {
         productToSend.specifications = JSON.stringify(product.specifications);
     }
 
+    delete productToSend.imagen;
     return productToSend;
 };
 
 export const getAdminProducts = async (): Promise<Product[]> => {
-    return fetchApi<Product[]>('/productos', { method: 'GET' });
+    const data = await fetchApi<any[]>('/productos', { method: 'GET' });
+    return data.map(mapToFrontendProduct);
 };
 
 export const getProductByCode = async (codigo: string): Promise<Product> => {
-    return fetchApi<Product>(`/productos/${codigo}`, { method: 'GET' });
+    const data = await fetchApi<any>(`/productos/${codigo}`, { method: 'GET' });
+    return mapToFrontendProduct(data);
 };
 
 export const createProduct = async (product: Product, category: Category): Promise<Product> => {

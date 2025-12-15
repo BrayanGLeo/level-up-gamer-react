@@ -50,7 +50,7 @@ const HomePage = () => {
             <section className="hero" style={heroStyle}>
                 <div className="container">
                     <h2 className="hero-title">¡Desafía tus límites con Level-Up Gamer!</h2>
-                    <p className="hero-text">Conviértete en un Pro Gamer con nuestros productos...</p>
+                    <p className="hero-text">Conviértete en un Pro Gamer con nuestros productos, estando seguro que son de la máxima calidad del mercado</p>
                     <Link to="/catalogo" className="btn">Explorar Productos</Link>
                 </div>
             </section>
