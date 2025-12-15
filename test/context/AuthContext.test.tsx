@@ -38,9 +38,6 @@ const loginApiMock = vi.mocked(api.loginApi);
 const getPerfilApiMock = vi.mocked(api.getPerfilApi);
 const registerApiMock = vi.mocked(api.registerApi);
 
-
-
-
 describe('AuthContext', () => {
     let consoleErrorSpy: any;
 
@@ -141,7 +138,7 @@ describe('AuthContext', () => {
 
             expect(result.current.currentUser).toBeNull();
             expect(loginResult.success).toBe(false);
-            expect(loginResult.message).toBe('Correo o contraseña incorrectos.');
+            expect(loginResult.message).toBe('Datos incorrectos.');
         });
     });
 
@@ -153,14 +150,18 @@ describe('AuthContext', () => {
 
             registerApiMock.mockResolvedValue('Registro exitoso');
 
+            loginApiMock.mockResolvedValue({ nombre: 'New', rol: 'Cliente' } as any);
+            getPerfilApiMock.mockResolvedValue({ ...newUserData, role: 'Cliente' } as any);
+
             await act(async () => {
                 registerResult = await result.current.register(newUserData);
             });
 
             expect(registerApiMock).toHaveBeenCalled();
+            expect(loginApiMock).toHaveBeenCalled();
             expect(registerResult.success).toBe(true);
-            expect(registerResult.message).toBe('Registro exitoso. Por favor inicia sesión.'); 
-            expect(registerResult.redirect).toBe('/login');
+            expect(registerResult.message).toBe('¡Inicio de Sesión Exitoso!');
+            expect(registerResult.redirect).toBe('/');
         });
 
         test('debe manejar errores cuando register falla (ej. email duplicado)', async () => {
@@ -168,7 +169,7 @@ describe('AuthContext', () => {
             const failedUserData: userData.RegisterData = { email: 'fail@test.com', name: 'Fail', surname: 'User', password: 'p', rut: '6', birthdate: '2000-01-01' };
             let registerResult: LoginResult = { success: false, message: '', redirect: '/' };
 
-            registerApiMock.mockRejectedValue(new Error('Error al procesar la solicitud: Correo duplicado'));
+            registerApiMock.mockRejectedValue(new Error('Correo duplicado'));
 
             await act(async () => {
                 registerResult = await result.current.register(failedUserData);
