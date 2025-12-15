@@ -164,6 +164,17 @@ describe('api.ts', () => {
             await updateProfileApi({ name: 'New', surname: 'Name' });
             expect(mockFetch).toHaveBeenCalledWith(expect.stringContaining('/auth/perfil'), expect.objectContaining({ method: 'PUT' }));
         });
+
+        test('debe lanzar error "Credenciales inválidas" para login fallido 401/403', async () => {
+            mockFetch.mockResolvedValueOnce({
+                ok: false, status: 401, json: () => Promise.resolve({}), headers: new Headers(),
+            });
+            localStorageMock.setItem('currentUser', 'token');
+
+            await expect(loginApi('a@b.com', '123')).rejects.toThrow('Credenciales inválidas');
+            expect(localStorageMock.getItem('currentUser')).toBe('token'); 
+            expect(mockLocation.href).toBe('');
+        });
     });
 
     describe('Product Endpoints', () => {
@@ -194,6 +205,35 @@ describe('api.ts', () => {
             mockFetch.mockResolvedValueOnce({ ok: true, status: 200, json: () => Promise.resolve(rawProduct), headers: new Headers({ 'Content-Length': '50' }) });
             await getProductByCodeApi('1');
             expect(mockFetch).toHaveBeenCalledWith(expect.stringContaining('/tienda/productos/1'), expect.anything());
+        });
+
+        test('getProductsApi maneja errores al parsear features/specifications (cubre línea 44)', async () => {
+            const rawProduct = { 
+                codigo: '1', 
+                nombre: 'P1', 
+                imagenUrl: 'url', 
+                categoria: { nombre: 'Cat' }, 
+                precio: 100, 
+                stock: 1, 
+                stockCritico: 1,
+                features: '{invalid json string',
+                specifications: '{"key": "value"}'
+            };
+            mockFetch.mockResolvedValueOnce({ 
+                ok: true, 
+                status: 200, 
+                json: () => Promise.resolve([rawProduct]), 
+                headers: new Headers({ 'Content-Length': '100' }) 
+            });
+
+            const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+            const products = await getProductsApi();
+            
+            expect(consoleErrorSpy).toHaveBeenCalledWith("Error al parsear especificaciones o características:", expect.any(Error));
+            expect(products[0].features).toEqual([]);
+            
+            consoleErrorSpy.mockRestore();
         });
     });
 
