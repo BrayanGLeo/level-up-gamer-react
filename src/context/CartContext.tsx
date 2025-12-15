@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext, ReactNode } from 'react';
 import { Product } from '../data/productData';
+import NotificationModal from '../components/NotificationModal';
 
 export interface CartItem extends Product {
     quantity: number;
@@ -7,7 +8,7 @@ export interface CartItem extends Product {
 
 export interface CartContextType {
     cartItems: CartItem[];
-    addToCart: (product: Product) => void;
+    addToCart: (product: Product) => boolean;
     updateQuantity: (codigo: string, amount: number) => void;
     removeFromCart: (codigo: string) => void;
     clearCart: () => void;
@@ -23,18 +24,26 @@ const CartContext = createContext<CartContextType>(null!);
 
 export const CartProvider = ({ children }: CartProviderProps) => {
     const [cartItems, setCartItems] = useState<CartItem[]>([]);
+    const [showModal, setShowModal] = useState(false);
+    const [modalMsg, setModalMsg] = useState("");
+    const [modalTitle, setModalTitle] = useState("Aviso");
+    const handleCloseModal = () => setShowModal(false);
+    const handleShowModal = (title: string, msg: string) => {
+        setModalTitle(title);
+        setModalMsg(msg);
+        setShowModal(true);
+    };
 
-    const addToCart = (product: Product) => {
+    const addToCart = (product: Product): boolean => {
         const existingItem = cartItems.find(item => item.codigo === product.codigo);
-
         const currentQuantity = existingItem ? existingItem.quantity : 0;
+
         if (currentQuantity + 1 > product.stock) {
-            alert(`¡Stock insuficiente! Solo quedan ${product.stock} unidades de ${product.nombre}.`);
-            return;
+            handleShowModal("Stock Insuficiente", `¡Lo sentimos! No hay stock de ${product.nombre} disponibles.`);
+            return false;
         }
 
         let newCart: CartItem[];
-
         if (existingItem) {
             newCart = cartItems.map(item =>
                 item.codigo === product.codigo
@@ -46,6 +55,7 @@ export const CartProvider = ({ children }: CartProviderProps) => {
         }
 
         setCartItems(newCart);
+        return true;
     };
 
     const updateQuantity = (codigo: string, amount: number) => {
@@ -53,14 +63,13 @@ export const CartProvider = ({ children }: CartProviderProps) => {
         if (!item) return;
 
         if (amount > 0 && item.quantity + amount > item.stock) {
-            alert(`No puedes añadir más. Stock máximo: ${item.stock}`);
+            handleShowModal("Límite Alcanzado", `No puedes añadir más. El stock máximo disponible es ${item.stock}.`);
             return;
         }
 
-        let newCart = cartItems.map(item =>
+        const newCart = cartItems.map(item =>
             item.codigo === codigo ? { ...item, quantity: Math.max(0, item.quantity + amount) } : item
         );
-
         setCartItems(newCart);
     };
 
@@ -84,6 +93,13 @@ export const CartProvider = ({ children }: CartProviderProps) => {
     return (
         <CartContext.Provider value={{ cartItems, addToCart, updateQuantity, removeFromCart, clearCart, getCartTotal, getCartItemCount }}>
             {children}
+
+            <NotificationModal
+                show={showModal}
+                onHide={handleCloseModal}
+                title={modalTitle}
+                message={modalMsg}
+            />
         </CartContext.Provider>
     );
 };

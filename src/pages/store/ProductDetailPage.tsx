@@ -35,7 +35,6 @@ const ProductDetailPage = () => {
     const [product, setProduct] = useState<Product | undefined>(undefined);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
-
     const { addToCart, cartItems } = useCart();
     const [showModal, setShowModal] = useState(false);
 
@@ -57,18 +56,13 @@ const ProductDetailPage = () => {
     }, [codigo]);
 
     const handleAddToCart = () => {
-        if (!product) return;
+        if (product) {
+            const wasAdded = addToCart(product);
 
-        const itemInCart = cartItems.find(item => item.codigo === product.codigo);
-        const currentQty = itemInCart ? itemInCart.quantity : 0;
-
-        if (currentQty + 1 > product.stock) {
-            addToCart(product);
-            return;
+            if (wasAdded) {
+                setShowModal(true);
+            }
         }
-
-        addToCart(product);
-        setShowModal(true);
     };
 
     const isStockMaxed = product
@@ -130,7 +124,7 @@ const ProductDetailPage = () => {
                             <Button
                                 onClick={handleAddToCart}
                                 className="btn btn-lg w-100"
-                                disabled={product.stock === 0 || isStockMaxed}
+                                disabled={product.stock === 0}
                                 style={{
                                     opacity: (product.stock === 0 || isStockMaxed) ? 0.6 : 1,
                                     cursor: (product.stock === 0 || isStockMaxed) ? 'not-allowed' : 'pointer'
@@ -139,7 +133,7 @@ const ProductDetailPage = () => {
                                 {product.stock === 0
                                     ? 'Agotado'
                                     : isStockMaxed
-                                        ? 'Límite alcanzado en carrito'
+                                        ? 'Stock Máximo en Carrito'
                                         : 'Agregar al Carrito'}
                             </Button>
 

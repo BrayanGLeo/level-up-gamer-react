@@ -38,9 +38,12 @@ const CatalogoPage = () => {
     const handleCloseModal = () => setShowModal(false);
 
     const handleAddToCart = (product: Product) => {
-        addToCart(product);
-        setSelectedProduct(product);
-        setShowModal(true);
+        const wasAdded = addToCart(product);
+
+        if (wasAdded) {
+            setSelectedProduct(product);
+            setShowModal(true);
+        }
     };
 
     const filteredProducts = products.filter(product => {
