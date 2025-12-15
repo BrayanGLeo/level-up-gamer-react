@@ -36,7 +36,7 @@ const ProductDetailPage = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
 
-    const { addToCart } = useCart();
+    const { addToCart, cartItems } = useCart();
     const [showModal, setShowModal] = useState(false);
 
     useEffect(() => {
@@ -57,11 +57,23 @@ const ProductDetailPage = () => {
     }, [codigo]);
 
     const handleAddToCart = () => {
-        if (product) {
+        if (!product) return;
+
+        const itemInCart = cartItems.find(item => item.codigo === product.codigo);
+        const currentQty = itemInCart ? itemInCart.quantity : 0;
+
+        if (currentQty + 1 > product.stock) {
             addToCart(product);
-            setShowModal(true);
+            return;
         }
+
+        addToCart(product);
+        setShowModal(true);
     };
+
+    const isStockMaxed = product
+        ? (cartItems.find(i => i.codigo === product.codigo)?.quantity || 0) >= product.stock
+        : false;
 
     if (loading) {
         return (
@@ -118,9 +130,17 @@ const ProductDetailPage = () => {
                             <Button
                                 onClick={handleAddToCart}
                                 className="btn btn-lg w-100"
-                                disabled={product.stock === 0}
+                                disabled={product.stock === 0 || isStockMaxed}
+                                style={{
+                                    opacity: (product.stock === 0 || isStockMaxed) ? 0.6 : 1,
+                                    cursor: (product.stock === 0 || isStockMaxed) ? 'not-allowed' : 'pointer'
+                                }}
                             >
-                                {product.stock > 0 ? 'Agregar al Carrito' : 'Agotado'}
+                                {product.stock === 0
+                                    ? 'Agotado'
+                                    : isStockMaxed
+                                        ? 'Límite alcanzado en carrito'
+                                        : 'Agregar al Carrito'}
                             </Button>
 
                             <div className="text-center mt-4">

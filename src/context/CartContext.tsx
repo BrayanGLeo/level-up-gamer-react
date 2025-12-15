@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
+import React, { createContext, useState, useContext, ReactNode } from 'react';
 import { Product } from '../data/productData';
 
 export interface CartItem extends Product {
@@ -27,12 +27,18 @@ export const CartProvider = ({ children }: CartProviderProps) => {
     const addToCart = (product: Product) => {
         const existingItem = cartItems.find(item => item.codigo === product.codigo);
 
+        const currentQuantity = existingItem ? existingItem.quantity : 0;
+        if (currentQuantity + 1 > product.stock) {
+            alert(`¡Stock insuficiente! Solo quedan ${product.stock} unidades de ${product.nombre}.`);
+            return;
+        }
+
         let newCart: CartItem[];
 
         if (existingItem) {
             newCart = cartItems.map(item =>
                 item.codigo === product.codigo
-                    ? { ...item, quantity: item.quantity + 1 } 
+                    ? { ...item, quantity: item.quantity + 1 }
                     : item
             );
         } else {
@@ -43,6 +49,14 @@ export const CartProvider = ({ children }: CartProviderProps) => {
     };
 
     const updateQuantity = (codigo: string, amount: number) => {
+        const item = cartItems.find(i => i.codigo === codigo);
+        if (!item) return;
+
+        if (amount > 0 && item.quantity + amount > item.stock) {
+            alert(`No puedes añadir más. Stock máximo: ${item.stock}`);
+            return;
+        }
+
         let newCart = cartItems.map(item =>
             item.codigo === codigo ? { ...item, quantity: Math.max(0, item.quantity + amount) } : item
         );
