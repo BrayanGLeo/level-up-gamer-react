@@ -24,7 +24,7 @@ vi.mock('../../../src/context/CartContext', async (importOriginal) => {
     const actual = await importOriginal() as object;
     return {
         ...actual,
-        useCart: () => ({ addToCart: mockAddToCart, cartItems: [] }),
+        useCart: () => ({ addToCart: mockAddToCart, cartItems: [] }), 
         CartProvider: ({ children }: any) => <div>{children}</div>
     };
 });
@@ -43,6 +43,7 @@ describe('CatalogoPage', () => {
         vi.clearAllMocks();
         consoleSpy.mockClear();
         (api.getProductsApi as any).mockResolvedValue(mockProducts);
+        mockAddToCart.mockReturnValue(true); 
     });
 
     test('renderiza todos los productos después de cargar', async () => {
@@ -129,6 +130,6 @@ describe('CatalogoPage', () => {
         fireEvent.click(addButton);
 
         expect(mockAddToCart).toHaveBeenCalledWith(mockProducts[0]);
-        expect(screen.getByText('¡Añadido al carrito!')).toBeInTheDocument();
+        expect(await screen.findByText('¡Añadido al carrito!')).toBeInTheDocument();
     });
 });

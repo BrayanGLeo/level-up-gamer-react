@@ -159,7 +159,7 @@ describe('AuthContext', () => {
 
             expect(registerApiMock).toHaveBeenCalled();
             expect(registerResult.success).toBe(true);
-            expect(registerResult.message).toContain('¡Registro Exitoso!');
+            expect(registerResult.message).toBe('Registro exitoso. Por favor inicia sesión.'); 
             expect(registerResult.redirect).toBe('/login');
         });
 

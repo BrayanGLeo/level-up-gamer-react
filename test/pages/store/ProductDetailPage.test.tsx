@@ -11,13 +11,21 @@ vi.mock('../../../src/utils/api', () => ({
 
 const mockAddToCart = vi.fn();
 vi.mock('../../../src/context/CartContext', async () => {
-    return { useCart: () => ({ addToCart: mockAddToCart }) };
+    return {
+        useCart: () => ({
+            addToCart: mockAddToCart,
+            cartItems: []
+        })
+    };
 });
 
 const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
 
 describe('ProductDetailPage', () => {
-    beforeEach(() => vi.clearAllMocks());
+    beforeEach(() => {
+        vi.clearAllMocks();
+        mockAddToCart.mockReturnValue(true);
+    });
 
     test('renderiza fallback de imagen si no hay URL', async () => {
         const productNoImg = {
