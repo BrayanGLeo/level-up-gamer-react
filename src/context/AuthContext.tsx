@@ -10,8 +10,9 @@ export interface AuthContextType {
     currentUser: CurrentUser | null;
     login: (email: string, password: string) => Promise<LoginResult>;
     register: (userData: RegisterData) => Promise<LoginResult>;
-    logout: () => LoginResult;
+    logout: () => void;
     updateCurrentUser: (user: CurrentUser) => void;
+    isLoading: boolean;
 }
 
 export interface LoginResult {
@@ -28,16 +29,28 @@ const AuthContext = createContext<AuthContextType>(null!);
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
     const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
+    const [isLoading, setIsLoading] = useState<boolean>(true);
 
     useEffect(() => {
         const checkSession = async () => {
+            const userIntentionalLogout = localStorage.getItem('user_logged_out');
+            
+            if (userIntentionalLogout === 'true') {
+                setCurrentUser(null);
+                setIsLoading(false);
+                return;
+            }
+
             try {
                 const userProfile = await getPerfilApi();
                 const user: CurrentUser = { ...userProfile, role: userProfile.role };
                 setCurrentUser(user);
             } catch (e) {
-                console.error("Sesión de servidor invalidada o no existente.");
+                console.error("Sesión no válida o expirada.");
                 setCurrentUser(null);
+                localStorage.removeItem('user_logged_out'); 
+            } finally {
+                setIsLoading(false);
             }
         };
         checkSession();
@@ -49,62 +62,49 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
     const login = async (email: string, password: string): Promise<LoginResult> => {
         try {
+            localStorage.removeItem('user_logged_out'); 
+
             const loginResult: AuthApiResult = await loginApi(email, password);
-
             const userProfile = await getPerfilApi();
-
             const user: CurrentUser = { ...userProfile, role: loginResult.rol };
 
             setCurrentUser(user);
 
             if (user.role === 'Administrador') {
-                return { success: true, redirect: '/admin', message: 'Inicio de sesión de administrador exitoso.' };
+                return { success: true, redirect: '/admin', message: 'Bienvenido Admin.' };
             } else if (user.role === 'Vendedor') {
-                return { success: true, redirect: '/admin/ordenes', message: 'Inicio de sesión de vendedor exitoso.' };
+                return { success: true, redirect: '/admin/ordenes', message: 'Bienvenido Vendedor.' };
             } else {
                 return { success: true, redirect: '/', message: '¡Inicio de Sesión Exitoso!' };
             }
         } catch (error: any) {
             setCurrentUser(null);
-            const message = error.message.includes('Credenciales inválidas') ? 'Correo o contraseña incorrectos.' : error.message;
+            const message = error.message.includes('Credenciales inválidas') ? 'Datos incorrectos.' : error.message;
             return { success: false, message: message };
         }
     };
 
     const register = async (userData: RegisterData): Promise<LoginResult> => {
         try {
+            localStorage.removeItem('user_logged_out');
             await registerApi(userData);
-
-            const loginResult = await login(userData.email, userData.password);
-
-            if (loginResult.success) {
-                return {
-                    success: true,
-                    redirect: '/',
-                    message: '¡Registro Exitoso! Sesión iniciada automáticamente.'
-                };
-            } else {
-                return { success: true, redirect: '/login', message: 'Registro exitoso. Por favor inicia sesión.' };
-            }
-
+            return login(userData.email, userData.password);
         } catch (error: any) {
-            let errorMsg = error.message;
-            if (error.message.includes("Error al procesar la solicitud:")) {
-                errorMsg = error.message.replace('Error al procesar la solicitud:', '').trim();
-            }
-            return { success: false, message: errorMsg };
+            return { success: false, message: error.message };
         }
     };
 
-    const logout = (): LoginResult => {
+    const logout = () => {
         logoutApi().catch(console.error);
 
+        localStorage.setItem('user_logged_out', 'true');
+
         setCurrentUser(null);
-        return { success: true, message: 'Has cerrado la sesión.', redirect: '/' };
+        window.location.href = '/'; 
     };
 
     return (
-        <AuthContext.Provider value={{ currentUser, login, register, logout, updateCurrentUser }}>
+        <AuthContext.Provider value={{ currentUser, login, register, logout, updateCurrentUser, isLoading }}>
             {children}
         </AuthContext.Provider>
     );
